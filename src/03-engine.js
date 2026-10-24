@@ -36,9 +36,16 @@ function modal(html, actions){ const m=document.createElement('div'); m.classNam
 
 /* ---- avatar + course ---- */
 function avatarSVG(){ return `<svg viewBox="0 0 34 46" aria-hidden="true"><rect x="7" y="2" width="20" height="18" fill="#f3c08a" stroke="#1d2733" stroke-width="3"/><rect x="7" y="2" width="20" height="6" fill="#5a3b1e"/><rect x="12" y="10" width="3" height="3" fill="#1d2733"/><rect x="20" y="10" width="3" height="3" fill="#1d2733"/><rect x="13" y="15" width="8" height="2" fill="#1d2733"/><rect x="5" y="21" width="24" height="14" fill="#2fb37a" stroke="#1d2733" stroke-width="3"/><rect x="1" y="21" width="4" height="12" fill="#f3c08a" stroke="#1d2733" stroke-width="2"/><rect x="29" y="21" width="4" height="12" fill="#f3c08a" stroke="#1d2733" stroke-width="2"/><rect x="7" y="35" width="8" height="9" fill="#3a56a8" stroke="#1d2733" stroke-width="2"/><rect x="19" y="35" width="8" height="9" fill="#3a56a8" stroke="#1d2733" stroke-width="2"/></svg>`; }
+function courseX(i,n){ return 8+(84*(i+1))/n; }
+/* Walk the existing avatar to checkpoint `cleared` (1-based count), hop on arrival, recolor that flag. */
+function moveAvatar(courseEl, cleared, n, color){
+  const av=courseEl&&courseEl.querySelector('.avatar'); if(!av) return;
+  const x= cleared===0?4:courseX(cleared-1,n); av.classList.add('walk'); av.style.left=x+'%';
+  setTimeout(()=>{ av.classList.remove('walk'); av.classList.add('hop'); const flags=courseEl.querySelectorAll('svg rect'); const base=flags[0]; const k=cleared-1; if(flags[1+k*2]){ flags[1+k*2].setAttribute('fill','var(--ok)'); flags[2+k*2].setAttribute('fill',color); } const labs=courseEl.querySelectorAll('span'); if(labs[k]) labs[k].style.color='var(--ok)'; ding(); },950);
+}
 function courseHTML(checkpoints, clearedCount, color){
   // checkpoints: array of labels. avatar sits at index clearedCount (0 = start)
-  const n=checkpoints.length; const xs=checkpoints.map((_,i)=>8+ (84*(i+1))/n);
+  const n=checkpoints.length; const xs=checkpoints.map((_,i)=>courseX(i,n));
   let svg=`<svg viewBox="0 0 100 40" preserveAspectRatio="none">`;
   svg+=`<rect x="0" y="30" width="100" height="10" fill="var(--grass)" stroke="var(--ink)" stroke-width=".6"/>`;
   xs.forEach((x,i)=>{ const done=i<clearedCount; svg+=`<rect x="${x-4}" y="${22-(i%2)*3}" width="8" height="${8+(i%2)*3}" fill="${done?'var(--ok)':'var(--dirt)'}" stroke="var(--ink)" stroke-width=".5"/><line x1="${x}" y1="${22-(i%2)*3}" x2="${x}" y2="${12-(i%2)*3}" stroke="var(--ink)" stroke-width=".6"/><rect x="${x}" y="${12-(i%2)*3}" width="6" height="4" fill="${done?color:'var(--line)'}" stroke="var(--ink)" stroke-width=".4"/>`; });

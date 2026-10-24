@@ -109,8 +109,9 @@ function scenePlayer(host, frames, onEnd, lvl){
   const id=k=>`l${lvl}-${String(k+1).padStart(2,'0')}`;
   const DUR=k=>Math.max(3800, 1800+(frames[k].say.length*52), ((typeof VOICE_DUR!=='undefined'&&VOICE_DUR[id(k)])||0)*1000+700);
   const audio=new Audio(); audio.preload='auto';
-  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="cap" id="cap"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
-  const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), cap=$('#cap',host);
+  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="chat" id="chat" aria-live="polite"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
+  const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), chat=$('#chat',host); let shown=0;
+  function addMsg(k){ const f=frames[k], c=CHARS[f.who]; const right=!(f.who==='coach'||f.who==='checker'||f.who==='bar'); chat.querySelectorAll('.msg.now').forEach(m=>m.classList.remove('now')); const m=document.createElement('div'); m.className='msg now'+(right?' r':''); m.innerHTML=`<div class="av" style="background:${c.bg};color:${c.fg}">${c.face}</div><div class="bub"><span class="nm">${c.nm}</span><span class="say">${f.say}</span>${f.board?`<div class="mth">${f.board}</div>`:''}</div>`; chat.appendChild(m); chat.scrollTop=chat.scrollHeight; }
   function setChar(el,who,talk){ const c=CHARS[who]; el.innerHTML=`<div class="face" style="background:${c.bg};color:${c.fg}">${c.face}</div><span class="nm">${c.nm}</span>`; el.classList.toggle('talk',!!talk); }
   function speak(k){ try{ audio.pause(); if(!State.s.voice) return; audio.src='voices/'+id(k)+'.mp3'; audio.currentTime=0; audio.play().catch(()=>{}); }catch(e){} }
   function show(){
@@ -118,7 +119,7 @@ function scenePlayer(host, frames, onEnd, lvl){
     setChar(side==='L'?cL:cR, f.who, true); const other=side==='L'?cR:cL; if(!other.innerHTML) setChar(other, side==='L'?'vera':'coach', false); else other.classList.remove('talk');
     sb.innerHTML=f.board; sb.classList.remove('shake'); if(f.fx==='shake'){ void sb.offsetWidth; sb.classList.add('shake'); }
     const me=side==='L'?cL:cR; me.classList.remove('flip'); if(f.fx==='flip'||f.fx==='hop'){ void me.offsetWidth; me.classList.add('flip'); }
-    cap.innerHTML=`<b>${CHARS[f.who].nm}:</b> ${f.say}`; $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
+    if(i<shown){ chat.innerHTML=''; shown=0; } while(shown<=i){ addMsg(shown); shown++; } $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
     speak(i);
   }
   function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
@@ -216,7 +217,9 @@ const LEVEL_DEFS=LEVELS.map(L=>({n:L.n, boss:MINI[L.n]}));
 let levelTab='explainer', lastLevel=null;
 VIEWS.learn=(app)=>{
   app.innerHTML=h`<div class="stack"><div class="block"><p class="eyebrow">Learn</p><h1>Six levels. Clear the checkpoints.</h1><p style="margin-top:6px">Each level is an obby, an obstacle course with checkpoints: an interactive, a short video, and a mini-boss. Checkpoints earn coins. Clear all of a level for its badge.</p></div>
-  <div class="grid">${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}</div></div>`;
+  <div class="grid">${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}</div>
+  <div class="block soft"><div class="row" style="justify-content:space-between"><div><b>Want a fresh run?</b><p class="muted" style="font-size:.9rem">Resets every Learn checkpoint and level badge so the obbies start over. Coins, Check My Answers, and Final Boss history stay.</p></div><button class="btn alt sm" id="resetLearn">Start the lessons over</button></div></div></div>`;
+  $('#resetLearn').onclick=()=>modal('<h2>Start the lessons over?</h2><p class="muted">All six levels go back to the first checkpoint. Level badges are removed. Coins and test history are kept.</p>',[{label:'Keep my progress',cls:'alt'},{label:'Reset lessons',fn:()=>{ State.s.learn={}; ['l1','l2','l3','l4','l5','l6','nine'].forEach(b=>delete State.s.badges[b]); State.save(); toast('Lessons reset. Back to the spawn point.'); render(); }}]);
 };
 VIEWS.level=(app,n)=>{
   n=+n||1; if(n!==lastLevel){ levelTab='explainer'; lastLevel=n; } const L=LEVELS[n-1]; const D=LEVEL_DEFS[n-1]; const st=State.s.learn['l'+n]||(State.s.learn['l'+n]={});
@@ -230,7 +233,7 @@ VIEWS.level=(app,n)=>{
    <div class="block" id="lbody"></div></div>`;
   app.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ levelTab=b.dataset.lt; render(); });
   const body=$('#lbody');
-  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); checkLevelBadge(n); setTimeout(render,900); };
+  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
   if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
   else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n); }
   else {

@@ -78,8 +78,10 @@ textarea{min-height:88px;resize:vertical}
 /* Obby course */
 .course{position:relative;height:84px;margin:6px 0 2px}
 .course svg{width:100%;height:100%;display:block;overflow:visible}
-.avatar{position:absolute;bottom:26px;width:34px;height:46px;transition:left .6s cubic-bezier(.3,1.4,.5,1);transform:translateX(-50%)}
-@media (prefers-reduced-motion:reduce){.avatar{transition:none}}
+.avatar{position:absolute;bottom:26px;width:34px;height:46px;transition:left .9s ease-in-out;transform:translateX(-50%)}
+.avatar.walk{animation:walk .3s infinite alternate} @keyframes walk{to{transform:translateX(-50%) translateY(-4px) rotate(3deg)}}
+.avatar.hop{animation:hop .55s cubic-bezier(.3,1.4,.5,1)} @keyframes hop{0%,100%{transform:translateX(-50%) translateY(0)}45%{transform:translateX(-50%) translateY(-18px)}}
+@media (prefers-reduced-motion:reduce){.avatar{transition:none;animation:none!important}}
 .cp{font-size:.7rem;font-weight:900;text-anchor:middle;fill:var(--muted)}
 /* Items */
 .item{padding:14px;border:3px solid var(--line);border-radius:var(--r);background:var(--panel);display:grid;gap:10px}
@@ -123,6 +125,17 @@ footer .wrap{padding-block:14px 24px;display:flex;justify-content:space-between;
 .stage .char .nm{font-size:.7rem;font-weight:900;background:var(--panel);border:2px solid var(--ink);border-radius:4px;padding:0 6px}
 .stage .char.talk .face{animation:bob .6s infinite alternate} @keyframes bob{to{transform:translateY(-6px)}}
 .stage .char.flip .face{animation:spin .8s} @keyframes spin{to{transform:rotateY(360deg)}}
+.chat{display:grid;gap:8px;max-height:min(46vh,360px);overflow-y:auto;padding:10px;border:3px solid var(--ink);border-radius:var(--r);background:var(--panel2);margin-top:10px;scroll-behavior:smooth}
+.msg{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start}
+.msg.r{grid-template-columns:1fr 34px} .msg.r .av{order:2} .msg.r .bub{order:1;border-color:var(--accent)}
+.msg .av{width:32px;height:32px;border:2px solid var(--ink);border-radius:5px;font-family:var(--disp);font-size:.8rem;display:flex;align-items:center;justify-content:center;margin-top:4px}
+.msg .bub{background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0;animation:pop .25s}
+.msg .nm{font-size:.68rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block}
+.msg .say{font-weight:700}
+.msg .mth{margin-top:6px;font-weight:900;font-size:1.05rem;font-variant-numeric:tabular-nums;background:var(--panel2);border:2px solid var(--line);border-radius:6px;padding:3px 10px;display:block;width:max-content;max-width:100%;overflow-wrap:anywhere}
+.msg .mth .hl{background:var(--gold);color:var(--gold-ink);border-radius:4px;padding:0 4px} .msg .mth .bad{color:var(--bad);text-decoration:line-through}
+.msg.now .bub{border-color:var(--ink);box-shadow:0 3px 0 var(--shadow)}
+.stage{min-height:200px}
 .cap{min-height:3.2em;padding:10px 14px;border:3px solid var(--ink);border-radius:var(--r);background:var(--panel);font-weight:800;font-size:1.05rem;margin-top:10px}
 .cap b{color:var(--accent)}
 .vbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
@@ -687,9 +700,16 @@ function modal(html, actions){ const m=document.createElement('div'); m.classNam
 
 /* ---- avatar + course ---- */
 function avatarSVG(){ return `<svg viewBox="0 0 34 46" aria-hidden="true"><rect x="7" y="2" width="20" height="18" fill="#f3c08a" stroke="#1d2733" stroke-width="3"/><rect x="7" y="2" width="20" height="6" fill="#5a3b1e"/><rect x="12" y="10" width="3" height="3" fill="#1d2733"/><rect x="20" y="10" width="3" height="3" fill="#1d2733"/><rect x="13" y="15" width="8" height="2" fill="#1d2733"/><rect x="5" y="21" width="24" height="14" fill="#2fb37a" stroke="#1d2733" stroke-width="3"/><rect x="1" y="21" width="4" height="12" fill="#f3c08a" stroke="#1d2733" stroke-width="2"/><rect x="29" y="21" width="4" height="12" fill="#f3c08a" stroke="#1d2733" stroke-width="2"/><rect x="7" y="35" width="8" height="9" fill="#3a56a8" stroke="#1d2733" stroke-width="2"/><rect x="19" y="35" width="8" height="9" fill="#3a56a8" stroke="#1d2733" stroke-width="2"/></svg>`; }
+function courseX(i,n){ return 8+(84*(i+1))/n; }
+/* Walk the existing avatar to checkpoint `cleared` (1-based count), hop on arrival, recolor that flag. */
+function moveAvatar(courseEl, cleared, n, color){
+  const av=courseEl&&courseEl.querySelector('.avatar'); if(!av) return;
+  const x= cleared===0?4:courseX(cleared-1,n); av.classList.add('walk'); av.style.left=x+'%';
+  setTimeout(()=>{ av.classList.remove('walk'); av.classList.add('hop'); const flags=courseEl.querySelectorAll('svg rect'); const base=flags[0]; const k=cleared-1; if(flags[1+k*2]){ flags[1+k*2].setAttribute('fill','var(--ok)'); flags[2+k*2].setAttribute('fill',color); } const labs=courseEl.querySelectorAll('span'); if(labs[k]) labs[k].style.color='var(--ok)'; ding(); },950);
+}
 function courseHTML(checkpoints, clearedCount, color){
   // checkpoints: array of labels. avatar sits at index clearedCount (0 = start)
-  const n=checkpoints.length; const xs=checkpoints.map((_,i)=>8+ (84*(i+1))/n);
+  const n=checkpoints.length; const xs=checkpoints.map((_,i)=>courseX(i,n));
   let svg=`<svg viewBox="0 0 100 40" preserveAspectRatio="none">`;
   svg+=`<rect x="0" y="30" width="100" height="10" fill="var(--grass)" stroke="var(--ink)" stroke-width=".6"/>`;
   xs.forEach((x,i)=>{ const done=i<clearedCount; svg+=`<rect x="${x-4}" y="${22-(i%2)*3}" width="8" height="${8+(i%2)*3}" fill="${done?'var(--ok)':'var(--dirt)'}" stroke="var(--ink)" stroke-width=".5"/><line x1="${x}" y1="${22-(i%2)*3}" x2="${x}" y2="${12-(i%2)*3}" stroke="var(--ink)" stroke-width=".6"/><rect x="${x}" y="${12-(i%2)*3}" width="6" height="4" fill="${done?color:'var(--line)'}" stroke="var(--ink)" stroke-width=".4"/>`; });
@@ -1168,8 +1188,9 @@ function scenePlayer(host, frames, onEnd, lvl){
   const id=k=>`l${lvl}-${String(k+1).padStart(2,'0')}`;
   const DUR=k=>Math.max(3800, 1800+(frames[k].say.length*52), ((typeof VOICE_DUR!=='undefined'&&VOICE_DUR[id(k)])||0)*1000+700);
   const audio=new Audio(); audio.preload='auto';
-  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="cap" id="cap"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
-  const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), cap=$('#cap',host);
+  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="chat" id="chat" aria-live="polite"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
+  const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), chat=$('#chat',host); let shown=0;
+  function addMsg(k){ const f=frames[k], c=CHARS[f.who]; const right=!(f.who==='coach'||f.who==='checker'||f.who==='bar'); chat.querySelectorAll('.msg.now').forEach(m=>m.classList.remove('now')); const m=document.createElement('div'); m.className='msg now'+(right?' r':''); m.innerHTML=`<div class="av" style="background:${c.bg};color:${c.fg}">${c.face}</div><div class="bub"><span class="nm">${c.nm}</span><span class="say">${f.say}</span>${f.board?`<div class="mth">${f.board}</div>`:''}</div>`; chat.appendChild(m); chat.scrollTop=chat.scrollHeight; }
   function setChar(el,who,talk){ const c=CHARS[who]; el.innerHTML=`<div class="face" style="background:${c.bg};color:${c.fg}">${c.face}</div><span class="nm">${c.nm}</span>`; el.classList.toggle('talk',!!talk); }
   function speak(k){ try{ audio.pause(); if(!State.s.voice) return; audio.src='voices/'+id(k)+'.mp3'; audio.currentTime=0; audio.play().catch(()=>{}); }catch(e){} }
   function show(){
@@ -1177,7 +1198,7 @@ function scenePlayer(host, frames, onEnd, lvl){
     setChar(side==='L'?cL:cR, f.who, true); const other=side==='L'?cR:cL; if(!other.innerHTML) setChar(other, side==='L'?'vera':'coach', false); else other.classList.remove('talk');
     sb.innerHTML=f.board; sb.classList.remove('shake'); if(f.fx==='shake'){ void sb.offsetWidth; sb.classList.add('shake'); }
     const me=side==='L'?cL:cR; me.classList.remove('flip'); if(f.fx==='flip'||f.fx==='hop'){ void me.offsetWidth; me.classList.add('flip'); }
-    cap.innerHTML=`<b>${CHARS[f.who].nm}:</b> ${f.say}`; $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
+    if(i<shown){ chat.innerHTML=''; shown=0; } while(shown<=i){ addMsg(shown); shown++; } $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
     speak(i);
   }
   function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
@@ -1275,7 +1296,9 @@ const LEVEL_DEFS=LEVELS.map(L=>({n:L.n, boss:MINI[L.n]}));
 let levelTab='explainer', lastLevel=null;
 VIEWS.learn=(app)=>{
   app.innerHTML=h`<div class="stack"><div class="block"><p class="eyebrow">Learn</p><h1>Six levels. Clear the checkpoints.</h1><p style="margin-top:6px">Each level is an obby, an obstacle course with checkpoints: an interactive, a short video, and a mini-boss. Checkpoints earn coins. Clear all of a level for its badge.</p></div>
-  <div class="grid">${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}</div></div>`;
+  <div class="grid">${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}</div>
+  <div class="block soft"><div class="row" style="justify-content:space-between"><div><b>Want a fresh run?</b><p class="muted" style="font-size:.9rem">Resets every Learn checkpoint and level badge so the obbies start over. Coins, Check My Answers, and Final Boss history stay.</p></div><button class="btn alt sm" id="resetLearn">Start the lessons over</button></div></div></div>`;
+  $('#resetLearn').onclick=()=>modal('<h2>Start the lessons over?</h2><p class="muted">All six levels go back to the first checkpoint. Level badges are removed. Coins and test history are kept.</p>',[{label:'Keep my progress',cls:'alt'},{label:'Reset lessons',fn:()=>{ State.s.learn={}; ['l1','l2','l3','l4','l5','l6','nine'].forEach(b=>delete State.s.badges[b]); State.save(); toast('Lessons reset. Back to the spawn point.'); render(); }}]);
 };
 VIEWS.level=(app,n)=>{
   n=+n||1; if(n!==lastLevel){ levelTab='explainer'; lastLevel=n; } const L=LEVELS[n-1]; const D=LEVEL_DEFS[n-1]; const st=State.s.learn['l'+n]||(State.s.learn['l'+n]={});
@@ -1289,7 +1312,7 @@ VIEWS.level=(app,n)=>{
    <div class="block" id="lbody"></div></div>`;
   app.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ levelTab=b.dataset.lt; render(); });
   const body=$('#lbody');
-  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); checkLevelBadge(n); setTimeout(render,900); };
+  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
   if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
   else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n); }
   else {
