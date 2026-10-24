@@ -46,6 +46,7 @@ button{font:inherit}
 .nav{display:flex;gap:6px;flex-wrap:wrap}
 .tab{border:3px solid var(--ink);background:var(--panel2);color:var(--ink);padding:6px 12px;border-radius:var(--r);font-weight:900;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
 .tab[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.tab.fs{padding:6px 10px;font-size:1.05rem;line-height:1}
 .tab:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 main{flex:1}
 main .wrap{padding-block:22px 40px}
@@ -188,13 +189,14 @@ details{border:3px solid var(--line);border-radius:var(--r);padding:10px 14px;ba
 .result{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
 .result .big{font-family:var(--disp);font-size:clamp(2rem,7vw,3.2rem);color:var(--accent);font-variant-numeric:tabular-nums}
 .workbox{font-size:.95rem;white-space:pre-wrap;background:var(--panel2);border-radius:6px;padding:8px 10px;font-weight:700}
-@media (max-width:560px){ .hud .wrap{gap:6px} .nav{width:100%;order:3} .tab{flex:1;text-align:center;padding:6px 4px;font-size:.8rem;white-space:nowrap} .pnav{gap:5px} .pbtn{font-size:.72rem} .block{padding:14px} .result{grid-template-columns:1fr} .scale{grid-template-columns:1fr;gap:6px} }
+@media (max-width:560px){ .hud .wrap{gap:6px} .nav{width:100%;order:3} .tab.fs{flex:0 0 auto} .tab{flex:1;text-align:center;padding:6px 4px;font-size:.8rem;white-space:nowrap} .pnav{gap:5px} .pbtn{font-size:.72rem} .block{padding:14px} .result{grid-template-columns:1fr} .scale{grid-template-columns:1fr;gap:6px} }
 </style>
 <div class="hud"><div class="wrap">
   <button class="logo" id="logoBtn" type="button"><span class="cube"></span>Algebra Quest</button>
   <span class="spacer"></span>
   <span class="pill coins" id="coinPill"><span class="coin"></span><span id="coinCount" class="num">0</span></span>
   <span class="pill badges" id="badgePill" title="Badges">🏅 <span id="badgeCount" class="num">0</span></span>
+  <button class="tab fs" id="fsBtn" type="button" aria-label="Full screen" title="Full screen" hidden>⛶</button>
   <nav class="nav" id="nav" aria-label="Sections"></nav>
 </div></div>
 <main><div class="wrap" id="app"></div></main>

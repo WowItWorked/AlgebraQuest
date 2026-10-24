@@ -5,6 +5,10 @@ function start(hot){
   const r=routeFromHash(); route={view:r.view,arg:r.arg}; if(hot&&hot.route&&!location.hash) route=hot.route;
   render(); if(r.gate) openGate();
   $('#logoBtn').onclick=()=>go('lobby'); $('#glyph').onclick=openGate;
+  // Full screen: optional, desktop browsers mostly; hidden where the browser refuses it.
+  const fsb=$('#fsBtn'); const root=document.documentElement;
+  if(document.fullscreenEnabled&&root.requestFullscreen){ fsb.hidden=false; fsb.onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); else root.requestFullscreen().catch(()=>{ fsb.hidden=true; }); };
+    document.addEventListener('fullscreenchange',()=>{ fsb.textContent=document.fullscreenElement?'⛶':'⛶'; fsb.title=document.fullscreenElement?'Exit full screen':'Full screen'; fsb.setAttribute('aria-label',fsb.title); }); }
   try{ window.claude?.hot?.snapshot?.(()=>({s:State.s, route, unlocked:State.unlocked})); }catch(e){}
   connect();
   window.addEventListener('hashchange',()=>{ const r=routeFromHash(); route={view:r.view,arg:r.arg}; render(); if(r.gate) openGate(); });
