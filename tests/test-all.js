@@ -4,7 +4,7 @@ const FAKE=`window.__store={}; window.__samples=[];
 window.claude={use:async(name)=>{ await new Promise(r=>setTimeout(r,30));
  if(name==='user') return {id:async()=>'u1', isOwner:async()=>true};
  if(name==='sample'){ const f=async(input,opts)=>{ window.__samples.push(input.slice(0,40)); return {text:'Fake hint: look at the sign when the term crosses over. Which sign should it be?',truncated:false}; }; f.json=async(input)=>{ window.__samples.push('json:'+input.slice(0,30)); if(input.includes('"score"')) return {score:2,feedback:'Fake: names the step and the fix.'}; return {items:[{id:'3c',diagnosis:'Fake diag for 3c.'}],summary:'Fake summary: practice fraction bars, then compound inequalities.'}; }; f.limits=async()=>({maxPromptBytes:100000}); return f; }
- if(name==='db'){ const mk=(p)=>({path:p, get:async()=>({exists:!!window.__store[p], data:()=>window.__store[p]}), set:async(d)=>{ window.__store[p]=JSON.parse(JSON.stringify(d)); }, collection:(c)=>col(p+'/'+c)}); const col=(p)=>({path:p, doc:(id)=>mk(p+'/'+id), orderBy(){return this}, limit(){return this}, get:async()=>({docs:Object.keys(window.__store).filter(k=>k.startsWith(p+'/')).map(k=>({data:()=>window.__store[k]}))})}); return {doc:mk, collection:col}; }
+ if(name==='db'){ const mk=(p)=>({path:p, get:async()=>({exists:!!window.__store[p], data:()=>window.__store[p]}), set:async(d)=>{ window.__store[p]=JSON.parse(JSON.stringify(d)); }, delete:async()=>{ delete window.__store[p]; }, collection:(c)=>col(p+'/'+c)}); const col=(p)=>({path:p, doc:(id)=>mk(p+'/'+id), orderBy(){return this}, limit(){return this}, get:async()=>({docs:Object.keys(window.__store).filter(k=>k.startsWith(p+'/')).map(k=>({data:()=>window.__store[k]}))})}); return {doc:mk, collection:col}; }
  return null; }};`;
 const URL='file://'+path.resolve('harness.html'); const out=[]; const ok=(name,cond,extra='')=>out.push((cond?'ok  ':'FAIL')+' '+name+(extra?' :: '+extra:''));
 const ANS={ '1a':'1600 + 400h ≤ 3000','1b':'1600+800(t-3)<=3000','1c':'4.5','2a':0,'2b':'012','2c':1,'3a':'y=k/(5-k)','3b':'y = nx/4 + c','3c':'-11','3d':'2','4a':'w=(P-2l)/2','4b':'36','5a':'18+6.5x<12+7.5x','5b':'x>6','5c':'7','6a':'48<3x+3<69','6b':'15<x<22','6c':'16,17,18; 17,18,19; 18,19,20; 19,20,21; 20,21,22; 21,22,23','6d':{lo:15,hi:22,loOpen:true,hiOpen:true} };
@@ -72,6 +72,9 @@ async function answer(page, it, val){ const el=page.locator(`[data-item="${it.id
     for(const t of ['solutions','dash']){ await page.click(`[data-t="${t}"]`); await page.waitForTimeout(150); ok(mode+' guide tab '+t, await page.locator('#gbody .block').count()>=1); }
     ok(mode+' guide shows scratch work', (await page.locator('#gbody').innerText()).includes('scratch')||true);
     await page.click('[data-t="solutions"]'); await page.waitForTimeout(100); await page.locator('details summary').first().click(); ok(mode+' solutions show his scratch', (await page.locator('details').first().innerText()).includes('1600 + 400h'));
+    await page.click('[data-t="summary"]'); await page.waitForTimeout(100); await page.click('#resetAll'); await page.locator('.modal .btn',{hasText:'Reset all'}).click(); await page.waitForTimeout(400);
+    const rs=await page.evaluate(()=>({coins:State.s.coins,checks:Object.keys(State.s.checks).length,attempts:State.s.attempts.length,store:Object.keys(window.__store||{}).length}));
+    ok(mode+' reset all progress', rs.coins===0&&rs.checks===0&&rs.attempts===0&&(mode==='public'||rs.store===0), JSON.stringify(rs));
     await noH('guide');
     // student text scan
     await page.evaluate(()=>go('lobby')); const txt=await page.evaluate(()=>document.body.innerText); ok(mode+' no urgency words', !/days left|countdown|test date|hurry|deadline|test is (soon|coming)/i.test(txt));

@@ -1404,15 +1404,22 @@ VIEWS.level=(app,n)=>{
 function checkLevelBadge(n){ const st=State.s.learn['l'+n]||{}; const D=LEVEL_DEFS[n-1]; if(st.explainer&&st.video&&D.boss.every((_,i)=>st['q'+(i+1)])){ State.award('l'+n); if(State.s.badges.l2&&State.s.badges.l5) State.award('nine'); } }
 /* ===== Parent guide (passphrase-gated) ===== */
 let guideTab='summary';
+async function resetAllProgress(){
+  const old=State.s.attempts||[]; State.s={coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:State.s.muted, voice:State.s.voice};
+  if(State.db&&State.uid){ try{ const prof=State.db.doc('data/users/'+State.uid+'/profile'); for(const a of old){ if(a.id) await prof.collection('attempts').doc(a.id).delete(); } await prof.delete(); }catch(e){ console.warn('reset',e); } }
+  toast('Progress reset. Fresh spawn.'); render();
+}
 VIEWS.guide = (app)=>{
   if(!State.unlocked){ go('lobby'); openGate(); return; }
   const tabs=[['summary','What the test shows'],['solutions','Worked solutions'],['dash','Attempt dashboard']];
   app.innerHTML=h`<div class="stack">
    <div class="block"><div class="row" style="justify-content:space-between"><div><p class="eyebrow">Parent guide</p><h1>Behind the curtain.</h1></div><button class="btn alt sm" id="lockBtn">Lock & return to lobby</button></div>
    <p class="muted" style="margin-top:6px">${State.mode==='signed'?'Signed in: saved attempts load from this account.':'Public link: nothing is saved here, so the dashboard shows only this browser session.'}</p>
+   <div class="row" style="margin-top:10px"><button class="btn alt sm" id="resetAll" style="border-color:var(--bad);color:var(--bad)">Reset all progress</button><span class="muted" style="font-size:.85rem">Coins, badges, Check history, Learn checkpoints, daily streak, and Final Boss runs. Cannot be undone.</span></div>
    <div class="steps" style="margin-top:12px">${tabs.map(([k,l])=>`<button class="tab" data-t="${k}" aria-current="${guideTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
    <div id="gbody"></div></div>`;
   $('#lockBtn').onclick=()=>{ State.unlocked=false; go('lobby'); };
+  $('#resetAll').onclick=()=>modal('<h2>Reset all progress?</h2><p class="muted">Everything goes back to zero: coins, badges, every Check attempt and scratch note, Learn checkpoints, the daily streak, and all Final Boss runs. This cannot be undone.</p>',[{label:'Keep everything',cls:'alt'},{label:'Reset all',fn:resetAllProgress}]);
   app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ guideTab=b.dataset.t; render(); });
   const body=$('#gbody'); ({summary:guideSummary, solutions:guideSolutions, dash:guideDash})[guideTab](body);
 };
