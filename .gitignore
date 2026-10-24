@@ -1,3 +1,5 @@
 node_modules/
 harness.html
 *.png
+tools/piper-models/
+voices/*.raw.wav

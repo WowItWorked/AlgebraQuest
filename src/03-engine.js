@@ -16,7 +16,7 @@ const BADGES = [
 ];
 
 const State = {
-  s:{coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:false, voice:false},
+  s:{coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:false, voice:true},
   mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false,
   listeners:new Set(),
   on(fn){this.listeners.add(fn);}, emit(){this.listeners.forEach(f=>f());},

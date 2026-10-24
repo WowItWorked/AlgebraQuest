@@ -1,0 +1,402 @@
+{
+ "l1-01": {
+  "key": "fdc89c4ee112c28d576e77c2dc927beef11d1d27",
+  "who": "coach",
+  "sec": 5.46
+ },
+ "l1-02": {
+  "key": "031caa266f7f21897f95fb2401d421be71352007",
+  "who": "vera",
+  "sec": 13.35
+ },
+ "l1-03": {
+  "key": "110172d12497c4c9616d7a2a837b5cb8b7659c84",
+  "who": "coach",
+  "sec": 8.44
+ },
+ "l1-04": {
+  "key": "a3aab4dc18d040204f6b4f2aacc2d7d51511d424",
+  "who": "coach",
+  "sec": 5.56
+ },
+ "l1-05": {
+  "key": "17bf05ba24ace257306349c294182eda2e5ffb1a",
+  "who": "coach",
+  "sec": 8.05
+ },
+ "l1-06": {
+  "key": "040faaee4564a52e43961656698d16ff84daca57",
+  "who": "coach",
+  "sec": 7.03
+ },
+ "l1-07": {
+  "key": "537001352a58023015410be6a009a51da41ff92b",
+  "who": "vera",
+  "sec": 9.82
+ },
+ "l1-08": {
+  "key": "8845a61d720cb24eff6e7a949d2773d71f95bd2b",
+  "who": "coach",
+  "sec": 8.59
+ },
+ "l1-09": {
+  "key": "c905ef09708192a524a01bb28a84b0ff99258ecd",
+  "who": "nine",
+  "sec": 7.29
+ },
+ "l1-10": {
+  "key": "48d871965a519e6b7dd263e56efa2c9a8322b9b2",
+  "who": "vera",
+  "sec": 10.55
+ },
+ "l1-11": {
+  "key": "d42295a8e56ed29c5f4dc20171694a66f565b08b",
+  "who": "coach",
+  "sec": 5.33
+ },
+ "l1-12": {
+  "key": "e009d7ea6f79ae685ba65b1eca510e4b1502f0ca",
+  "who": "coach",
+  "sec": 9.01
+ },
+ "l1-13": {
+  "key": "d105e3ad35642f29aaa7047ea31ae559dba0ef7a",
+  "who": "vera",
+  "sec": 9.25
+ },
+ "l2-01": {
+  "key": "44f376bbcbf9cc66c2dabfd9c665eabe95622479",
+  "who": "coach",
+  "sec": 6.22
+ },
+ "l2-02": {
+  "key": "b57655f2d15e246ae553cb14fc02c5ac0c92a469",
+  "who": "coach",
+  "sec": 4.62
+ },
+ "l2-03": {
+  "key": "50ec572352606b557918c7e689d33f56d783fa06",
+  "who": "coach",
+  "sec": 3.76
+ },
+ "l2-04": {
+  "key": "f320e6a2bab6cb3c6ce469bb7a84508334208f1c",
+  "who": "vera",
+  "sec": 10.03
+ },
+ "l2-05": {
+  "key": "0edc0ebd4c0bbe1f407910d5ef19d557a21ad749",
+  "who": "coach",
+  "sec": 6.87
+ },
+ "l2-06": {
+  "key": "2c709b295f8ada860cf5750b7cfac8a8ff1a1a80",
+  "who": "coach",
+  "sec": 6.09
+ },
+ "l2-07": {
+  "key": "39bca10cbee15ba9bf6f15c1c64149debafbd7b9",
+  "who": "nine",
+  "sec": 8.46
+ },
+ "l2-08": {
+  "key": "610e24bf23b8f6ae739b569ea090edad6dc9f958",
+  "who": "coach",
+  "sec": 4.83
+ },
+ "l2-09": {
+  "key": "3e6c2c94e7c0b189de774084998d0c2bbca70c65",
+  "who": "nine",
+  "sec": 11.49
+ },
+ "l2-10": {
+  "key": "0122d41e499aa7a18f98101f130b3c4d94645892",
+  "who": "coach",
+  "sec": 14.81
+ },
+ "l2-11": {
+  "key": "4e0d99b39aa38485a6a8b9d20fe7e110ba3cc529",
+  "who": "coach",
+  "sec": 2.32
+ },
+ "l2-12": {
+  "key": "deb2cb8e47f50f2bd199c72e7860f5bbc53aa80b",
+  "who": "vera",
+  "sec": 8.18
+ },
+ "l2-13": {
+  "key": "3993e48d8392f1eada42bc80f1fef32670cb6211",
+  "who": "jug",
+  "sec": 8.67
+ },
+ "l2-14": {
+  "key": "92c405c12cd4a3c9fd2cbd44290c8504eda3eff9",
+  "who": "coach",
+  "sec": 8.33
+ },
+ "l3-01": {
+  "key": "5c35dec0def5b650304a31005d9698554ff1da0e",
+  "who": "vera",
+  "sec": 10.68
+ },
+ "l3-02": {
+  "key": "9566302e27d3fee7a44b9c4dcc8bd4651618e14e",
+  "who": "coach",
+  "sec": 7.11
+ },
+ "l3-03": {
+  "key": "024d872f33484d14c3693b52d3ae854656316aef",
+  "who": "coach",
+  "sec": 5.51
+ },
+ "l3-04": {
+  "key": "d77192a6fa40e4870ba10a32be1ac678ecc24950",
+  "who": "vera",
+  "sec": 8.65
+ },
+ "l3-05": {
+  "key": "fae0cf71cff61c7da9f85a4d1ca61d233158bb49",
+  "who": "coach",
+  "sec": 9.06
+ },
+ "l3-06": {
+  "key": "8329040dcbe2599a2b55c3cf3bb8caa449f874b6",
+  "who": "coach",
+  "sec": 5.54
+ },
+ "l3-07": {
+  "key": "05827a31a84cd729b1c4886d78761f9df93eaa30",
+  "who": "coach",
+  "sec": 4.62
+ },
+ "l3-08": {
+  "key": "da17076f1173473eb6bb77fb7880ef67ff0e8a50",
+  "who": "vera",
+  "sec": 7.16
+ },
+ "l3-09": {
+  "key": "a3e6822f98acc81c35a56d96c3137276966b32ea",
+  "who": "coach",
+  "sec": 5.04
+ },
+ "l3-10": {
+  "key": "b4ce73e64cffaa1355b3f9ddf68f040676614dd0",
+  "who": "coach",
+  "sec": 4.49
+ },
+ "l3-11": {
+  "key": "b9fa46cdfa5c84999f56197e80af34194d5e11dd",
+  "who": "nine",
+  "sec": 4.36
+ },
+ "l3-12": {
+  "key": "7afa69f6ae04ceee15cbb288725b79cfa600c510",
+  "who": "vera",
+  "sec": 9.01
+ },
+ "l3-13": {
+  "key": "16914983b55662d0c3453ec1987d4552cd7d3ee2",
+  "who": "coach",
+  "sec": 7.16
+ },
+ "l4-01": {
+  "key": "8a68f7e94990fb6b53a962fab83c637aaaec64b9",
+  "who": "bar",
+  "sec": 7.89
+ },
+ "l4-02": {
+  "key": "21ad820ea475a1c58290838a39b308443dbdb2a0",
+  "who": "bar",
+  "sec": 8.41
+ },
+ "l4-03": {
+  "key": "f8856fc800db6fccdea40ff325d5973317426326",
+  "who": "coach",
+  "sec": 5.46
+ },
+ "l4-04": {
+  "key": "e8388335cf27d771a51b716e779861f16df7daa9",
+  "who": "coach",
+  "sec": 7.39
+ },
+ "l4-05": {
+  "key": "768508880ebfe5cdb96b863d137d7e8f0b593f72",
+  "who": "nine",
+  "sec": 7.05
+ },
+ "l4-06": {
+  "key": "0b2786838f118ddcec5778b6180198ae4215f1c8",
+  "who": "bar",
+  "sec": 5.12
+ },
+ "l4-07": {
+  "key": "f2815a1d8e345199a6a97db5e3255ed083d858e6",
+  "who": "coach",
+  "sec": 6.09
+ },
+ "l4-08": {
+  "key": "f1baa87650dc231d0a882d8afe8684e50927ef45",
+  "who": "coach",
+  "sec": 1.18
+ },
+ "l4-09": {
+  "key": "ccb0169247d354463cf580998a14ed94cdb41da9",
+  "who": "bar",
+  "sec": 3.19
+ },
+ "l4-10": {
+  "key": "af61a009d52991d1eb8daa8eb43d90e057e66c3c",
+  "who": "bar",
+  "sec": 9.85
+ },
+ "l4-11": {
+  "key": "3f9f16ac3abd012e03ada7708f0fdbd6bb610c04",
+  "who": "coach",
+  "sec": 4.68
+ },
+ "l4-12": {
+  "key": "243135d1eaf5d1c712d44890855500313cd2e0e7",
+  "who": "coach",
+  "sec": 3.87
+ },
+ "l4-13": {
+  "key": "5970e11d2b7d6cab4fa1f16ec5865b6ea8174977",
+  "who": "bar",
+  "sec": 6.64
+ },
+ "l5-01": {
+  "key": "673c50d4c8ffb725cb4413df97b65899cac9d276",
+  "who": "coach",
+  "sec": 5.3
+ },
+ "l5-02": {
+  "key": "ca41b669b9681e1bc43b299b1c4d830f50dde53a",
+  "who": "coach",
+  "sec": 7.18
+ },
+ "l5-03": {
+  "key": "ac04f6e54da21328d7cf1762023f40d98e23a505",
+  "who": "coach",
+  "sec": 3.4
+ },
+ "l5-04": {
+  "key": "e4fdff52b7cb50adec1ee7c680e90a3dd1386f62",
+  "who": "vera",
+  "sec": 8.44
+ },
+ "l5-05": {
+  "key": "dd94c8b30ea75cfbe971569b011b2cf2ca7d9744",
+  "who": "coach",
+  "sec": 6.22
+ },
+ "l5-06": {
+  "key": "10f07fc96d9f6ae709e8f42763dd0e23743c49e4",
+  "who": "nine",
+  "sec": 4.52
+ },
+ "l5-07": {
+  "key": "ff9d04502320e7da7e330aa07242b4d93dbf3138",
+  "who": "coach",
+  "sec": 6.06
+ },
+ "l5-08": {
+  "key": "63449b971ca57f80d04dbcb1d6369ba0944a8a20",
+  "who": "coach",
+  "sec": 2.14
+ },
+ "l5-09": {
+  "key": "eb8ba44f83c811cd3a856de3292a9a63281380fc",
+  "who": "nine",
+  "sec": 8.23
+ },
+ "l5-10": {
+  "key": "7758361fd9def29d4246f4d5efed9bd0707a7891",
+  "who": "coach",
+  "sec": 6.74
+ },
+ "l5-11": {
+  "key": "5436cb51e6475f2fe041138b08537148ec9276b0",
+  "who": "coach",
+  "sec": 9.12
+ },
+ "l5-12": {
+  "key": "1e8fe406b939ad9922a196132d137971507a35d0",
+  "who": "coach",
+  "sec": 3.97
+ },
+ "l5-13": {
+  "key": "681db201471071f550f77fbc94e37c975d7936f5",
+  "who": "vera",
+  "sec": 12.59
+ },
+ "l5-14": {
+  "key": "bbed496875e7764b93a0ce020384cbe4a84e1333",
+  "who": "coach",
+  "sec": 7.18
+ },
+ "l6-01": {
+  "key": "e881ca6f94cb04e98521e4b5a52ecbf9f47b46f7",
+  "who": "checker",
+  "sec": 4.47
+ },
+ "l6-02": {
+  "key": "ac0b6de1d41f5588c8677ebfc6f2031f10f057eb",
+  "who": "checker",
+  "sec": 4.96
+ },
+ "l6-03": {
+  "key": "9e9db3b1e5f742c9b47126dbb68b8e6c2a19b3a2",
+  "who": "checker",
+  "sec": 9.17
+ },
+ "l6-04": {
+  "key": "b475ba895ad35f6cce77d86ef84e1961ab28a6b4",
+  "who": "nine",
+  "sec": 9.33
+ },
+ "l6-05": {
+  "key": "387826ff38c9914adf8c10e645d53a1bb9d5e17c",
+  "who": "checker",
+  "sec": 4.91
+ },
+ "l6-06": {
+  "key": "a1579df84e209b624c449a8026b91775b235fde6",
+  "who": "checker",
+  "sec": 9.22
+ },
+ "l6-07": {
+  "key": "6aec9c0683b08a4f61221ba6448d80285ed8dd33",
+  "who": "checker",
+  "sec": 8.33
+ },
+ "l6-08": {
+  "key": "315980bc000d0d910b6939ed332c617a59722182",
+  "who": "coach",
+  "sec": 7.08
+ },
+ "l6-09": {
+  "key": "5e6064960d802b3bb60026e7e0838eee3026755d",
+  "who": "checker",
+  "sec": 5.51
+ },
+ "l6-10": {
+  "key": "892b94749911ac37e8347d87be801a8aa24311ad",
+  "who": "checker",
+  "sec": 6.03
+ },
+ "l6-11": {
+  "key": "3da889efda14d756985674c44540e5ffd4704c34",
+  "who": "coach",
+  "sec": 5.88
+ },
+ "l6-12": {
+  "key": "60867f92fe6627775cc775813e1f50d7c58fc882",
+  "who": "checker",
+  "sec": 7.03
+ },
+ "l6-13": {
+  "key": "11aa968df4a1c2398e542391403573cd57909470",
+  "who": "checker",
+  "sec": 5.2
+ }
+}

@@ -102,29 +102,32 @@ const SCENES={
 ],
 };
 
-/* ---- Scene player ---- */
+/* ---- Scene player: captions + pre-rendered voice clips (voices/<id>.mp3) ---- */
 let player=null;
-function scenePlayer(host, frames, onEnd){
-  let i=0, playing=false, timer=null, startedAt=0, left=0; const DUR=f=>Math.max(3800, 1800+ (f.say.length*52));
-  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="cap" id="cap"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🗣 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
+function scenePlayer(host, frames, onEnd, lvl){
+  let i=0, playing=false, timer=null, startedAt=0, left=0;
+  const id=k=>`l${lvl}-${String(k+1).padStart(2,'0')}`;
+  const DUR=k=>Math.max(3800, 1800+(frames[k].say.length*52), ((typeof VOICE_DUR!=='undefined'&&VOICE_DUR[id(k)])||0)*1000+700);
+  const audio=new Audio(); audio.preload='auto';
+  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="cap" id="cap"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
   const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), cap=$('#cap',host);
   function setChar(el,who,talk){ const c=CHARS[who]; el.innerHTML=`<div class="face" style="background:${c.bg};color:${c.fg}">${c.face}</div><span class="nm">${c.nm}</span>`; el.classList.toggle('talk',!!talk); }
-  function speak(t){ try{ if(!State.s.voice||!window.speechSynthesis) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,'')); u.rate=1.02; u.pitch=1.05; speechSynthesis.speak(u);}catch(e){} }
+  function speak(k){ try{ audio.pause(); if(!State.s.voice) return; audio.src='voices/'+id(k)+'.mp3'; audio.currentTime=0; audio.play().catch(()=>{}); }catch(e){} }
   function show(){
     const f=frames[i]; const side = (f.who==='coach'||f.who==='checker'||f.who==='bar')?'L':'R';
     setChar(side==='L'?cL:cR, f.who, true); const other=side==='L'?cR:cL; if(!other.innerHTML) setChar(other, side==='L'?'vera':'coach', false); else other.classList.remove('talk');
     sb.innerHTML=f.board; sb.classList.remove('shake'); if(f.fx==='shake'){ void sb.offsetWidth; sb.classList.add('shake'); }
     const me=side==='L'?cL:cR; me.classList.remove('flip'); if(f.fx==='flip'||f.fx==='hop'){ void me.offsetWidth; me.classList.add('flip'); }
     cap.innerHTML=`<b>${CHARS[f.who].nm}:</b> ${f.say}`; $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
-    speak(f.say);
+    speak(i);
   }
-  function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(frames[i])); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
-  function play(){ playing=true; $('#pp',host).textContent='⏸ Pause'; if(left>0&&left<DUR(frames[i])){ schedule(left); } else { show(); schedule(DUR(frames[i])); } }
-  function pause(){ playing=false; clearTimeout(timer); left=Math.max(0,left-(Date.now()-startedAt)); $('#pp',host).textContent='▶ Play'; try{ speechSynthesis&&speechSynthesis.cancel(); }catch(e){} }
+  function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
+  function play(){ playing=true; $('#pp',host).textContent='⏸ Pause'; if(left>0&&left<DUR(i)){ schedule(left); if(State.s.voice) audio.play().catch(()=>{}); } else { show(); schedule(DUR(i)); } }
+  function pause(){ playing=false; clearTimeout(timer); left=Math.max(0,left-(Date.now()-startedAt)); $('#pp',host).textContent='▶ Play'; try{ audio.pause(); }catch(e){} }
   $('#pp',host).onclick=()=>playing?pause():play();
   $('#rp',host).onclick=()=>{ pause(); i=0; left=0; play(); };
-  $('#vo',host).onclick=()=>{ State.s.voice=!State.s.voice; State.save(); $('#vo',host).textContent=State.s.voice?'🗣 Voice on':'🔇 Voice off'; if(State.s.voice) speak(frames[i].say); else try{speechSynthesis.cancel();}catch(e){} };
-  const stop=()=>{ pause(); }; 
+  $('#vo',host).onclick=()=>{ State.s.voice=!State.s.voice; State.save(); $('#vo',host).textContent=State.s.voice?'🔊 Voice on':'🔇 Voice off'; if(State.s.voice){ if(playing) speak(i); } else audio.pause(); };
+  const stop=()=>{ pause(); audio.src=''; };
   play(); return {stop};
 }
 
@@ -212,7 +215,7 @@ const LEVEL_DEFS=LEVELS.map(L=>({n:L.n, boss:MINI[L.n]}));
 /* ---- Views ---- */
 let levelTab='explainer', lastLevel=null;
 VIEWS.learn=(app)=>{
-  app.innerHTML=h`<div class="stack"><div class="block"><p class="eyebrow">Learn</p><h1>Six obbies. Clear the checkpoints.</h1><p style="margin-top:6px">Each level: an interactive, a short video, and a mini-boss. Checkpoints earn coins. Clear all of a level for its badge.</p></div>
+  app.innerHTML=h`<div class="stack"><div class="block"><p class="eyebrow">Learn</p><h1>Six levels. Clear the checkpoints.</h1><p style="margin-top:6px">Each level is an obby, an obstacle course with checkpoints: an interactive, a short video, and a mini-boss. Checkpoints earn coins. Clear all of a level for its badge.</p></div>
   <div class="grid">${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}</div></div>`;
 };
 VIEWS.level=(app,n)=>{
@@ -229,7 +232,7 @@ VIEWS.level=(app,n)=>{
   const body=$('#lbody');
   const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); checkLevelBadge(n); setTimeout(render,900); };
   if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
-  else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }); }
+  else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n); }
   else {
     body.innerHTML=`<p class="eyebrow">Mini-boss</p><h3>${D.boss.length} questions. Wrong answers respawn you with a hint.</h3><div class="stack" id="mb" style="margin-top:10px"></div>`;
     D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);

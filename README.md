@@ -17,6 +17,10 @@ Live artifact: https://claude.ai/artifact/RbaM9DamvxqEwj7JNi9sjy
   - `06-learn.js` six Learn levels: interactives, scenes, mini-bosses
   - `07-parent.js` parent guide and dashboard
   - `08-main.js` boot and capability wiring
+  - `09-voices.js` generated clip durations (from `tools/voices.mjs`)
+- `voices/` — one MP3 per scene line, published alongside the page; rendered by `tools/voices.mjs`
+  (needs `piper`, `ffmpeg`, and the Piper voice models in `tools/piper-models/` or `$PIPER_VOICES`).
+  The cast and processing are at the top of that script. Rerun it after editing any scene line.
 - `tests/` — Node and Playwright checks. `test-math.js` and `test-gen.js` run with plain Node from `src/`;
   the others need Playwright and a wrapped `harness.html` (see `tests/test-ui.js` for the wrapper).
 
