@@ -1,0 +1,13 @@
+const { chromium } = require('playwright'); const path=require('path');
+(async()=>{ const b=await chromium.launch(); const page=await b.newPage({viewport:{width:390,height:844}}); const errs=[]; page.on('pageerror',e=>errs.push(e.message));
+ await page.goto('file://'+path.resolve('harness.html')+'#check'); await page.waitForTimeout(400);
+ const nl=page.locator('[data-item="6d"]'); await nl.scrollIntoViewIfNeeded(); const svg=nl.locator('svg'); const box=await svg.boundingBox();
+ const X=v=>box.x+(24+(v-10)/17*552)/600*box.width; const y=box.y+box.height/2;
+ await page.mouse.move(X(12),y); await page.mouse.down(); await page.mouse.move(X(15),y,{steps:8}); await page.mouse.up();
+ await page.mouse.move(X(25),y); await page.mouse.down(); await page.mouse.move(X(22),y,{steps:8}); await page.mouse.up();
+ console.log('after drag', JSON.stringify(await nl.evaluate(el=>el._nl.get())));
+ await page.mouse.click(X(15),y); console.log('after tap', JSON.stringify(await nl.evaluate(el=>el._nl.get())));
+ await page.mouse.click(X(15),y); await nl.locator('.check').click(); await page.waitForTimeout(200); console.log('6d:', (await nl.locator('.fb').innerText()).slice(0,40));
+ const p2=await b.newPage({viewport:{width:1280,height:900}}); await p2.goto('file://'+path.resolve('harness.html')+'#guide'); await p2.waitForTimeout(400); console.log('hash guide gate:', await p2.locator('#pp').count()>0);
+ const p3=await b.newPage({viewport:{width:1280,height:900}}); await p3.goto('file://'+path.resolve('harness.html')+'#level3'); await p3.waitForTimeout(400); console.log('level3 h1:', await p3.locator('h1').innerText());
+ console.log('errs',errs); await b.close(); })();

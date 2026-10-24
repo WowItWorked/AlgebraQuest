@@ -1,0 +1,1391 @@
+<title>Algebra Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Layout: a chunky sandbox-game HUD. Sky-blue ground, white block panels, hard 3px edges with a 4px "block" drop, display face for headlines only. */
+:root{
+  --bg:#dceefc; --bg2:#c4e0f7; --panel:#ffffff; --panel2:#f1f6fb; --ink:#1d2733; --muted:#5a6b7d; --line:#9db3c8; --shadow:#6f8aa5;
+  --accent:#6b3df5; --accent-ink:#ffffff; --gold:#f5b800; --gold-ink:#3b2a00; --grass:#5bc236; --dirt:#a4683a; --ok:#1f9d47; --ok-bg:#dff7e5; --bad:#d8383e; --bad-bg:#ffe3e4; --warn:#c77a00; --warn-bg:#fff1d6;
+  --l1:#2aa7e8; --l2:#2fb37a; --l3:#f0612f; --l4:#8e4ff0; --l5:#e23c7f; --l6:#1b9fa8;
+  --disp:'Bungee','Arial Black',Impact,sans-serif; --body:'Nunito','Segoe UI',system-ui,sans-serif;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141b2a; --bg2:#0f1521; --panel:#1f2838; --panel2:#283446; --ink:#edf2f8; --muted:#a5b4c6; --line:#4a5b73; --shadow:#0a0f18;
+  --accent:#9b7bff; --accent-ink:#120a2e; --gold:#ffcb3d; --gold-ink:#2a1d00; --grass:#4caf32; --dirt:#8a5630; --ok:#5fd37f; --ok-bg:#1d3b28; --bad:#ff7a7f; --bad-bg:#4a2024; --warn:#ffb648; --warn-bg:#3f3015;
+  --l1:#4fbcf5; --l2:#4fcf96; --l3:#ff7d4d; --l4:#ab7cff; --l5:#ff6aa3; --l6:#3fc2cc;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#141b2a; --bg2:#0f1521; --panel:#1f2838; --panel2:#283446; --ink:#edf2f8; --muted:#a5b4c6; --line:#4a5b73; --shadow:#0a0f18;
+  --accent:#9b7bff; --accent-ink:#120a2e; --gold:#ffcb3d; --gold-ink:#2a1d00; --grass:#4caf32; --dirt:#8a5630; --ok:#5fd37f; --ok-bg:#1d3b28; --bad:#ff7a7f; --bad-bg:#4a2024; --warn:#ffb648; --warn-bg:#3f3015;
+  --l1:#4fbcf5; --l2:#4fcf96; --l3:#ff7d4d; --l4:#ab7cff; --l5:#ff6aa3; --l6:#3fc2cc;
+  color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);background-image:linear-gradient(var(--bg),var(--bg2));color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;font-weight:600;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.1;letter-spacing:.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(1.6rem,4vw,2.4rem)} h2{font-size:clamp(1.25rem,3vw,1.7rem)} h3{font-size:1.05rem}
+p{margin:0}
+a{color:var(--accent)}
+button{font:inherit}
+.num,.coins,.score,.tab{font-variant-numeric:tabular-nums}
+.wrap{width:100%;max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* HUD */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--panel);border-bottom:3px solid var(--line)}
+.hud .wrap{display:flex;align-items:center;gap:10px;min-height:60px;padding-block:8px;flex-wrap:wrap}
+.logo{font-family:var(--disp);font-size:1.15rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:8px;cursor:pointer;background:none;border:0;padding:0}
+.logo .cube{width:22px;height:22px;background:var(--grass);border:3px solid var(--ink);box-shadow:inset -5px -5px 0 var(--dirt)}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:3px solid var(--ink);border-radius:999px;background:var(--gold);color:var(--gold-ink);font-weight:900;font-size:.95rem}
+.pill.badges{background:var(--panel2);color:var(--ink)}
+.coin{width:16px;height:16px;border-radius:50%;background:var(--gold);border:2px solid var(--gold-ink);box-shadow:inset -3px -3px 0 rgba(0,0,0,.18);display:inline-block}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:3px solid var(--ink);background:var(--panel2);color:var(--ink);padding:6px 12px;border-radius:var(--r);font-weight:900;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.tab[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.tab:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+main{flex:1}
+main .wrap{padding-block:22px 40px}
+/* Blocks */
+.block{background:var(--panel);border:3px solid var(--ink);border-radius:var(--r);box-shadow:0 5px 0 var(--shadow);padding:18px}
+.block+.block,.stack>*+*{margin-top:18px}
+.block.soft{background:var(--panel2);box-shadow:none}
+.eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:900}
+.muted{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 18px;border:3px solid var(--ink);border-radius:var(--r);background:var(--accent);color:var(--accent-ink);font-weight:900;font-size:1rem;cursor:pointer;box-shadow:0 4px 0 var(--ink);text-decoration:none;user-select:none}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.alt{background:var(--panel);color:var(--ink)} .btn.gold{background:var(--gold);color:var(--gold-ink)} .btn.ok{background:var(--ok);color:#fff} .btn.sm{min-height:38px;padding:6px 12px;font-size:.9rem;box-shadow:0 3px 0 var(--ink)}
+.btn.ghost{background:transparent;border-color:transparent;box-shadow:none;color:var(--accent);padding-inline:6px;min-height:36px}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.btn:focus-visible,.tab:focus-visible,input:focus-visible,textarea:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+input[type=text],textarea{width:100%;font:inherit;font-weight:700;font-size:1.05rem;padding:10px 12px;border:3px solid var(--ink);border-radius:var(--r);background:var(--panel);color:var(--ink);min-width:0}
+textarea{min-height:88px;resize:vertical}
+.eq{font-weight:800;white-space:nowrap;padding:0 4px;background:var(--panel2);border-radius:4px;font-variant-numeric:tabular-nums}
+.students{display:grid;gap:6px;margin-top:8px}
+/* Portals (lobby) */
+.portal{display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;color:var(--ink);background:var(--panel);border:3px solid var(--ink);border-radius:var(--r);box-shadow:0 5px 0 var(--shadow);padding:16px;position:relative;overflow:hidden;min-width:0}
+.portal:active{transform:translateY(3px);box-shadow:0 2px 0 var(--shadow)}
+.portal .band{height:14px;margin:-16px -16px 6px;background:var(--pc,var(--accent));border-bottom:3px solid var(--ink)}
+.portal h3{font-size:1rem}
+.portal .lvl{font-family:var(--disp);font-size:.8rem;color:var(--pc,var(--accent))}
+.portal .prog{height:12px;background:var(--panel2);border:2px solid var(--ink);border-radius:6px;overflow:hidden}
+.portal .prog i{display:block;height:100%;background:var(--pc,var(--accent))}
+.portal.big{grid-column:1/-1;flex-direction:row;align-items:center;gap:18px;flex-wrap:wrap}
+.portal.big .band{display:none}
+.portal .done{position:absolute;top:10px;right:10px;background:var(--ok);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:1px 8px;font-size:.75rem;font-weight:900}
+/* Obby course */
+.course{position:relative;height:84px;margin:6px 0 2px}
+.course svg{width:100%;height:100%;display:block;overflow:visible}
+.avatar{position:absolute;bottom:26px;width:34px;height:46px;transition:left .6s cubic-bezier(.3,1.4,.5,1);transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){.avatar{transition:none}}
+.cp{font-size:.7rem;font-weight:900;text-anchor:middle;fill:var(--muted)}
+/* Items */
+.item{padding:14px;border:3px solid var(--line);border-radius:var(--r);background:var(--panel);display:grid;gap:10px}
+.item.ok{border-color:var(--ok);background:var(--ok-bg)} .item.bad{border-color:var(--bad)}
+.item .tag{font-family:var(--disp);font-size:.85rem;color:var(--accent);display:flex;gap:8px;align-items:center}
+.item .tag .ck{color:var(--ok)}
+.fb{padding:12px 14px;border-radius:var(--r);border:3px solid;font-weight:700}
+.fb.ok{background:var(--ok-bg);border-color:var(--ok)} .fb.bad{background:var(--bad-bg);border-color:var(--bad)} .fb.warn{background:var(--warn-bg);border-color:var(--warn)} .fb.info{background:var(--panel2);border-color:var(--line)}
+.fb .who{font-family:var(--disp);font-size:.75rem;display:block;margin-bottom:4px;opacity:.85}
+.fb a{font-weight:900}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:3px solid var(--line);background:var(--panel);color:var(--ink);border-radius:var(--r);padding:10px 12px;cursor:pointer;font-weight:700}
+.opt[aria-pressed=true]{border-color:var(--accent);background:var(--panel2);box-shadow:inset 4px 0 0 var(--accent)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:3px solid var(--ink);background:var(--panel2);color:var(--ink);border-radius:var(--r);padding:8px 12px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.chip[disabled]{opacity:.35;box-shadow:none;cursor:default}
+.seq{min-height:48px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px;border:3px dashed var(--line);border-radius:var(--r)}
+.seq .chip{cursor:pointer}
+/* Number line */
+.nl{user-select:none;touch-action:none}
+.nl svg{width:100%;height:auto;display:block;overflow:visible}
+.nl .tick{stroke:var(--ink);stroke-width:2} .nl .lab{font-size:11px;font-weight:800;fill:var(--ink);text-anchor:middle;font-family:var(--body)}
+.nl .shade{stroke:var(--accent);stroke-width:8;stroke-linecap:butt}
+.nl .dot{stroke:var(--ink);stroke-width:3;cursor:grab} .nl .dot.open{fill:var(--panel)} .nl .dot.closed{fill:var(--accent)}
+/* Toasts & modals */
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:50;pointer-events:none}
+.toast{background:var(--ink);color:var(--panel);border:3px solid var(--gold);border-radius:var(--r);padding:8px 14px;font-weight:900;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.modal{position:fixed;inset:0;background:rgba(10,16,28,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.modal .block{max-width:460px;width:100%}
+footer .wrap{padding-block:14px 24px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.85rem}
+.glyph{background:none;border:0;color:var(--line);cursor:pointer;font-size:.9rem;padding:6px;opacity:.6}
+/* Learn / scenes */
+.stage{position:relative;background:linear-gradient(var(--bg),var(--bg2) 70%,var(--grass) 70%,var(--grass) 78%,var(--dirt) 78%);border:3px solid var(--ink);border-radius:var(--r);min-height:260px;overflow:hidden;padding:14px}
+.stage .board{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--panel);border:3px solid var(--ink);border-radius:var(--r);padding:10px 16px;font-size:clamp(1.1rem,3.5vw,1.6rem);font-weight:900;font-variant-numeric:tabular-nums;max-width:calc(100% - 28px);text-align:center;transition:transform .3s;box-shadow:0 4px 0 var(--shadow)}
+.stage .board.shake{animation:shake .5s} @keyframes shake{20%{transform:translateX(-50%) rotate(-3deg)}40%{transform:translateX(-50%) rotate(3deg)}60%{transform:translateX(-50%) rotate(-2deg)}80%{transform:translateX(-50%) rotate(2deg)}}
+.stage .board .hl{background:var(--gold);color:var(--gold-ink);border-radius:4px;padding:0 4px}
+.stage .board .bad{color:var(--bad);text-decoration:line-through}
+.stage .char{position:absolute;bottom:22%;display:flex;flex-direction:column;align-items:center;gap:4px;transition:left .5s,right .5s,transform .3s}
+.stage .char .face{width:56px;height:56px;border:3px solid var(--ink);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:1.4rem;box-shadow:0 4px 0 var(--shadow)}
+.stage .char .nm{font-size:.7rem;font-weight:900;background:var(--panel);border:2px solid var(--ink);border-radius:4px;padding:0 6px}
+.stage .char.talk .face{animation:bob .6s infinite alternate} @keyframes bob{to{transform:translateY(-6px)}}
+.stage .char.flip .face{animation:spin .8s} @keyframes spin{to{transform:rotateY(360deg)}}
+.cap{min-height:3.2em;padding:10px 14px;border:3px solid var(--ink);border-radius:var(--r);background:var(--panel);font-weight:800;font-size:1.05rem;margin-top:10px}
+.cap b{color:var(--accent)}
+.vbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.vbar .prog{flex:1;min-width:120px;height:10px;border:2px solid var(--ink);border-radius:6px;background:var(--panel2);overflow:hidden} .vbar .prog i{display:block;height:100%;background:var(--accent)}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps .tab{font-size:.85rem;padding:5px 10px}
+.steps .tab.done{background:var(--ok-bg)}
+.scale{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;text-align:center;font-weight:900;font-size:1.2rem;font-variant-numeric:tabular-nums}
+.scale .pan{border:3px solid var(--ink);border-radius:var(--r);background:var(--panel2);padding:12px;min-height:60px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center}
+.scale .pan.tilt{animation:shake .5s}
+.bucket{border:3px dashed var(--line);border-radius:var(--r);padding:10px;min-height:70px;display:flex;gap:6px;flex-wrap:wrap;align-content:flex-start}
+.bucket.hot{border-color:var(--accent);background:var(--panel2)}
+.bucket h3{width:100%;font-size:1.3rem}
+.kw{border:3px solid var(--ink);background:var(--gold);color:var(--gold-ink);border-radius:var(--r);padding:6px 10px;font-weight:900;cursor:grab;box-shadow:0 3px 0 var(--ink)}
+.kw.sel{outline:3px solid var(--accent)}
+.kw.good{background:var(--ok);color:#fff;pointer-events:none;box-shadow:none} .kw.badk{background:var(--bad);color:#fff}
+.range{width:100%;accent-color:var(--accent);height:40px}
+.fracbar{display:inline-grid;grid-template-columns:1fr;text-align:center;vertical-align:middle;font-weight:900;font-size:1.3rem;margin:0 6px}
+.fracbar .top{border-bottom:4px solid var(--ink);padding:0 6px}
+.fracbar.hug .top{background:var(--gold);color:var(--gold-ink);border-radius:4px 4px 0 0}
+.badge{display:inline-flex;align-items:center;gap:6px;border:3px solid var(--ink);border-radius:var(--r);padding:6px 10px;background:var(--panel2);font-weight:900;font-size:.9rem}
+.badge.got{background:var(--gold);color:var(--gold-ink)}
+.badge .ico{font-size:1.1rem}
+table{border-collapse:collapse;width:100%;font-size:.95rem} th,td{padding:8px 10px;border-bottom:2px solid var(--line);text-align:left;vertical-align:top} th{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)} td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+.bar{height:12px;background:var(--panel2);border:2px solid var(--ink);border-radius:6px;overflow:hidden;min-width:80px} .bar i{display:block;height:100%;background:var(--ok)}
+details{border:3px solid var(--line);border-radius:var(--r);padding:10px 14px;background:var(--panel)} details+details{margin-top:10px} summary{cursor:pointer;font-weight:900;font-family:var(--disp);font-size:.95rem} details[open] summary{margin-bottom:8px}
+.gstep{display:grid;grid-template-columns:28px 1fr;gap:8px;padding:8px 0;border-top:2px dashed var(--line)} .gstep .k{font-family:var(--disp);color:var(--accent)} .gstep .m{color:var(--bad);font-weight:700} .gstep .ask{color:var(--ok);font-weight:800}
+.gstep .lbl{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-top:4px}
+.sr{position:absolute;left:-9999px}
+.lock{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.lock input{max-width:240px}
+.bossbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.hp{flex:1;min-width:160px;height:18px;border:3px solid var(--ink);border-radius:9px;background:var(--panel2);overflow:hidden} .hp i{display:block;height:100%;background:var(--bad);transition:width .5s}
+.result{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.result .big{font-family:var(--disp);font-size:clamp(2rem,7vw,3.2rem);color:var(--accent);font-variant-numeric:tabular-nums}
+.workbox{font-size:.95rem;white-space:pre-wrap;background:var(--panel2);border-radius:6px;padding:8px 10px;font-weight:700}
+@media (max-width:560px){ .hud .wrap{gap:6px} .nav{width:100%;order:3} .tab{flex:1;text-align:center;padding:6px 8px;font-size:.85rem} .block{padding:14px} .result{grid-template-columns:1fr} .scale{grid-template-columns:1fr;gap:6px} }
+</style>
+<div class="hud"><div class="wrap">
+  <button class="logo" id="logoBtn" type="button"><span class="cube"></span>Algebra Quest</button>
+  <span class="spacer"></span>
+  <span class="pill coins" id="coinPill"><span class="coin"></span><span id="coinCount" class="num">0</span></span>
+  <span class="pill badges" id="badgePill" title="Badges">🏅 <span id="badgeCount" class="num">0</span></span>
+  <nav class="nav" id="nav" aria-label="Sections"></nav>
+</div></div>
+<main><div class="wrap" id="app"></div></main>
+<footer><div class="wrap"><span>Coins, checkpoints, badges. Respawns are free.</span><button class="glyph" id="glyph" type="button" aria-label="Guide">▣</button></div></footer>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script>
+/* ===== Math engine: parse, evaluate, compare ===== */
+const M = (() => {
+  const UNI = [[/≤/g,'<='],[/≥/g,'>='],[/[×·•]/g,'*'],[/÷/g,'/'],[/[−–—]/g,'-'],[/½/g,'(1/2)'],[/¼/g,'(1/4)'],[/¾/g,'(3/4)'],[/⅓/g,'(1/3)'],[/⅔/g,'(2/3)'],[/²/g,'^2'],[/³/g,'^3'],[/\$/g,''],[/\*\*/g,'^'],[/\[/g,'('],[/\]/g,')'],[/\{/g,'('],[/\}/g,')']];
+  function clean(s){
+    s = String(s||'').trim().toLowerCase();
+    for (const [a,b] of UNI) s = s.replace(a,b);
+    s = s.replace(/(\d),(\d{3})(?!\d)/g,'$1$2');   // 1,600 -> 1600
+    s = s.replace(/=<|=</g,'<=').replace(/=>/g,'>=').replace(/==/g,'=');
+    return s;
+  }
+  function tokenize(s){
+    const t=[]; let i=0;
+    while(i<s.length){
+      const c=s[i];
+      if(/\s/.test(c)){i++;continue;}
+      if(/[0-9.]/.test(c)){ let j=i; while(j<s.length&&/[0-9.]/.test(s[j]))j++; t.push({k:'n',v:parseFloat(s.slice(i,j))}); i=j; continue; }
+      if(/[a-z]/.test(c)){ t.push({k:'v',v:c}); i++; continue; }
+      if(c==='<'||c==='>'){ if(s[i+1]==='='){t.push({k:'c',v:c+'='});i+=2;} else {t.push({k:'c',v:c});i++;} continue; }
+      if(c==='='){ t.push({k:'c',v:'='}); i++; continue; }
+      if('+-*/^()'.includes(c)){ t.push({k:'o',v:c}); i++; continue; }
+      throw new Error('bad char '+c);
+    }
+    return t;
+  }
+  // AST: {t:'n',v} {t:'v',v} {t:'op',op,a,b} {t:'neg',a} {t:'rel',parts:[expr...],ops:[...]}
+  function parse(str){
+    const tok = tokenize(clean(str)); let p=0;
+    const peek=()=>tok[p], next=()=>tok[p++];
+    function startsAtom(tk){ return tk && (tk.k==='n'||tk.k==='v'||(tk.k==='o'&&tk.v==='(')); }
+    function atom(){
+      const tk=next(); if(!tk) throw new Error('unexpected end');
+      if(tk.k==='n') return {t:'n',v:tk.v};
+      if(tk.k==='v') return {t:'v',v:tk.v};
+      if(tk.k==='o'&&tk.v==='('){ const e=expr(); const cl=next(); if(!cl||cl.v!==')') throw new Error('missing )'); return e; }
+      throw new Error('unexpected '+tk.v);
+    }
+    function power(){ let a=atom(); if(peek()&&peek().k==='o'&&peek().v==='^'){ next(); const b=unary(); a={t:'op',op:'^',a,b}; } return a; }
+    function unary(){ if(peek()&&peek().k==='o'&&(peek().v==='-'||peek().v==='+')){ const s=next().v; const a=unary(); return s==='-'?{t:'neg',a}:a; } return power(); }
+    function term(){
+      let a=unary();
+      for(;;){
+        const tk=peek();
+        if(tk&&tk.k==='o'&&(tk.v==='*'||tk.v==='/')){ next(); const b=unary(); a={t:'op',op:tk.v,a,b}; }
+        else if(startsAtom(tk)){ const b=unary(); a={t:'op',op:'*',a,b}; } // implicit multiplication
+        else break;
+      }
+      return a;
+    }
+    function expr(){
+      let a=term();
+      for(;;){ const tk=peek(); if(tk&&tk.k==='o'&&(tk.v==='+'||tk.v==='-')){ next(); const b=term(); a={t:'op',op:tk.v,a,b}; } else break; }
+      return a;
+    }
+    function rel(){
+      const parts=[expr()], ops=[];
+      while(peek()&&peek().k==='c'){ ops.push(next().v); parts.push(expr()); }
+      if(p<tok.length) throw new Error('trailing');
+      return ops.length? {t:'rel',parts,ops} : parts[0];
+    }
+    return rel();
+  }
+  function ev(n,env){
+    switch(n.t){
+      case 'n': return n.v;
+      case 'v': if(!(n.v in env)) throw new Error('unbound '+n.v); return env[n.v];
+      case 'neg': return -ev(n.a,env);
+      case 'op': { const a=ev(n.a,env), b=ev(n.b,env);
+        switch(n.op){case '+':return a+b;case '-':return a-b;case '*':return a*b;case '/':return a/b;case '^':return Math.pow(a,b);} }
+    }
+    throw new Error('eval');
+  }
+  function truth(rel,env){
+    const vals=rel.parts.map(x=>ev(x,env));
+    if(vals.some(v=>!isFinite(v))) return null;
+    for(let i=0;i<rel.ops.length;i++){
+      const a=vals[i], b=vals[i+1], o=rel.ops[i]; const eq=Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(a),Math.abs(b));
+      const ok = o==='='?eq : o==='<'?(a<b&&!eq) : o==='>'?(a>b&&!eq) : o==='<='?(a<b||eq) : (a>b||eq);
+      if(!ok) return false;
+    }
+    return true;
+  }
+  function vars(n,set=new Set()){ if(!n) return set; if(n.t==='v') set.add(n.v); if(n.t==='rel') n.parts.forEach(x=>vars(x,set)); if(n.a) vars(n.a,set); if(n.b) vars(n.b,set); return set; }
+  function tryParse(s){ try{ return parse(s);}catch(e){ return null; } }
+  // seeded sampler for determinism
+  function rng(seed){ let a=seed>>>0; return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  function exprEquiv(A,B){
+    const a=typeof A==='string'?tryParse(A):A, b=typeof B==='string'?tryParse(B):B;
+    if(!a||!b||a.t==='rel'||b.t==='rel') return false;
+    const vs=[...new Set([...vars(a),...vars(b)])]; const r=rng(1234); let good=0;
+    for(let i=0;i<40&&good<10;i++){
+      const env={}; vs.forEach(v=>{ env[v]=(r()*8-4); });
+      let x,y; try{ x=ev(a,env); y=ev(b,env);}catch(e){return false;}
+      if(!isFinite(x)||!isFinite(y)||Math.abs(x)>1e8||Math.abs(y)>1e8) continue;
+      if(Math.abs(x-y)>1e-6*Math.max(1,Math.abs(x),Math.abs(y))) return false;
+      good++;
+    }
+    return good>=6;
+  }
+  // grid for truth sets: quarter steps near the action plus wider sweep
+  function grid(){ const g=[]; for(let x=-40;x<=130;x+=0.25) g.push(x); for(let x=150;x<=1200;x+=37) g.push(x); g.push(-500,-120,2000); return g; }
+  function relEquiv(A,B){
+    const a=typeof A==='string'?tryParse(A):A, b=typeof B==='string'?tryParse(B):B;
+    if(!a||!b||a.t!=='rel'||b.t!=='rel') return false;
+    const va=[...vars(a)], vb=[...vars(b)];
+    if(va.length!==vb.length||va.some(v=>!vb.includes(v))) return false;
+    if(va.length===0){ return truth(a,{})===truth(b,{}); }
+    if(va.length===1){ const v=va[0]; let n=0; for(const x of grid()){ const ta=truth(a,{[v]:x}), tb=truth(b,{[v]:x}); if(ta===null||tb===null) continue; if(ta!==tb) return false; n++; } return n>50; }
+    const r=rng(99); let n=0;
+    for(let i=0;i<400;i++){ const env={}; va.forEach(v=>env[v]=Math.round((r()*60-20)*4)/4); const ta=truth(a,env), tb=truth(b,env); if(ta===null||tb===null) continue; if(ta!==tb) return false; n++; }
+    return n>100;
+  }
+  // numeric answer: "4.5", "4 1/2", "4½ hours", "-11", "7 jugs", "$36"
+  function toNumber(s){
+    s=clean(s); if(s.includes('=')) s=s.slice(s.lastIndexOf('=')+1);
+    s=s.replace(/\b(hours?|hrs?|h|in|inches|jugs?|units?|total|at least|about|approximately|is|x|t|y|w|p)\b/g,' ').replace(/[a-z]/g,' ').trim();
+    let m=s.match(/^(-?)\s*(\d+)\s+(\d+)\s*\/\s*(\d+)$/); if(m){ const v=+m[2]+ +m[3]/+m[4]; return m[1]?-v:v; }
+    m=s.match(/^(-?)\s*(\d+)\s*\(1\/2\)$/); if(m){ const v=+m[2]+0.5; return m[1]?-v:v; }
+    const t=tryParse(s); if(!t||t.t==='rel') return null;
+    try{ const v=ev(t,{}); return isFinite(v)?v:null; }catch(e){ return null; }
+  }
+  function numEq(a,b,tol=1e-6){ return a!==null&&b!==null&&Math.abs(a-b)<=tol*Math.max(1,Math.abs(b)); }
+  // solved-for check: returns {expr, status:'ok'|'not-solved'|'bad'}
+  function solvedSide(str,v){
+    const t=tryParse(str); if(!t) return {status:'bad'};
+    if(t.t!=='rel') return vars(t).has(v)?{status:'not-solved',expr:t}:{status:'ok',expr:t};
+    if(t.ops.length!==1||t.ops[0]!=='=') return {status:'bad'};
+    const [L,R]=t.parts; const isBare=n=>n.t==='v'&&n.v===v;
+    if(isBare(L)&&!vars(R).has(v)) return {status:'ok',expr:R};
+    if(isBare(R)&&!vars(L).has(v)) return {status:'ok',expr:L};
+    if(isBare(L)||isBare(R)) return {status:'circular',expr:isBare(L)?R:L};
+    return {status:'not-solved',rel:t};
+  }
+  function integers(s){ return (String(s).match(/-?\d+/g)||[]).map(Number); }
+  function hasOp(str,op){ const t=tryParse(str); return !!(t&&t.t==='rel'&&t.ops.includes(op)); }
+  function fmt(n){ return Number.isInteger(n)?String(n):String(Math.round(n*1000)/1000); }
+  return {clean,parse,tryParse,ev,truth,vars,exprEquiv,relEquiv,toNumber,numEq,solvedSide,integers,hasOp,fmt,rng};
+})();
+/* ===== Content: the practice test, misconception hints, parent guide ===== */
+const PARENT_PASSPHRASE = 'blockparty';   // <-- edit me (letters only, case does not matter)
+
+const LEVELS = [
+  {n:1, title:'Words to Inequality', short:'Words → Symbols', skill:'setup', blurb:'Turn a budget story into a symbol sentence.', color:'var(--l1)'},
+  {n:2, title:'Solve, Then Get Real', short:'Solve & Interpret', skill:'solve', blurb:'Do the algebra, then ask the real world if it agrees.', color:'var(--l2)'},
+  {n:3, title:'Literal Equations', short:'Letters as Numbers', skill:'literal', blurb:'Undo in reverse. Collect the variable. Factor it out.', color:'var(--l3)'},
+  {n:4, title:'Fraction Bars & Cross-Multiplying', short:'Fraction Bars', skill:'fractions', blurb:'The bar is a grouping symbol. Treat it like parentheses.', color:'var(--l4)'},
+  {n:5, title:'Compound Inequalities', short:'Three-Part Inequalities', skill:'compound', blurb:'Whatever you do to the middle, do to all three parts.', color:'var(--l5)'},
+  {n:6, title:'Verify & Explain', short:'Check Your Work', skill:'verify', blurb:'Plug it back in. Check the story. Find the error in someone else\'s work.', color:'var(--l6)'},
+];
+const SKILL_NAMES = {setup:'Words → inequality', solve:'Solve & interpret', literal:'Literal equations', fractions:'Fraction bars', compound:'Compound inequalities', verify:'Verify & explain'};
+
+const PROBLEMS = [
+  {n:1, title:'The DJ Budget', stem:'A DJ charges <b>$1,600</b> for the first <b>3 hours</b>, then <b>$400</b> for each <b>additional half-hour</b>. The budget is <b>$3,000</b>.'},
+  {n:2, title:'Three Students, One Formula', stem:'The surface area of a pyramid is <span class="eq">A = ½lp + B</span>. Three students solved it for <i>p</i>:<div class="students"><div><b>Ana:</b> <span class="eq">p = 2(A − B) / l</span></div><div><b>Ben:</b> <span class="eq">p = 2A − B/l</span></div><div><b>Chris:</b> <span class="eq">p = (A − B) / (2l)</span></div></div>'},
+  {n:3, title:'Solve for the Letter', stem:'Solve each equation for the indicated variable.'},
+  {n:4, title:'The Rectangle', stem:'A rectangle has perimeter <b>156 in</b> and length <b>42 in</b>. Perimeter is <span class="eq">P = 2l + 2w</span>.'},
+  {n:5, title:'Water Delivery', stem:'<b>ClearSpring</b> charges <b>$18</b> plus <b>$6.50 per jug</b>. <b>PureWater</b> charges <b>$12</b> plus <b>$7.50 per jug</b>. Let <i>x</i> = number of jugs. <b>When does ClearSpring cost less?</b>'},
+  {n:6, title:'Three in a Row', stem:'Three consecutive integers have a sum <b>greater than 48</b> and <b>less than 69</b>. Let <i>x</i> = the smallest integer.'},
+];
+
+/* Each item: kind rel|expr|num|choice|order|numberline|triples.
+   hints: tried in order; first matching `when` wins. The renderer appends the Learn link. */
+const ITEMS = [
+ {id:'1a', p:1, skill:'setup', learn:1, kind:'rel', work:false,
+  prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation.',
+  answer:'1600 + 400h <= 3000', placeholder:'e.g. 1600 + 400h ≤ 3000',
+  hints:[
+   {when:(r,H)=>H.has(/3000\s*-\s*1600|1400/)||H.rel('400h<=1400'), text:'Freeze! The inequality should describe the party <i>before</i> you solve anything. Nobody has subtracted anything yet. What does the DJ charge in total for 3 hours plus <i>h</i> extra half-hours? That total is what has to fit the budget.'},
+   {when:(r,H)=>H.rel('1600+400h<3000'), text:'So close. "Budget $3,000" means $3,000 is still okay to spend. Which symbol lets the total <i>equal</i> 3,000?'},
+   {when:(r,H)=>H.rel('1600+400h>=3000')||H.rel('1600+400h>3000'), text:'Your symbol says the cost has to be <i>bigger</i> than the budget. Is a budget a floor or a ceiling? Point the symbol at the smaller side.'},
+   {when:(r,H)=>H.rel('400h<=3000'), text:'You have the half-hours covered, but the DJ also charges something before the first extra half-hour even starts. What is it, and where does it go?'},
+   {when:(r,H)=>H.has(/=/)&&!H.has(/[<>]/), text:'An equals sign says the cost is <i>exactly</i> $3,000. A budget is a limit, not a target. Which inequality symbol says "this much or less"?'},
+  ],
+  generic:['Build the total cost first: fixed part + (price per half-hour)(number of half-hours). Then compare that total to the budget with the symbol that matches "budget".','Total cost = 1600 + 400h. "Budget $3,000" means the total can be 3,000 or anything smaller. Put those two facts together with one symbol.'],
+  firstStep:'Total cost = 1600 + 400h. Now compare that to 3000.'},
+ {id:'1b', p:1, skill:'setup', learn:1, kind:'rel', work:false,
+  prompt:'Now let <i>t</i> = the <b>total</b> time in hours (including the first 3). Write a new inequality using <i>t</i>.',
+  answer:'1600 + 800(t - 3) <= 3000', placeholder:'e.g. 1600 + ___(t − 3) ≤ 3000',
+  hints:[
+   {when:(r,H)=>H.has(/h/)&&!H.has(/t/), text:'The new variable is <i>t</i>, total hours. Your inequality still talks about <i>h</i>. Start by answering: if the party lasts <i>t</i> hours, how many of those hours are <i>extra</i> (past the first 3)?'},
+   {when:(r,H)=>H.rel('1600+800t<=3000')||H.rel('1600+400t<=3000'), text:'Careful: <i>t</i> counts the first 3 hours too, and those are already paid for by the $1,600. How many hours are actually extra? Write that as an expression in <i>t</i>.'},
+   {when:(r,H)=>H.rel('1600+400(t-3)<=3000'), text:'You found the extra hours (<i>t</i> − 3). Nice. But $400 is the price per <i>half</i>-hour. How many half-hours are in one hour, so what does one extra <i>hour</i> cost?'},
+   {when:(r,H)=>H.rel('1600+800(t-3)<3000'), text:'Same symbol question as 1a: the budget is allowed to be hit exactly. Which symbol includes "equal to"?'},
+  ],
+  generic:['Two steps: (1) extra hours = t − 3. (2) each extra hour costs 2 × $400. Build the cost, then compare to 3,000 like before.','Cost = 1600 + 800(t − 3). Now attach the budget with the "at most" symbol.'],
+  firstStep:'Extra hours = t − 3. Each extra hour has 2 half-hours, so it costs 2 × 400 = 800.'},
+ {id:'1c', p:1, skill:'solve', learn:2, kind:'num', work:true,
+  prompt:'Solve your inequality from (a). What is the <b>maximum total time</b> for the party, including the first 3 hours? (Answer in hours.)',
+  answer:'4.5', unit:'hours', placeholder:'e.g. 4.5',
+  partial:{'4.75':'You solved correctly (h ≤ 3.5) but the DJ bills by <i>whole</i> half-hours. You cannot buy half of a half-hour. How many complete half-hours fit, and how much time is that?'},
+  hints:[
+   {when:(r,H)=>H.num(3.5), text:'3.5 is the algebra answer for <i>h</i>, which counts half-hours, not hours, and the DJ only sells whole ones. Two questions: how many whole half-hours is that, and then what is the <i>total</i> time including the first 3 hours?'},
+   {when:(r,H)=>H.num(3), text:'3 is either the free hours or the whole half-hours. The question asks for total time. Add the extra time (in hours!) to the first 3 hours.'},
+   {when:(r,H)=>H.num(6.5), text:'It looks like you added 3.5 to 3. But 3.5 was <i>half-hours</i>. Convert to hours first, and remember only whole half-hours count.'},
+   {when:(r,H)=>H.num(1.5), text:'1.5 hours is the extra time. The question asks for the total, including the first 3 hours.'},
+  ],
+  generic:['Solve 1600 + 400h ≤ 3000 for h first. Then ask the real world: can h be a fraction? Then convert half-hours to hours and add the first 3.','h ≤ 3.5, so the biggest whole number of half-hours is 3. Three half-hours is 1.5 hours. Total = 3 + 1.5.'],
+  firstStep:'1600 + 400h ≤ 3000 → subtract 1600 from both sides → 400h ≤ 1400.'},
+ {id:'2a', p:2, skill:'verify', learn:6, kind:'choice', work:false,
+  prompt:'Which student solved for <i>p</i> correctly?', options:['Ana','Ben','Chris'], correct:[0],
+  hints:[
+   {when:(r)=>r==='1', text:'Test Ben\'s idea with easy numbers: let A = 10, B = 4, l = 2. The original formula says 10 = ½(2)p + 4, so p = 6. Does Ben\'s formula give 6?'},
+   {when:(r)=>r==='2', text:'Chris divided by 2 to get rid of the ½. Is dividing the opposite of multiplying by ½? What undoes multiplying by one-half?'},
+  ],
+  generic:['Plug in friendly numbers (A = 10, B = 4, l = 2 gives p = 6) and see whose formula returns 6.','Only one formula undoes "+ B" first, then undoes the "× ½" by multiplying by 2, then undoes "× l".'],
+  firstStep:'Pick numbers that make the original true, then test each student\'s formula with them.'},
+ {id:'2b', p:2, skill:'literal', learn:3, kind:'order', work:false,
+  prompt:'Put the steps of the correct solution in order (tap a step to add it to your solution).',
+  steps:['A − B = ½lp','2(A − B) = lp','p = 2(A − B) / l'],
+  hints:[
+   {when:(r,H)=>r.startsWith('1')||r.startsWith('2'), text:'Which operation was done to <i>p</i> <b>last</b> when the formula was built? That is the first thing to undo. (Hint: something was added on at the very end.)'},
+  ],
+  generic:['Undo in reverse order: the formula multiplies p by l, then by ½, then adds B. Peel those off backwards.','First subtract B. Then multiply both sides by 2. Then divide by l.'],
+  firstStep:'Subtract B from both sides: A − B = ½lp.'},
+ {id:'2c', p:2, skill:'verify', learn:6, kind:'choice', work:false, explain:true,
+  prompt:'Which statement correctly explains an error? (Pick one; two of these are true.)',
+  options:['Ben did not subtract B before clearing the ½, and then divided only B by l instead of the whole side.','Chris divided by 2 instead of multiplying by 2 to undo the ½.','Ana forgot to distribute the 2 to both A and B.','Ben and Chris both forgot that l is a variable.'], correct:[0,1],
+  hints:[
+   {when:(r)=>r==='2', text:'Look again at Ana\'s answer: 2(A − B). The 2 is multiplying the whole group, so nothing is forgotten. Test with numbers if unsure.'},
+   {when:(r)=>r==='3', text:'Everyone treated l as a letter just fine. Look at the <i>order</i> of the undo steps, and at what got divided by l.'},
+  ],
+  generic:['Compare each student\'s answer to the correct undo order: subtract B, multiply by 2, divide by l.','Ben broke the order (cleared the ½ before removing B) and divided only one term by l. Chris used the wrong inverse for ½.'],
+  firstStep:'List the undo order first, then check who broke it.'},
+ {id:'3a', p:3, skill:'literal', learn:3, kind:'expr', var:'y', work:true,
+  prompt:'Solve <span class="eq">3y + k = 8y − ky</span> for <i>y</i>.',
+  answer:'k/(5-k)', placeholder:'y = …',
+  hints:[
+   {when:(r,H)=>H.status==='not-solved'&&H.relEq('k=y(5-k)'), text:'You collected the y terms and factored. That is the hard part. Now y is being multiplied by (5 − k). What undoes a multiplication?'},
+   {when:(r,H)=>H.status==='not-solved'&&(H.relEq('k=5y-ky')||H.relEq('k = 5y - ky')), text:'Good: all the y terms are on one side. But y shows up twice. Pull it out of both terms: 5y − ky = y(5 − k). Then one more step.'},
+   {when:(r,H)=>H.status==='not-solved', text:'y is still on both sides, or still appears in your answer. Collect every term with y on one side and everything else on the other.'},
+   {when:(r,H)=>H.expr('k/(5+k)'), text:'Sign check: when ky crosses the equals sign, what happens to its sign? Write the step where you move it and look at the sign in front of ky.'},
+   {when:(r,H)=>H.expr('k/5'), text:'You lost the ky term. It has a y in it, so it belongs with the other y terms. Bring 3y and ky together with 8y before you factor.'},
+   {when:(r,H)=>H.expr('k/(11-k)')||H.expr('k/(11+k)'), text:'3y and 8y are on opposite sides. Moving 3y across the equals sign changes its sign. Should 3 and 8 add or subtract?'},
+   {when:(r,H)=>H.expr('k/(k-5)')||H.expr('-k/(5-k)'), text:'Almost. Check the sign on one of your terms. Try plugging in k = 1: the original equation gives 3y + 1 = 8y − y, so y = 1/4. Does your formula give 1/4?'},
+  ],
+  generic:['Get all y terms on one side (3y − 8y + ky ... or 8y − ky − 3y). Then factor y out, then divide.','k = 8y − ky − 3y = 5y − ky = y(5 − k). Divide both sides by (5 − k).'],
+  firstStep:'Subtract 3y from both sides: k = 5y − ky.'},
+ {id:'3b', p:3, skill:'literal', learn:3, kind:'expr', var:'y', work:true,
+  prompt:'Solve <span class="eq">x = 4(y − c) / n</span> for <i>y</i>.',
+  answer:'nx/4 + c', placeholder:'y = …',
+  hints:[
+   {when:(r,H)=>H.expr('nx/4-c'), text:'Last step check: to undo "− c", do you subtract c or add c?'},
+   {when:(r,H)=>H.expr('(nx+c)/4'), text:'You added c <i>inside</i> the division by 4. Undo in reverse order: the 4 was multiplied before c was... wait, which happened first when building the right side? Subtract c, then ×4, then ÷n. Reverse that.'},
+   {when:(r,H)=>H.expr('x*n/4')||H.expr('nx/4'), text:'You undid n and 4. There is one more operation still attached to y. Look inside the parentheses.'},
+   {when:(r,H)=>H.expr('4x/n+c')||H.expr('4x/n-c'), text:'Hmm, 4 and n switched roles. Multiplying both sides by n removes the ÷n. Then you still need to undo the ×4.'},
+   {when:(r,H)=>H.status==='not-solved', text:'y should end up alone on one side with no y on the other. Keep undoing operations until it is.'},
+  ],
+  generic:['Reverse order: multiply both sides by n, divide both sides by 4, then add c.','nx = 4(y − c) → nx/4 = y − c → y = nx/4 + c.'],
+  firstStep:'Multiply both sides by n: nx = 4(y − c).'},
+ {id:'3c', p:3, skill:'fractions', learn:4, kind:'num', work:true,
+  prompt:'Solve <span class="eq">(t + 2) / 3 = (t − 4) / 5</span> for <i>t</i>.',
+  answer:'-11', placeholder:'t = …',
+  hints:[
+   {when:(r,H)=>H.num(11), text:'Sign slip somewhere. After cross-multiplying you get 5t + 10 = 3t − 12. Move the 3t and the 10 and watch each sign.'},
+   {when:(r,H)=>H.num(13), text:'Check your cross-multiplication: the 5 multiplies the top of the <i>left</i> fraction, the 3 multiplies the top of the right. Write 5(t + 2) = 3(t − 4).'},
+   {when:(r,H)=>H.num(-3)||H.num(-1), text:'Did the number get distributed to everything on top? 5(t + 2) means 5 times t <b>and</b> 5 times 2. The fraction bar groups the whole top.'},
+   {when:(r,H)=>H.num(-7)||H.num(7), text:'You are close to the end. Recheck the last subtraction: 5t + 10 = 3t − 12 → 2t = −22. What is t?'},
+  ],
+  generic:['The fraction bar groups the top. Cross-multiply: 5(t + 2) = 3(t − 4). Then distribute both sides.','5t + 10 = 3t − 12. Get t terms together: 2t = −22.'],
+  firstStep:'Cross-multiply: 5(t + 2) = 3(t − 4).'},
+ {id:'3d', p:3, skill:'fractions', learn:4, kind:'num', work:true,
+  prompt:'Solve <span class="eq">2y = (12 − 6y) / 3 + 4</span> for <i>y</i>.',
+  answer:'2', placeholder:'y = …',
+  hints:[
+   {when:(r,H)=>H.num(4), text:'The fraction bar is a grouping symbol: the whole (12 − 6y) is divided by 3, not just the 12. What is 6y ÷ 3?'},
+   {when:(r,H)=>H.num(4/3), text:'If you multiplied everything by 3, the +4 needs to be multiplied too: 6y = 12 − 6y + 12.'},
+   {when:(r,H)=>H.num(8/3)||H.num(1), text:'Try simplifying the fraction first: (12 − 6y)/3 = 4 − 2y. Then the equation is 2y = 4 − 2y + 4.'},
+   {when:(r,H)=>H.num(-2), text:'Sign check when you move −2y across: 2y + 2y = 8.'},
+  ],
+  generic:['Divide <i>both</i> terms on top by 3: (12 − 6y)/3 = 4 − 2y. Then collect y.','2y = 4 − 2y + 4 → 4y = 8.'],
+  firstStep:'Simplify the fraction: (12 − 6y)/3 = 4 − 2y.'},
+ {id:'4a', p:4, skill:'literal', learn:3, kind:'expr', var:'w', work:false,
+  prompt:'Solve <span class="eq">P = 2l + 2w</span> for <i>w</i>.',
+  answer:'(p - 2l)/2', placeholder:'w = …',
+  hints:[
+   {when:(r,H)=>H.expr('p-2l/2')||H.expr('p-l'), text:'Dividing by 2 has to hit <i>every</i> term on that side, not just one. Put parentheses around the whole thing before you divide: (P − 2l) ÷ 2.'},
+   {when:(r,H)=>H.expr('p-2l'), text:'You subtracted 2l. Good. But w is still being multiplied by 2. One more undo.'},
+   {when:(r,H)=>H.expr('(p+2l)/2'), text:'2l is being <i>added</i> to 2w. What undoes adding?'},
+   {when:(r,H)=>H.expr('(p-l)/2')||H.expr('p/2-2l'), text:'Track the 2 on the l carefully. Subtract 2l (all of it), then divide everything by 2.'},
+  ],
+  generic:['Undo in reverse: subtract 2l from both sides, then divide both sides by 2.','P − 2l = 2w, then w = (P − 2l)/2, which also equals P/2 − l.'],
+  firstStep:'Subtract 2l from both sides: P − 2l = 2w.'},
+ {id:'4b', p:4, skill:'verify', learn:6, kind:'num', work:true,
+  prompt:'Find the width of the rectangle (in inches).',
+  answer:'36', unit:'in', placeholder:'e.g. 36',
+  hints:[
+   {when:(r,H)=>H.num(72), text:'You found 2w. The question asks for w.'},
+   {when:(r,H)=>H.num(114)||H.num(57), text:'The length is used twice in a perimeter (two long sides). Subtract 2 × 42, not 42.'},
+   {when:(r,H)=>H.num(42), text:'That is the length. Plug P = 156 and l = 42 into your formula from part (a).'},
+  ],
+  generic:['Use your formula from (a): w = (P − 2l)/2 with P = 156 and l = 42.','(156 − 84)/2 = ?'],
+  firstStep:'w = (156 − 2·42)/2.'},
+ {id:'5a', p:5, skill:'setup', learn:1, kind:'rel', work:false,
+  prompt:'Write an inequality for when ClearSpring costs less than PureWater.',
+  answer:'18 + 6.5x < 12 + 7.5x', placeholder:'e.g. 18 + 6.5x < …',
+  hints:[
+   {when:(r,H)=>H.rel('18+6.5x>12+7.5x'), text:'Which company is supposed to be cheaper? Put ClearSpring\'s total on the small side of the symbol.'},
+   {when:(r,H)=>H.rel('18+6.5x<=12+7.5x'), text:'"Costs less" is strict. If the two bills are equal, is ClearSpring cheaper? Choose the symbol without the "or equal" line.'},
+   {when:(r,H)=>H.has(/=/)&&!H.has(/[<>]/), text:'An equals sign finds where the two plans cost the same. The question asks when one costs <i>less</i>. Use an inequality symbol.'},
+   {when:(r,H)=>H.rel('6.5x<7.5x')||H.rel('18<12'), text:'Each company has two parts: a flat fee plus a per-jug price. Write ClearSpring\'s whole bill, then PureWater\'s whole bill, then compare.'},
+  ],
+  generic:['Write each company\'s total bill as (fee) + (price per jug)(x). Then put ClearSpring\'s on the smaller side with a strict symbol.','ClearSpring: 18 + 6.5x. PureWater: 12 + 7.5x. ClearSpring < PureWater.'],
+  firstStep:'ClearSpring total = 18 + 6.5x. PureWater total = 12 + 7.5x.'},
+ {id:'5b', p:5, skill:'solve', learn:2, kind:'rel', solved:'x', work:true,
+  prompt:'Solve your inequality from (a).',
+  answer:'x > 6', placeholder:'e.g. x > …',
+  hints:[
+   {when:(r,H)=>H.rel('x<6'), text:'The direction flipped somewhere. If you divided or multiplied by a negative number, the sign flips; if you did not, it stays. Which did you do? Test x = 10: is 18 + 65 less than 12 + 75?'},
+   {when:(r,H)=>H.rel('x<-6'), text:'You probably had −x < −6 and divided by −1. Dividing by a negative flips the symbol. Negative Nine is laughing.'},
+   {when:(r,H)=>H.rel('x>=6')||H.rel('x<=6'), text:'Your (a) inequality was strict (no "or equal"). Solving never adds an "or equal" line.'},
+   {when:(r,H)=>H.has(/=/)&&!H.has(/[<>]/), text:'You found the break-even point, where the plans cost the same. The question wants the inequality: for which x is ClearSpring cheaper?'},
+   {when:(r,H)=>H.rel('x>-6'), text:'Watch the constants: 12 − 18 = −6, and the x terms: 7.5 − 6.5 = 1. Rebuild: 6 < x.'},
+  ],
+  generic:['Collect x terms on one side and plain numbers on the other. Try subtracting 6.5x from both sides so the x coefficient stays positive, and no flipping is needed.','18 + 6.5x < 12 + 7.5x → 6 < x.'],
+  firstStep:'Subtract 6.5x from both sides: 18 < 12 + x.'},
+ {id:'5c', p:5, skill:'solve', learn:2, kind:'num', work:true,
+  prompt:'In real-world terms, what is the smallest number of jugs for which ClearSpring is the cheaper plan?',
+  answer:'7', unit:'jugs', placeholder:'e.g. 7',
+  hints:[
+   {when:(r,H)=>H.num(6), text:'At exactly 6 jugs, compute both bills: 18 + 39 and 12 + 45. Are they different? Which whole number is the first one that makes ClearSpring strictly cheaper?'},
+   {when:(r,H)=>H.has(/>|</), text:'The algebra answer is x > 6. The real-world question wants an actual number of jugs you could order. What is the first whole number past 6?'},
+   {when:(r,H)=>H.num(6.5)||H.num(6.1), text:'Can you order 6.5 jugs? Jugs come in whole numbers. What is the first whole number greater than 6?'},
+  ],
+  generic:['x > 6 is the algebra. Jugs are whole things. What is the smallest whole number that is greater than 6?','The first whole number greater than 6 is 7.'],
+  firstStep:'x > 6 means strictly more than 6.'},
+ {id:'6a', p:6, skill:'compound', learn:5, kind:'rel', work:false,
+  prompt:'Write a compound inequality for the sum of the three integers.',
+  answer:'48 < 3x + 3 < 69', placeholder:'e.g. 48 < ___ < 69',
+  hints:[
+   {when:(r,H)=>H.rel('48<3x<69'), text:'Three consecutive integers are x, x + 1, and x + 2. Their sum is not just 3x. Add all three.'},
+   {when:(r,H)=>H.rel('48<=3x+3<=69')||H.rel('48<=3x+3<69')||H.rel('48<3x+3<=69'), text:'"Greater than 48" and "less than 69" are both strict. No "or equal" lines here.'},
+   {when:(r,H)=>H.rel('3x+3>48')||H.rel('3x+3<69')||H.rel('x+x+1+x+2>48'), text:'You have half of it. The sum has to be greater than 48 <b>and</b> less than 69. Write both conditions in one three-part inequality.'},
+   {when:(r,H)=>H.rel('48<x<69'), text:'x is the smallest integer, but the story talks about the <i>sum</i> of all three. Write the sum in terms of x first.'},
+   {when:(r,H)=>H.rel('48<3x+6<69')||H.rel('48<3x+2<69'), text:'Add the three carefully: x + (x + 1) + (x + 2). How many x\'s, and what do the plain numbers add up to?'},
+  ],
+  generic:['The three integers are x, x + 1, x + 2. Add them, simplify, then trap the sum between 48 and 69.','Sum = 3x + 3. So 48 < 3x + 3 < 69.'],
+  firstStep:'Sum = x + (x + 1) + (x + 2) = 3x + 3.'},
+ {id:'6b', p:6, skill:'compound', learn:5, kind:'rel', solved:'x', work:true,
+  prompt:'Solve the compound inequality for <i>x</i>.',
+  answer:'15 < x < 22', placeholder:'e.g. __ < x < __',
+  hints:[
+   {when:(r,H)=>H.rel('16<x<23'), text:'When you subtracted 3, did it hit all <b>three</b> parts? 48 − 3 and 69 − 3 both have to happen.'},
+   {when:(r,H)=>H.rel('45<3x<66'), text:'Good, you subtracted 3 from all three parts. Now divide all three parts by 3.'},
+   {when:(r,H)=>H.rel('15<=x<=22')||H.rel('15<=x<22')||H.rel('15<x<=22'), text:'The symbols were strict in (a); solving does not change that. Keep them strict.'},
+   {when:(r,H)=>H.rel('x>15')||H.rel('x<22'), text:'Half of a compound answer. x has to satisfy both conditions. Write the full three-part answer.'},
+   {when:(r,H)=>H.rel('15<x<23')||H.rel('14<x<22'), text:'One endpoint is off by one. Redo the arithmetic: (48 − 3) ÷ 3 and (69 − 3) ÷ 3.'},
+  ],
+  generic:['Whatever you do to the middle, do to all three parts. Subtract 3 everywhere, then divide by 3 everywhere.','45 < 3x < 66 → 15 < x < 22.'],
+  firstStep:'Subtract 3 from all three parts: 45 < 3x < 66.'},
+ {id:'6c', p:6, skill:'compound', learn:5, kind:'triples', work:true,
+  prompt:'List every possible set of three consecutive integers. (Type them like 16,17,18; 17,18,19; …)',
+  placeholder:'16,17,18; 17,18,19; …',
+  hints:[
+   {when:(r,H)=>H.ints.includes(15)&&H.ints.includes(16)&&H.ints.includes(17)&&H.ints[0]===15, text:'Is 15 greater than 15? Check the triple that starts at 15: its sum is 48, which is not greater than 48.'},
+   {when:(r,H)=>H.ints.includes(22)&&H.ints.includes(23)&&H.ints.includes(24), text:'Check the triple that starts at 22: the sum is 69. Is 69 less than 69?'},
+   {when:(r,H)=>H.ints.length>0&&H.ints.length<18&&H.ints.length%3===0, text:'You are missing some. x can be any integer strictly between 15 and 22. Count them: 16, 17, …, 21. That is how many triples there should be.'},
+   {when:(r,H)=>H.ints.length>18, text:'Too many. x has to be strictly between 15 and 22, so x = 16, 17, 18, 19, 20, 21. Six triples only.'},
+  ],
+  generic:['From 15 < x < 22, list the integers x can be. Each one starts a triple (x, x + 1, x + 2).','x ∈ {16, 17, 18, 19, 20, 21}. Build each triple from those.'],
+  firstStep:'The integers strictly between 15 and 22 are 16, 17, 18, 19, 20, 21.'},
+ {id:'6d', p:6, skill:'compound', learn:5, kind:'numberline', work:false,
+  prompt:'Graph the solution to (b) on the number line. Drag the two circles into place and tap a circle to switch between open and closed.',
+  nl:{min:10,max:27,lo:15,hi:22,loOpen:true,hiOpen:true},
+  hints:[
+   {when:(r,H)=>H.nl&&H.nl.lo===15&&H.nl.hi===22&&(!H.nl.loOpen||!H.nl.hiOpen), text:'Right spots! Now the circles: a filled circle means "this number counts." Is 15 a solution of 15 < x < 22? Strict inequalities get open circles.'},
+   {when:(r,H)=>H.nl&&H.nl.lo===16&&H.nl.hi===21, text:'16 and 21 are the smallest and largest <i>integer</i> solutions, but the graph shows the inequality itself: 15 < x < 22. Where are the boundaries?'},
+   {when:(r,H)=>H.nl&&(H.nl.lo!==15||H.nl.hi!==22), text:'Read the endpoints off your answer to (b): the two numbers on the outside of 15 < x < 22.'},
+  ],
+  generic:['The endpoints come from (b). Open circles for strict inequalities, and shade everything between.','Open circle at 15, open circle at 22, shade between.'],
+  firstStep:'Place the left circle at 15 and the right one at 22.'},
+];
+const ITEM_BY_ID = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+
+/* ===== Parent guide content ===== */
+const GUIDE = {
+ '1a':{answer:'1600 + 400h ≤ 3000', steps:[
+   {s:'Name the fixed part ($1,600) and the variable part ($400 per half-hour, h half-hours).', m:'Skipping straight to numbers without naming what h counts.', ask:'"What does one h stand for? One hour or one half-hour?"'},
+   {s:'Build the total cost expression: 1600 + 400h.', m:'Writing 400h alone and forgetting the base fee.', ask:'"If zero extra half-hours happen, what does the DJ still charge?"'},
+   {s:'Translate "budget $3,000" into ≤ 3000 and attach it to the total.', m:'Fusing a solving step into the setup (he wrote 1600 + 400h ≤ 3000 − 1600). The setup must describe the situation before anything is moved.', ask:'"Read your inequality out loud as a sentence about the party. Does it describe what the DJ charges, or a step of solving?"'},
+ ]},
+ '1b':{answer:'1600 + 800(t − 3) ≤ 3000', steps:[
+   {s:'Define t = total hours including the first 3.', m:'He wrote "t = total time" but then stalled. The variable definition was fine; the bridge to an expression was missing.', ask:'"If the party is t hours long, how many of those hours are extra?"'},
+   {s:'Extra hours = t − 3.', m:'Using t as if it were only the extra hours.', ask:'"Does t include the first 3 hours? Then how do we peel them off?"'},
+   {s:'Each extra hour has 2 half-hours: cost = 2 × 400 = 800 per extra hour.', m:'Keeping 400 as the per-hour rate.', ask:'"How many half-hours in one hour? So what does one extra hour cost?"'},
+   {s:'Write 1600 + 800(t − 3) ≤ 3000.', m:'Dropping the parentheses (800t − 3).', ask:'"Is it 800 times just t, or 800 times the whole extra time?"'},
+ ]},
+ '1c':{answer:'4.5 hours total (h ≤ 3.5 → 3 whole half-hours → 1.5 h extra)', steps:[
+   {s:'Subtract 1600 from both sides: 400h ≤ 1400.', m:'Moving a term without changing its sign.', ask:'"What did you do to the left side? Did the right side get the same treatment?"'},
+   {s:'Divide both sides by 400: h ≤ 3.5.', m:'Stopping here and reporting 3.5 as the answer.', ask:'"3.5 of what? Can the DJ sell half of a half-hour?"'},
+   {s:'Apply the billing rule: only whole half-hours, so h = 3 at most.', m:'Reporting 4.75 h (using 3.5 half-hours as if it were purchasable).', ask:'"Read the DJ\'s rule again. How is extra time sold?"'},
+   {s:'Convert and add: 3 half-hours = 1.5 h; total = 3 + 1.5 = 4.5 h.', m:'He got 4½ with no work shown. Correct, but ungraded reasoning earns nothing when the answer is off.', ask:'"Show me the line where 3.5 turned into 4.5. Walk me through it."'},
+ ]},
+ '2a':{answer:'Ana', steps:[
+   {s:'Substitute friendly numbers that satisfy the original (A = 10, B = 4, l = 2 gives p = 6) and test each formula.', m:'Judging by which answer "looks right" instead of testing.', ask:'"How could you check without re-solving? What if we picked numbers?"'},
+   {s:'Ana: 2(10 − 4)/2 = 6 ✓. Ben: 20 − 4/2 = 18 ✗. Chris: 6/4 = 1.5 ✗.', m:'Arithmetic slips while testing (order of operations in Ben\'s formula).', ask:'"In Ben\'s formula, what gets divided by l: just B or everything?"'},
+ ]},
+ '2b':{answer:'A − B = ½lp → 2(A − B) = lp → p = 2(A − B)/l', steps:[
+   {s:'Subtract B from both sides: A − B = ½lp.', m:'Left blank on the test: he could identify the right answer but not produce the proof. Start by asking what was done to p last.', ask:'"When the formula was built, what was the last thing done? Then what do we undo first?"'},
+   {s:'Multiply both sides by 2: 2(A − B) = lp.', m:'Dividing by 2 (Chris\'s error) or multiplying only A.', ask:'"What is the opposite of multiplying by one-half? Does it apply to the whole side?"'},
+   {s:'Divide both sides by l: p = 2(A − B)/l.', m:'Dividing only one term by l (Ben\'s error).', ask:'"If we divide the left side by l, how much of it gets divided?"'},
+ ]},
+ '2c':{answer:'Ben: cleared the ½ before subtracting B and divided only B by l (order of operations). Chris: divided by 2 instead of multiplying by 2.', steps:[
+   {s:'Compare each wrong answer against the correct undo sequence.', m:'He wrote "Ben forgot to multiply A and B," which sees the missing distribution but not the order-of-operations issue, and says nothing about Chris.', ask:'"You spotted that the 2 did not reach B. What else is different about where Ben\'s l is?"'},
+   {s:'Name the step where each one went wrong, in words.', m:'Vague explanations ("he did it wrong"). The test wants the specific step.', ask:'"Which step number did Ben break? Which one did Chris break?"'},
+ ]},
+ '3a':{answer:'y = k/(5 − k)   (equivalently −k/(k − 5))', steps:[
+   {s:'Collect y terms on one side: subtract 3y → k = 8y − ky − 3y = 5y − ky.', m:'Moving a term without flipping its sign; or not recognizing ky as a y term because it has a k attached.', ask:'"Which terms have a y in them? Even the sneaky one?"'},
+   {s:'Factor y out: k = y(5 − k).', m:'Trying to divide by 5 only, leaving ky behind; this is the single biggest gap on his test.', ask:'"y is in two terms. What can we pull out of both so y appears only once?"'},
+   {s:'Divide both sides by (5 − k): y = k/(5 − k).', m:'Dividing by 5 and k separately, or leaving the answer as k = y(5 − k).', ask:'"y is being multiplied by the whole group (5 − k). What undoes that?"'},
+ ]},
+ '3b':{answer:'y = nx/4 + c', steps:[
+   {s:'Multiply both sides by n: nx = 4(y − c).', m:'Dividing by n instead, or multiplying only part of a side.', ask:'"What is happening to the right side right now: divided by n? So what cancels that?"'},
+   {s:'Divide both sides by 4: nx/4 = y − c.', m:'Distributing the 4 first (fine, but then the c must be handled as 4c).', ask:'"Do you want to distribute the 4 or divide it away? Either works. Which is fewer steps?"'},
+   {s:'Add c to both sides: y = nx/4 + c.', m:'Subtracting c instead of adding.', ask:'"y has a −c stuck to it. What undoes subtracting c?"'},
+ ]},
+ '3c':{answer:'t = −11', steps:[
+   {s:'Cross-multiply (the bar groups each top): 5(t + 2) = 3(t − 4).', m:'Treating the fraction bar as not grouping: writing 5t + 2 = 3t − 4.', ask:'"The 5 multiplies the whole top. What is the whole top?"'},
+   {s:'Distribute: 5t + 10 = 3t − 12.', m:'Forgetting to distribute to the second term.', ask:'"5 times t is 5t. 5 times what else?"'},
+   {s:'Collect: 2t = −22, so t = −11.', m:'Sign error when moving the 10 (getting +2 or 11).', ask:'"Moving the 10 across: does it stay +10?"'},
+ ]},
+ '3d':{answer:'y = 2', steps:[
+   {s:'Simplify the fraction: (12 − 6y)/3 = 4 − 2y (both terms on top get divided).', m:'Dividing only the 12 by 3 and keeping −6y (gives y = 4).', ask:'"The bar is under both 12 and 6y. What is 6y ÷ 3?"'},
+   {s:'Rewrite: 2y = 4 − 2y + 4 = 8 − 2y.', m:'Losing the + 4 that sits outside the fraction.', ask:'"Is the + 4 under the bar or outside it?"'},
+   {s:'Add 2y to both sides: 4y = 8, so y = 2.', m:'Sign error moving −2y.', ask:'"To get rid of a −2y, what do we add to both sides?"'},
+ ]},
+ '4a':{answer:'w = (P − 2l)/2  or  P/2 − l', steps:[
+   {s:'Subtract 2l from both sides: P − 2l = 2w.', m:'Subtracting l instead of 2l.', ask:'"What exactly is being added to 2w? All of 2l?"'},
+   {s:'Divide both sides by 2: w = (P − 2l)/2.', m:'Dividing only one term (P − 2l/2 = P − l). Parentheses prevent this.', ask:'"Before you divide, put the whole side in parentheses. Now what gets divided?"'},
+ ]},
+ '4b':{answer:'w = 36 in', steps:[
+   {s:'Substitute P = 156, l = 42 into w = (P − 2l)/2.', m:'Subtracting 42 instead of 84.', ask:'"How many long sides does a rectangle have?"'},
+   {s:'(156 − 84)/2 = 72/2 = 36.', m:'Stopping at 72 (that is 2w).', ask:'"Is 72 one width or two widths?"'},
+   {s:'Verify: 2(42) + 2(36) = 84 + 72 = 156 ✓.', m:'Skipping the check.', ask:'"Does your width rebuild the perimeter 156?"'},
+ ]},
+ '5a':{answer:'18 + 6.5x < 12 + 7.5x', steps:[
+   {s:'Write each total: ClearSpring 18 + 6.5x; PureWater 12 + 7.5x.', m:'Comparing only the per-jug prices or only the fees.', ask:'"What is the whole bill from each company for x jugs?"'},
+   {s:'"ClearSpring costs less" → ClearSpring total < PureWater total (strict).', m:'Reversing the direction, or using ≤.', ask:'"Which bill should be the smaller one? If they tie, does ClearSpring cost less?"'},
+ ]},
+ '5b':{answer:'6 < x, i.e., x > 6', steps:[
+   {s:'Subtract 6.5x from both sides: 18 < 12 + x. (Keeps the coefficient positive, so nothing flips.)', m:'Subtracting 7.5x instead, getting −x < −6, then forgetting to flip when dividing by −1 (gives x < −6).', ask:'"Which x term do you want to move so you do not end up with a negative in front of x?"'},
+   {s:'Subtract 12: 6 < x.', m:'Arithmetic slip on 18 − 12.', ask:'"What is 18 − 12?"'},
+   {s:'Read it correctly: 6 < x means x is greater than 6.', m:'Reading 6 < x as "x is less than 6."', ask:'"Which side is x on? Is x the bigger or smaller thing?"'},
+ ]},
+ '5c':{answer:'At least 7 jugs (at exactly 6 the plans cost the same)', steps:[
+   {s:'Translate x > 6 to the real world: jugs are whole numbers.', m:'Reporting "6 jugs" (the algebraic boundary) as the real-world answer.', ask:'"Compute both bills at 6 jugs. Who is cheaper?"'},
+   {s:'The smallest whole number greater than 6 is 7.', m:'Saying 6.5 or 6.1.', ask:'"Can you order part of a jug?"'},
+ ]},
+ '6a':{answer:'48 < x + (x + 1) + (x + 2) < 69, i.e., 48 < 3x + 3 < 69', steps:[
+   {s:'Write the three integers: x, x + 1, x + 2.', m:'Using x, y, z or x, 2x, 3x.', ask:'"If the smallest is x, what is the very next integer?"'},
+   {s:'Sum: 3x + 3.', m:'Writing 3x (forgetting the +1 and +2).', ask:'"Add the three. How many x\'s? How many plain ones?"'},
+   {s:'Trap the sum: 48 < 3x + 3 < 69, strict on both sides.', m:'Writing only one side, or using ≤.', ask:'"The story gave two conditions. Where is the second one?"'},
+ ]},
+ '6b':{answer:'15 < x < 22', steps:[
+   {s:'Subtract 3 from all three parts: 45 < 3x < 66.', m:'Solving only the middle (subtracting 3 from the middle but not the ends).', ask:'"There are three parts. Did all three get the same treatment?"'},
+   {s:'Divide all three parts by 3: 15 < x < 22.', m:'Dividing only the middle.', ask:'"Same question: all three?"'},
+ ]},
+ '6c':{answer:'(16,17,18), (17,18,19), (18,19,20), (19,20,21), (20,21,22), (21,22,23)', steps:[
+   {s:'List the integers strictly between 15 and 22: 16, 17, 18, 19, 20, 21.', m:'Including 15 or 22 (boundaries are not solutions).', ask:'"Is 15 greater than 15?"'},
+   {s:'Build each triple from its x.', m:'Listing only the x values and not the triples, or only one triple.', ask:'"Each x starts a set. What are the other two in each set?"'},
+   {s:'Verify an edge: 21 + 22 + 23 = 66 < 69 ✓; 22 + 23 + 24 = 69, not < 69.', m:'Skipping the check.', ask:'"Check the last one. Is its sum really less than 69?"'},
+ ]},
+ '6d':{answer:'Open circles at 15 and 22, shaded between', steps:[
+   {s:'Mark the endpoints 15 and 22 from part (b).', m:'Marking 16 and 21 (the integer solutions) instead of the inequality\'s boundaries.', ask:'"The graph shows the inequality, not the list. What are the two numbers in 15 < x < 22?"'},
+   {s:'Use open circles because the inequalities are strict.', m:'Closed circles for strict inequalities.', ask:'"Does 15 count as a solution? Then is its circle filled or empty?"'},
+   {s:'Shade between the circles.', m:'Shading outward (an "or" graph) instead of between.', ask:'"Is x trapped between the two, or escaping outward?"'},
+ ]},
+};
+
+const OBSERVED = [
+  {id:'1a', note:'Wrote "1600 + 400h ≤ 3000 − 1600", fusing a solving step into the setup. The inequality must describe the situation before anything is moved.'},
+  {id:'1b', note:'Wrote "t = total time" but no inequality. Defined the variable, then could not bridge to an expression (t − 3 extra hours, 800 per hour).'},
+  {id:'1c', note:'Wrote "4½ hours" with no work. Right answer, no visible reasoning; on a graded test the reasoning is the insurance.'},
+  {id:'2a', note:'Ana. Correct.'},
+  {id:'2b', note:'Blank. Could recognize the right answer but not produce the algebraic steps.'},
+  {id:'2c', note:'"Ben forgot to multiply A and B." Half right: sees the missing distribution but not the order-of-operations problem, and did not address Chris.'},
+  {id:'3', note:'Problems 3 through 6 left blank. Problem 3 (literal equations with the variable on both sides, and fractions) is the biggest gap and the biggest share of the test. He avoided attempting, so this tool makes attempting cheap: no penalty, respawn with a hint.'},
+];
+/* ===== Engine: state, persistence, routing, HUD, lobby, gate ===== */
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const h = (strings,...vals)=>strings.reduce((o,s,i)=>o+s+(i<vals.length?vals[i]:''),'');
+
+const BADGES = [
+  {id:'first', name:'First Coin', ico:'🪙', how:'Get any answer right.'},
+  {id:'respawn', name:'Comeback Kid', ico:'🔁', how:'Get one right after a respawn.'},
+  {id:'check_all', name:'Checked Out', ico:'✅', how:'Clear all 19 parts in Check My Answers.'},
+  {id:'letters', name:'Letter Wrangler', ico:'🔤', how:'Clear all four parts of Problem 3.'},
+  {id:'fraction', name:'Bar Tamer', ico:'➗', how:'Clear 3c and 3d.'},
+  {id:'nine', name:'Beat Negative Nine', ico:'🙃', how:'Clear Level 2 and Level 5.'},
+  {id:'l1',name:'Level 1 Clear',ico:'🚩',how:'Clear every checkpoint in Level 1.'},{id:'l2',name:'Level 2 Clear',ico:'🚩',how:'Clear every checkpoint in Level 2.'},{id:'l3',name:'Level 3 Clear',ico:'🚩',how:'Clear every checkpoint in Level 3.'},{id:'l4',name:'Level 4 Clear',ico:'🚩',how:'Clear every checkpoint in Level 4.'},{id:'l5',name:'Level 5 Clear',ico:'🚩',how:'Clear every checkpoint in Level 5.'},{id:'l6',name:'Level 6 Clear',ico:'🚩',how:'Clear every checkpoint in Level 6.'},
+  {id:'boss', name:'Boss Slayer', ico:'👑', how:'Score 80% or more on the Final Boss.'},
+  {id:'perfect', name:'Flawless', ico:'💎', how:'A perfect Final Boss run.'},
+];
+
+const State = {
+  s:{coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:false, voice:false},
+  mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false,
+  listeners:new Set(),
+  on(fn){this.listeners.add(fn);}, emit(){this.listeners.forEach(f=>f());},
+  _t:null,
+  save(){ renderHUD(); if(!this.db||!this.uid) return; clearTimeout(this._t); this._t=setTimeout(()=>this.flush(),700); },
+  async flush(){ if(!this.db||!this.uid) return; try{ const {attempts,...rest}=this.s; await this.db.doc('data/users/'+this.uid+'/profile').set({...rest, updatedAt:Date.now()}); }catch(e){ console.warn('save failed',e); } },
+  addCoins(n,why){ this.s.coins+=n; toast(`+${n} coins${why?' · '+why:''}`); ding(); if(!this.s.badges.first) this.award('first'); this.save(); },
+  award(id){ if(this.s.badges[id]) return; this.s.badges[id]=Date.now(); const b=BADGES.find(x=>x.id===id); toast(`🏅 Badge: ${b?b.name:id}`); this.save(); },
+};
+
+/* audio: tiny ding, no assets */
+let actx=null; function ding(){ if(State.s.muted) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type='square'; o.frequency.setValueAtTime(880,actx.currentTime); o.frequency.setValueAtTime(1320,actx.currentTime+.08); g.gain.setValueAtTime(.06,actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.25); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+.26);}catch(e){} }
+function thud(){ if(State.s.muted) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type='triangle'; o.frequency.setValueAtTime(220,actx.currentTime); o.frequency.exponentialRampToValueAtTime(90,actx.currentTime+.2); g.gain.setValueAtTime(.08,actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.25); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+.26);}catch(e){} }
+
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; $('#toasts').appendChild(t); setTimeout(()=>t.remove(),2600); }
+function modal(html, actions){ const m=document.createElement('div'); m.className='modal'; m.innerHTML=`<div class="block" role="dialog" aria-modal="true"><div class="stack">${html}<div class="row" id="mact"></div></div></div>`; actions.forEach(a=>{ const b=document.createElement('button'); b.className='btn '+(a.cls||''); b.textContent=a.label; b.onclick=()=>{ m.remove(); a.fn&&a.fn(); }; $('#mact',m).appendChild(b); }); document.body.appendChild(m); return m; }
+
+/* ---- avatar + course ---- */
+function avatarSVG(){ return `<svg viewBox="0 0 34 46" aria-hidden="true"><rect x="7" y="2" width="20" height="18" fill="#f3c08a" stroke="#1d2733" stroke-width="3"/><rect x="7" y="2" width="20" height="6" fill="#5a3b1e"/><rect x="12" y="10" width="3" height="3" fill="#1d2733"/><rect x="20" y="10" width="3" height="3" fill="#1d2733"/><rect x="13" y="15" width="8" height="2" fill="#1d2733"/><rect x="5" y="21" width="24" height="14" fill="#2fb37a" stroke="#1d2733" stroke-width="3"/><rect x="1" y="21" width="4" height="12" fill="#f3c08a" stroke="#1d2733" stroke-width="2"/><rect x="29" y="21" width="4" height="12" fill="#f3c08a" stroke="#1d2733" stroke-width="2"/><rect x="7" y="35" width="8" height="9" fill="#3a56a8" stroke="#1d2733" stroke-width="2"/><rect x="19" y="35" width="8" height="9" fill="#3a56a8" stroke="#1d2733" stroke-width="2"/></svg>`; }
+function courseHTML(checkpoints, clearedCount, color){
+  // checkpoints: array of labels. avatar sits at index clearedCount (0 = start)
+  const n=checkpoints.length; const xs=checkpoints.map((_,i)=>8+ (84*(i+1))/n);
+  let svg=`<svg viewBox="0 0 100 40" preserveAspectRatio="none">`;
+  svg+=`<rect x="0" y="30" width="100" height="10" fill="var(--grass)" stroke="var(--ink)" stroke-width=".6"/>`;
+  xs.forEach((x,i)=>{ const done=i<clearedCount; svg+=`<rect x="${x-4}" y="${22-(i%2)*3}" width="8" height="${8+(i%2)*3}" fill="${done?'var(--ok)':'var(--dirt)'}" stroke="var(--ink)" stroke-width=".5"/><line x1="${x}" y1="${22-(i%2)*3}" x2="${x}" y2="${12-(i%2)*3}" stroke="var(--ink)" stroke-width=".6"/><rect x="${x}" y="${12-(i%2)*3}" width="6" height="4" fill="${done?color:'var(--line)'}" stroke="var(--ink)" stroke-width=".4"/>`; });
+  svg+=`</svg>`;
+  const ax = clearedCount===0? 4 : xs[Math.min(clearedCount,n)-1];
+  const labels = checkpoints.map((c,i)=>`<span style="position:absolute;left:${xs[i]}%;transform:translateX(-50%);bottom:-2px;font-size:.68rem;font-weight:900;color:${i<clearedCount?'var(--ok)':'var(--muted)'};white-space:nowrap">${esc(c)}</span>`).join('');
+  return `<div class="course" aria-hidden="true">${svg}<div class="avatar" style="left:${ax}%">${avatarSVG()}</div>${labels}</div>`;
+}
+
+/* ---- routing ---- */
+const VIEWS = {};
+let route = {view:'lobby', arg:null};
+function go(view,arg=null){ route={view,arg}; try{ history.replaceState(null,'', '#'+(arg!==null?view+arg:view)); }catch(e){} render(); window.scrollTo({top:0}); }
+function render(){
+  const app=$('#app'); const v=VIEWS[route.view]||VIEWS.lobby; app.innerHTML=''; v(app,route.arg); renderHUD();
+}
+function renderHUD(){
+  $('#coinCount').textContent=State.s.coins; $('#badgeCount').textContent=Object.keys(State.s.badges).length;
+  const tabs=[['lobby','Lobby'],['learn','Learn'],['check','Check'],['boss','Final Boss']];
+  $('#nav').innerHTML=tabs.map(([k,l])=>`<button class="tab" data-v="${k}" aria-current="${route.view===k||(k==='learn'&&route.view==='level')?'page':'false'}">${l}</button>`).join('');
+  $('#nav').querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.v));
+}
+function learnLink(n){ const L=LEVELS[n-1]; return `<a href="#level${n}" data-go="level" data-arg="${n}">→ Level ${n}: ${esc(L.title)}</a>`; }
+document.addEventListener('click',e=>{ const a=e.target.closest('[data-go]'); if(a){ e.preventDefault(); go(a.dataset.go, a.dataset.arg?+a.dataset.arg:null); } });
+
+/* ---- Lobby ---- */
+VIEWS.lobby = (app)=>{
+  const checkDone=ITEMS.filter(i=>State.s.checks[i.id]&&State.s.checks[i.id].correct).length;
+  const best=State.s.attempts.length? Math.max(...State.s.attempts.map(a=>a.pct)) : null;
+  app.innerHTML=h`
+  <div class="stack">
+   <div class="block" style="background:linear-gradient(135deg,var(--panel),var(--panel2))">
+    <p class="eyebrow">Spawn lobby</p>
+    <h1>Pick a portal.</h1>
+    <p style="margin-top:6px">Six Learn levels are obbies: clear checkpoints, earn coins. <b>Check My Answers</b> grades your real practice test. The <b>Final Boss</b> is a fresh test with new numbers. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" data-go="check">Check My Answers</button>
+      <button class="btn gold" data-go="boss">Fight the Final Boss</button>
+      <button class="btn alt sm" id="muteBtn">${State.s.muted?'🔇 Sound off':'🔊 Sound on'}</button>
+    </div>
+   </div>
+   <div class="grid" id="portals">
+    ${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}
+    <button class="portal big" data-go="check" style="--pc:var(--accent)"><div style="flex:1;min-width:200px"><span class="lvl">CHECK MY ANSWERS</span><h3>Your practice test, graded live</h3><p class="muted" style="font-size:.9rem">19 parts. Type an answer, get coins or a hint. Hints never give the answer.</p></div><div style="min-width:160px;flex:1"><div class="prog"><i style="width:${Math.round(100*checkDone/ITEMS.length)}%"></i></div><span class="muted" style="font-size:.8rem">${checkDone}/${ITEMS.length} cleared</span></div></button>
+    <button class="portal big" data-go="boss" style="--pc:var(--gold)"><div style="flex:1;min-width:200px"><span class="lvl" style="color:var(--bad)">FINAL BOSS</span><h3>Fresh test, new numbers, same moves</h3><p class="muted" style="font-size:.9rem">No feedback until you hit Grade. Retake as many times as you like.</p></div><div style="min-width:160px;flex:1"><span class="muted" style="font-size:.85rem">${best===null?'No runs yet':`Best run: <b class="num">${best}%</b> · ${State.s.attempts.length} run${State.s.attempts.length===1?'':'s'}`}</span></div></button>
+   </div>
+   <div class="block soft"><p class="eyebrow">Badges</p><div class="row" style="margin-top:8px">${BADGES.map(b=>`<span class="badge ${State.s.badges[b.id]?'got':''}" title="${esc(b.how)}"><span class="ico">${b.ico}</span>${esc(b.name)}</span>`).join('')}</div></div>
+  </div>`;
+  $('#muteBtn').onclick=()=>{ State.s.muted=!State.s.muted; State.save(); render(); };
+};
+function levelProgress(n){ const L=State.s.learn['l'+n]||{}; const keys=['explainer','video','q1','q2','q3'].filter(k=>k!=='q3'||LEVEL_DEFS[n-1].boss.length>2); return {done:keys.filter(k=>L[k]).length,total:keys.length}; }
+
+/* ---- Parent gate ---- */
+function openGate(){
+  if(State.unlocked) return go('guide');
+  const m=modal(`<p class="eyebrow">Guide</p><h2>Enter the passphrase</h2><p class="muted">This area is for the grown-up who set this up.</p><div class="lock"><input type="text" id="pp" placeholder="passphrase" autocomplete="off" autocapitalize="off"><span id="ppmsg" class="muted"></span></div>`,[{label:'Unlock',fn:null,cls:'gold'},{label:'Back',cls:'alt'}]);
+  const btn=$('#mact .btn',m); btn.onclick=()=>{ const v=($('#pp',m).value||'').trim().toLowerCase(); if(v===PARENT_PASSPHRASE.toLowerCase()){ State.unlocked=true; m.remove(); go('guide'); } else { $('#ppmsg',m).textContent='Not it.'; } };
+  $('#pp',m).addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); }); setTimeout(()=>$('#pp',m).focus(),50);
+}
+
+/* ---- Hints: pattern match, escalate, optional AI ---- */
+function helperFor(item, raw){
+  const H={ raw, has:re=>re.test(raw), rel:s=>M.relEquiv(raw,s), expr:s=>{ const ss=M.solvedSide(raw,item.var); return !!(ss.expr&&M.exprEquiv(ss.expr,s)); }, num:n=>M.numEq(M.toNumber(raw),n), ints:M.integers(raw), status:null, relEq:s=>{ const t=M.tryParse(raw); return !!(t&&t.t==='rel'&&M.tryParse(s)&&equationEquiv(t,M.tryParse(s))); } };
+  if(item.kind==='expr') H.status=M.solvedSide(raw,item.var).status;
+  return H;
+}
+// equations A=B and C=D: equivalent if (A-B) is a nonzero constant multiple of (C-D)
+function equationEquiv(a,b){
+  if(a.ops.length!==1||b.ops.length!==1||a.ops[0]!=='='||b.ops[0]!=='=') return false;
+  const vs=[...new Set([...M.vars(a),...M.vars(b)])]; const r=M.rng(77); let ratio=null, n=0;
+  for(let i=0;i<30;i++){ const env={}; vs.forEach(v=>env[v]=r()*6-3); let x,y; try{ x=M.ev(a.parts[0],env)-M.ev(a.parts[1],env); y=M.ev(b.parts[0],env)-M.ev(b.parts[1],env);}catch(e){return false;} if(!isFinite(x)||!isFinite(y)||Math.abs(y)<1e-9) continue; const q=x/y; if(ratio===null) ratio=q; else if(Math.abs(q-ratio)>1e-6*Math.max(1,Math.abs(ratio))) return false; n++; }
+  return n>=6&&ratio!==null&&Math.abs(ratio)>1e-9;
+}
+function pickHint(item, raw, attempt){
+  const H=helperFor(item, raw); let text=null, matched=false;
+  for(const hh of (item.hints||[])){ let ok=false; try{ ok=hh.when(raw,H);}catch(e){} if(ok){ text=hh.text; matched=true; break; } }
+  if(!text) text = attempt>=2 ? item.generic[1] : item.generic[0];
+  if(attempt>=2 && matched && item.generic[1]) text += ' <br><b>Stronger hint:</b> '+item.generic[1];
+  return {text, matched};
+}
+async function aiHint(item, raw){
+  if(!State.sample) return null;
+  const P=PROBLEMS.find(p=>p.n===item.p);
+  const prompt=`You are a friendly, funny coach for an 11-year-old working on Algebra 1 (treat the reading level as 6th grade, the math as Algebra 1). Never state the final answer or any equivalent form of it. Hint at the single step where the student most likely went wrong, in 1-3 short sentences, ending with a question the student can act on. No praise padding, no first-person "I". Plain text only.
+Problem context: ${P.stem.replace(/<[^>]+>/g,'')}
+Sub-part: ${item.prompt.replace(/<[^>]+>/g,'')}
+Correct answer (secret, do not reveal): ${item.answer||item.nl&&JSON.stringify(item.nl)||'see steps'}
+Student typed: ${raw}`;
+  try{ const r=await State.sample(prompt,{modelTier:'quick',cache:true}); return r.text.trim(); }catch(e){ return null; }
+}
+/* ===== Shared widgets: grading, number line, order, choice ===== */
+function gradeItem(item, raw, extra){
+  // returns {ok:boolean, partial?:string}
+  switch(item.kind){
+    case 'rel': { if(!M.relEquiv(raw,item.answer)) return {ok:false}; if(item.solved){ const t=M.tryParse(raw); const bare=t.parts.filter(x=>x.t==='v'&&x.v===item.solved).length; const others=t.parts.filter(x=>!(x.t==='v'&&x.v===item.solved)); if(bare!==1||others.some(x=>M.vars(x).has(item.solved))) return {ok:false,partial:'That is true, but not finished: get '+item.solved+' alone in its own part.'}; } return {ok:true}; }
+    case 'expr': { const ss=M.solvedSide(raw,item.var); return {ok: ss.status==='ok' && M.exprEquiv(ss.expr,item.answer)}; }
+    case 'num': { const n=M.toNumber(raw); const want=M.toNumber(item.answer); if(M.numEq(n,want)) return {ok:true}; if(item.partial&&n!==null){ for(const k in item.partial) if(M.numEq(n,+k)) return {ok:false,partial:item.partial[k]}; } return {ok:false}; }
+    case 'choice': return {ok:item.correct.includes(+raw)};
+    case 'order': return {ok: raw===item.steps.map((_,i)=>i).join('')};
+    case 'numberline': { const nl=extra; const w=item.nl; return {ok: !!nl && nl.lo===w.lo && nl.hi===w.hi && nl.loOpen===w.loOpen && nl.hiOpen===w.hiOpen}; }
+    case 'triples': { const ints=M.integers(raw); const want=item.want||[16,17,18,19,20,21]; const set=new Set(ints);
+      const allTriples = ints.length===want.length*3 && want.every(x=>set.has(x)&&set.has(x+1)&&set.has(x+2)) && ints.every(v=>v>=want[0]&&v<=want[want.length-1]+2);
+      const starts = ints.length===want.length && want.every(x=>set.has(x)) && ints.every(v=>want.includes(v));
+      return {ok: allTriples||starts}; }
+  }
+  return {ok:false};
+}
+function rawOf(item, el){
+  if(item.kind==='choice') return el.dataset.choice ?? '';
+  if(item.kind==='order') return el.dataset.order ?? '';
+  if(item.kind==='numberline') return JSON.stringify(el._nl.get());
+  return ($('.ans',el)||{}).value||'';
+}
+function answerUI(item, idx){
+  const id=`in-${idx}-${item.id}`;
+  switch(item.kind){
+    case 'choice': return `<div class="opts" role="group">${item.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>${item.explain?`<label for="${id}x" class="muted" style="font-size:.9rem">Optional: explain the error in your own words</label><textarea id="${id}x" placeholder="Ben… Chris…"></textarea>`:''}`;
+    case 'order': return `<div class="chips pool">${item.steps.map((s,i)=>i).sort((a,b)=>((a*7+3)%5)-((b*7+3)%5)).map(i=>`<button type="button" class="chip" data-i="${i}">${item.steps[i]}</button>`).join('')}</div><p class="muted" style="font-size:.85rem">Your solution (tap a step to remove it):</p><div class="seq"></div>`;
+    case 'numberline': return `<div class="nl" data-min="${item.nl.min}" data-max="${item.nl.max}"></div>`;
+    case 'triples': return `<textarea class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off"></textarea>`;
+    default: return `<input type="text" class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="${item.kind==='num'?'decimal':'text'}">`;
+  }
+}
+function wireAnswerUI(item, el, onChange){
+  if(item.kind==='choice'){ el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ el.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); el.dataset.choice=b.dataset.i; onChange&&onChange(); }); }
+  if(item.kind==='order'){ const pool=$('.pool',el), seq=$('.seq',el); const upd=()=>{ el.dataset.order=[...seq.children].map(c=>c.dataset.i).join(''); onChange&&onChange(); };
+    pool.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ seq.appendChild(c); upd(); }); seq.addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(c){ pool.appendChild(c); upd(); } }); }
+  if(item.kind==='numberline'){ el._nl=numberLine($('.nl',el), item.nl.min, item.nl.max, onChange); }
+  if(item.kind==='num'||item.kind==='rel'||item.kind==='expr'||item.kind==='triples'){ const i=$('.ans',el); i.addEventListener('input',()=>onChange&&onChange()); }
+}
+/* Draggable number line: two handles, tap to toggle open/closed, shade between. */
+function numberLine(host, min, max, onChange, init){
+  const W=600, H=80, pad=24; const st={lo:init?init.lo:min+2, hi:init?init.hi:max-2, loOpen:init?init.loOpen:true, hiOpen:init?init.hiOpen:true};
+  const X=v=>pad+(v-min)/(max-min)*(W-2*pad); const V=x=>Math.round(min+(x-pad)/(W-2*pad)*(max-min));
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Number line from ${min} to ${max}"><line x1="${pad-14}" y1="40" x2="${W-pad+14}" y2="40" class="tick"/>`;
+  for(let v=min;v<=max;v++){ s+=`<line x1="${X(v)}" y1="33" x2="${X(v)}" y2="47" class="tick"/><text x="${X(v)}" y="66" class="lab">${v}</text>`; }
+  s+=`<line class="shade" y1="40" y2="40"/><circle class="dot" data-h="lo" cy="40" r="11"/><circle class="dot" data-h="hi" cy="40" r="11"/></svg>
+  <div class="row" style="font-size:.85rem;justify-content:space-between"><span class="muted">Drag a circle to move it. Tap it to switch open ○ / closed ●.</span><span class="num readout"></span></div>`;
+  host.innerHTML=s;
+  const svg=$('svg',host), shade=$('.shade',host), dots={lo:$('[data-h=lo]',host), hi:$('[data-h=hi]',host)}, ro=$('.readout',host);
+  function sync(){ shade.setAttribute('x1',X(st.lo)); shade.setAttribute('x2',X(st.hi)); for(const k of ['lo','hi']){ dots[k].setAttribute('cx',X(st[k])); dots[k].classList.toggle('open',st[k+'Open']); dots[k].classList.toggle('closed',!st[k+'Open']); } ro.textContent=`${st.loOpen?'(':'['}${st.lo}, ${st.hi}${st.hiOpen?')':']'}`; }
+  let drag=null, moved=false;
+  const pt=e=>{ const r=svg.getBoundingClientRect(); return (e.clientX-r.left)/r.width*W; };
+  for(const k of ['lo','hi']) dots[k].addEventListener('pointerdown',e=>{ drag=k; moved=false; try{ svg.setPointerCapture(e.pointerId);}catch(x){} e.preventDefault(); });
+  svg.addEventListener('pointermove',e=>{ if(!drag) return; const v=Math.max(min,Math.min(max,V(pt(e)))); if(v!==st[drag]){ moved=true; st[drag]=v; if(st.lo>st.hi){ const t=st.lo; st.lo=st.hi; st.hi=t; drag=drag==='lo'?'hi':'lo'; } sync(); } });
+  const up=()=>{ if(drag&&!moved){ st[drag+'Open']=!st[drag+'Open']; sync(); } if(drag){ drag=null; onChange&&onChange(); } };
+  svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',up);
+  sync();
+  return {get:()=>({...st}), set:(o)=>{Object.assign(st,o);sync();}};
+}
+
+/* ===== Check My Answers ===== */
+VIEWS.check = (app)=>{
+  const cleared=ITEMS.filter(i=>State.s.checks[i.id]?.correct).length;
+  app.innerHTML=h`<div class="stack">
+   <div class="block"><p class="eyebrow">Check my answers</p><h1>Your practice test, graded live.</h1><p style="margin-top:6px">Same problems, same numbers. Type an answer and tap <b>Check</b>. Right: coins. Wrong: you respawn with a hint about <i>your</i> answer, never the answer itself. Three tries unlocks "show me the first step."</p>
+   <div class="row" style="margin-top:10px"><span class="pill badges">${cleared}/${ITEMS.length} cleared</span><span class="muted" style="font-size:.9rem">Typing tips: ≤ can be typed as &lt;=, fractions as k/(5-k), and 2x means 2·x.</span></div></div>
+   ${PROBLEMS.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack" style="--gap:10px">${ITEMS.filter(i=>i.p===P.n).map((it,k)=>itemHTML(it,'c')).join('')}</div></div>`).join('')}
+  </div>`;
+  ITEMS.forEach(it=>wireCheckItem(it, app.querySelector(`[data-item="${it.id}"]`)));
+};
+function itemHTML(it, prefix){
+  const rec=State.s.checks[it.id]; const done=rec&&rec.correct;
+  return `<div class="item ${done?'ok':''}" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()} ${done?'<span class="ck">✔ cleared</span>':''}<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· ${SKILL_NAMES[it.skill]}</span></div><div>${it.prompt}</div>${answerUI(it,prefix)}<div class="row"><button type="button" class="btn sm check">${done?'Check again':'Check'}</button><span class="muted tries" style="font-size:.85rem">${rec&&rec.attempts?`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`:''}</span></div><div class="fbwrap"></div></div>`;
+}
+function wireCheckItem(it, el){
+  wireAnswerUI(it, el);
+  $('.check',el).onclick=async()=>{
+    const raw=rawOf(it,el).trim(); if(!raw||raw==='{}'){ showFB(el,'info','Type something first. Any attempt is free.'); return; }
+    const extra = it.kind==='numberline'? el._nl.get() : null;
+    const res=gradeItem(it, raw, extra);
+    const rec=State.s.checks[it.id]||(State.s.checks[it.id]={attempts:0,correct:false,firstTry:false,history:[]});
+    rec.attempts++; rec.history.push({raw: it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:raw, ok:res.ok, ts:Date.now()}); if(rec.history.length>25) rec.history.shift();
+    $('.tries',el).textContent=`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`;
+    if(res.ok){
+      const first=!rec.correct; const hadMiss=rec.history.some(x=>!x.ok);
+      if(first){ rec.correct=true; rec.firstTry=rec.attempts===1; rec.clearedAt=Date.now(); State.addCoins(rec.firstTry?10:5,'checkpoint cleared'); if(hadMiss) State.award('respawn'); }
+      else State.save();
+      el.classList.add('ok'); el.classList.remove('bad'); $('.tag',el).innerHTML=`${it.id.toUpperCase()} <span class="ck">✔ cleared</span>`;
+      showFB(el,'ok',first?pickPraise(it):'Still right. Checkpoint stays cleared.');
+      if(it.explain && State.sample){ const x=$('textarea',el); if(x&&x.value.trim().length>8) aiExplainFeedback(it,x.value.trim(),el); }
+      checkBadges();
+    } else {
+      thud(); el.classList.add('bad'); State.save();
+      const n=rec.history.filter(x=>!x.ok).length;
+      if(res.partial){ showFB(el,'warn',`<span class="who">Partially correct</span>${res.partial} ${learnLink(it.learn)}`); return; }
+      const {text,matched}=pickHint(it, raw, n);
+      let html=`<span class="who">Respawn · hint ${Math.min(n,3)}</span>${text}`;
+      if(n>=3) html+=`<br><button type="button" class="btn ghost sm firststep">Show me the first step</button>`;
+      html+=`<br>${learnLink(it.learn)}`;
+      showFB(el,'bad',html);
+      const fs=$('.firststep',el); if(fs) fs.onclick=()=>{ fs.outerHTML=`<div class="fb info" style="margin-top:6px"><span class="who">First step</span>${it.firstStep}</div>`; };
+      if(!matched && State.sample && it.kind!=='choice' && it.kind!=='order' && it.kind!=='numberline'){
+        const box=$('.fb',el); const ai=document.createElement('div'); ai.className='muted'; ai.style.marginTop='6px'; ai.textContent='Coach is thinking…'; box.appendChild(ai);
+        const t=await aiHint(it, raw); if(t) ai.innerHTML=`<span class="who">Coach</span>${esc(t)}`; else ai.remove();
+      }
+    }
+  };
+}
+async function aiExplainFeedback(it, text, el){
+  try{ const r=await State.sample(`A student (11 years old, Algebra 1) was asked to explain the error in these solutions for p from A = ½lp + B. Ben: p = 2A − B/l (error: cleared the ½ before subtracting B, and divided only B by l). Chris: p = (A − B)/(2l) (error: divided by 2 instead of multiplying by 2). The student wrote: "${text}". In 2 short sentences, say what the explanation gets right and what it is missing, as questions the student can answer. Do not use first person. Plain text.`,{modelTier:'quick',cache:true}); const d=document.createElement('div'); d.className='fb info'; d.innerHTML=`<span class="who">Coach on your explanation</span>${esc(r.text.trim())}`; $('.fbwrap',el).appendChild(d);}catch(e){}
+}
+const PRAISE=['Checkpoint cleared. Vera the Variable is finally alone and only slightly panicking.','Correct. Negative Nine just flipped his own sign in frustration.','Cleared. The fraction bar sends its regards (it is a grouping symbol, after all).','Nailed it. Respawn point moved forward.','Correct. The Checker plugged it back in and it holds.','Cleared. That is real Algebra 1 you just did.'];
+function pickPraise(it){ return PRAISE[(it.id.charCodeAt(0)+it.id.charCodeAt(1))%PRAISE.length]; }
+function showFB(el,kind,html){ $('.fbwrap',el).innerHTML=`<div class="fb ${kind}">${html}</div>`; }
+function checkBadges(){
+  const c=State.s.checks; const ok=id=>c[id]&&c[id].correct;
+  if(ITEMS.every(i=>ok(i.id))) State.award('check_all');
+  if(['3a','3b','3c','3d'].every(ok)) State.award('letters');
+  if(ok('3c')&&ok('3d')) State.award('fraction');
+}
+/* ===== Final Boss: seeded practice-test generator ===== */
+const NAMES=['Avery','Blake','Casey','Devin','Emery','Finley','Harper','Jordan','Kai','Lennon','Morgan','Quinn','Reese','Rowan','Sage','Tatum'];
+const F2=n=>Number.isInteger(n)?String(n):n.toFixed(2).replace(/0$/,'');
+const money=n=>'$'+(Number.isInteger(n)?n.toLocaleString('en-US'):n.toFixed(2));
+function genTest(seed){
+  const r=M.rng(seed); const ri=(a,b)=>a+Math.floor(r()*(b-a+1)); const pick=a=>a[Math.floor(r()*a.length)]; const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const probs=[], items=[];
+  /* P1 */
+  { const v=pick([{who:'A DJ',ev:'party'},{who:'A bounce-house company',ev:'block party'},{who:'A photo-booth company',ev:'dance'},{who:'A magician',ev:'birthday'},{who:'A food truck',ev:'fundraiser'}]);
+    const H0=pick([2,3,4]), R=pick([200,250,300,400,500]), n=ri(2,6), F=pick([800,1000,1200,1500,1600,2000]); const B=F+R*(n+0.5); const tot=H0+n/2;
+    probs.push({n:1,title:'The '+v.ev.replace(/^\w/,c=>c.toUpperCase())+' Budget',stem:`${v.who} charges <b>${money(F)}</b> for the first <b>${H0} hours</b> of a ${v.ev}, then <b>${money(R)}</b> for each <b>additional half-hour</b>. The budget is <b>${money(B)}</b>.`});
+    items.push({id:'1a',p:1,skill:'setup',learn:1,kind:'rel',work:false,prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation.',answer:`${F}+${R}h<=${B}`,show:`${F} + ${R}h ≤ ${B}`,placeholder:'e.g. fixed cost + ___h ≤ budget',
+      variants:[{form:`${F}+${R}h<${B}`,why:'Used a strict symbol; "budget" allows spending exactly the budget, so it needs ≤.'},{form:`${F}+${R}h>=${B}`,why:'Symbol points the wrong way; a budget is a ceiling, not a floor.'},{form:`${R}h<=${B}`,why:'Left out the fixed cost for the first hours.'},{form:`${F}+${R}h<=${B-F}`,why:'Fused a solving step into the setup; the inequality has to describe the situation before anything is moved.'}],
+      diag:'Build the total cost (fixed part + rate × h), then compare it to the budget with ≤.'});
+    items.push({id:'1b',p:1,skill:'setup',learn:1,kind:'rel',work:false,prompt:`Now let <i>t</i> = the <b>total</b> time in hours (including the first ${H0}). Write a new inequality using <i>t</i>.`,answer:`${F}+${2*R}(t-${H0})<=${B}`,show:`${F} + ${2*R}(t − ${H0}) ≤ ${B}`,placeholder:'e.g. ___ + ___(t − __) ≤ ___',
+      variants:[{form:`${F}+${2*R}t<=${B}`,why:`Charged for all t hours, but the first ${H0} are already covered by the fixed cost: extra hours are t − ${H0}.`},{form:`${F}+${R}(t-${H0})<=${B}`,why:`Used the half-hour price for a whole hour; one extra hour has two half-hours, so it costs ${2*R}.`},{form:`${F}+${R}t<=${B}`,why:'Mixed up the variable: t is total hours, not extra half-hours.'}],
+      diag:`Extra hours = t − ${H0}; each costs 2 × ${R} = ${2*R}. Then compare to the budget with ≤.`});
+    items.push({id:'1c',p:1,skill:'solve',learn:2,kind:'num',work:true,prompt:`Solve your inequality from (a). What is the <b>maximum total time</b> for the ${v.ev}, including the first ${H0} hours? (Answer in hours.)`,answer:String(tot),show:`${F2(tot)} hours`,placeholder:'hours',partial:{[String(H0+(n+0.5)/2)]:'The algebra was right, but only whole half-hours can be bought.'},
+      variants:[{num:n+0.5,why:'Stopped at the algebra answer for h (half-hours), not the total hours.'},{num:n,why:'Reported whole half-hours; the question asks for total time in hours.'},{num:n/2,why:'Found the extra hours but forgot to add the first '+H0+' hours.'}],
+      diag:`${F}+${R}h ≤ ${B} gives h ≤ ${n+0.5}; only ${n} whole half-hours fit, which is ${n/2} hours; total = ${H0} + ${n/2} = ${F2(tot)} hours.`});
+  }
+  /* P2 */
+  { const L=pick([['A','l','p','B'],['S','a','p','C'],['T','q','v','W'],['V','r','s','D'],['K','m','n','E']]); const [T,q,v,W]=L; const names=shuffle(NAMES).slice(0,3); const ci=ri(0,2);
+    const forms=[`${v} = 2(${T} − ${W}) / ${q}`,`${v} = 2${T} − ${W}/${q}`,`${v} = (${T} − ${W}) / (2${q})`]; // correct, ben-type, chris-type
+    const order=[0,1,2]; const arrange=shuffle([1,2]); const slots=[]; slots[ci]=0; const others=[0,1,2].filter(i=>i!==ci); slots[others[0]]=arrange[0]; slots[others[1]]=arrange[1];
+    const studs=names.map((nm,i)=>({nm,form:forms[slots[i]],kind:slots[i]}));
+    probs.push({n:2,title:'Three Students, One Formula',stem:`A formula says <span class="eq">${T} = ½${q}${v} + ${W}</span>. Three students solved it for <i>${v}</i>:<div class="students">${studs.map(s=>`<div><b>${s.nm}:</b> <span class="eq">${s.form}</span></div>`).join('')}</div>`});
+    items.push({id:'2a',p:2,skill:'verify',learn:6,kind:'choice',work:false,prompt:`Which student solved for <i>${v}</i> correctly?`,options:studs.map(s=>s.nm),correct:[ci],show:studs[ci].nm,diag:'Test each formula with easy numbers that make the original true; only one returns the right value.'});
+    items.push({id:'2b',p:2,skill:'literal',learn:3,kind:'order',work:false,prompt:'Put the steps of the correct solution in order (tap a step to add it).',steps:[`${T} − ${W} = ½${q}${v}`,`2(${T} − ${W}) = ${q}${v}`,`${v} = 2(${T} − ${W}) / ${q}`],show:'subtract, double, divide',diag:`Undo in reverse order: subtract ${W}, multiply both sides by 2, divide by ${q}.`});
+    const benN=studs.find(s=>s.kind===1).nm, chrisN=studs.find(s=>s.kind===2).nm, anaN=studs[ci].nm;
+    const opts=shuffle([{t:`${benN} cleared the ½ before subtracting ${W}, and then divided only ${W} by ${q} instead of the whole side.`,ok:true},{t:`${chrisN} divided by 2 instead of multiplying by 2 to undo the ½.`,ok:true},{t:`${anaN} forgot to distribute the 2 to both ${T} and ${W}.`,ok:false},{t:`${benN} and ${chrisN} both treated ${q} as a number instead of a variable.`,ok:false}]);
+    items.push({id:'2c',p:2,skill:'verify',learn:6,kind:'choice',work:false,prompt:'Which statement correctly explains an error? (Two are true; pick one.)',options:opts.map(o=>o.t),correct:opts.map((o,i)=>o.ok?i:-1).filter(i=>i>=0),show:'either true statement',diag:'Compare each wrong answer to the correct undo order; name the exact step that broke.'});
+  }
+  /* P3 */
+  { const y=pick(['y','m','w']), k=pick(['k','c','d'].filter(x=>x!==y)); const a=ri(2,4), b=a+ri(4,7);
+    const x=pick(['x','z']), yy=pick(['y','v'].filter(t=>t!==x)), c=ri(2,5), d=pick(['c','d','b'].filter(t=>t!==yy&&t!==x)), n=pick(['n','m'].filter(t=>t!==yy&&t!==x&&t!==d));
+    let q,s,p,rr,t; for(let i=0;i<200;i++){ q=ri(2,6); s=ri(2,6); if(q===s) continue; p=ri(1,9); rr=ri(1,9); const num=-(q*rr+s*p); if(num%(s-q)!==0) continue; t=num/(s-q); if(t===0||Math.abs(t)>20) continue; break; }
+    const dd=pick([2,3,4]), aa=ri(2,5), cc=ri(1,3), y0=ri(1,5), e=ri(1,6); const bb=(aa+cc)*y0-e; const bnum=bb*dd, cnum=cc*dd; // aa*y = (bnum - cnum*y)/dd + e
+    probs.push({n:3,title:'Solve for the Letter',stem:'Solve each equation for the indicated variable.'});
+    items.push({id:'3a',p:3,skill:'literal',learn:3,kind:'expr',var:y,work:true,prompt:`Solve <span class="eq">${a}${y} + ${k} = ${b}${y} − ${k}${y}</span> for <i>${y}</i>.`,answer:`${k}/(${b-a}-${k})`,show:`${y} = ${k} / (${b-a} − ${k})`,placeholder:`${y} = …`,
+      variants:[{form:`${k}/(${b-a}+${k})`,why:`Sign slipped when ${k}${y} crossed the equals sign.`},{form:`${k}/${b-a}`,why:`Lost the ${k}${y} term; it has a ${y} in it, so it belongs with the other ${y} terms.`},{form:`${k}/(${b+a}-${k})`,why:`${a}${y} and ${b}${y} are on opposite sides: moving one changes its sign, so they subtract, not add.`}],
+      diag:`Collect every ${y} term on one side (${k} = ${b-a}${y} − ${k}${y}), factor (${k} = ${y}(${b-a} − ${k})), then divide by the group.`});
+    items.push({id:'3b',p:3,skill:'literal',learn:3,kind:'expr',var:yy,work:true,prompt:`Solve <span class="eq">${x} = ${c}(${yy} − ${d}) / ${n}</span> for <i>${yy}</i>.`,answer:`${n}${x}/${c}+${d}`,show:`${yy} = ${n}${x}/${c} + ${d}`,placeholder:`${yy} = …`,
+      variants:[{form:`${n}${x}/${c}-${d}`,why:`Last step: undoing "− ${d}" means adding ${d}, not subtracting.`},{form:`(${n}${x}+${d})/${c}`,why:`Added ${d} inside the division by ${c}; undo the ÷${n}, then the ×${c}, then the −${d}.`},{form:`${c}${x}/${n}+${d}`,why:`${c} and ${n} swapped roles: multiply by ${n} to clear the division, then divide by ${c}.`}],
+      diag:`Multiply by ${n}, divide by ${c}, add ${d}: ${yy} = ${n}${x}/${c} + ${d}.`});
+    items.push({id:'3c',p:3,skill:'fractions',learn:4,kind:'num',work:true,prompt:`Solve <span class="eq">(t + ${p}) / ${q} = (t − ${rr}) / ${s}</span> for <i>t</i>.`,answer:String(t),show:`t = ${t}`,placeholder:'t = …',
+      variants:[{num:-t,why:'Sign slip after cross-multiplying; recheck the move of the constant.'},{num:(-(q*rr+s*p))/(s-q)*-1===t?null:(q*p+s*rr)/(s-q),why:'Cross-multiplied the wrong pairs; each denominator multiplies the opposite top.'},{num:(s*p-q*rr)/(q-s)!==t?(s*p-q*rr)/(q-s):null,why:`Did not distribute to the second term; ${s}(t + ${p}) means ${s}t and ${s}·${p}.`}].filter(v=>v.num!==null&&isFinite(v.num)),
+      diag:`Cross-multiply with the bar grouping each top: ${s}(t + ${p}) = ${q}(t − ${rr}); distribute; collect t.`});
+    items.push({id:'3d',p:3,skill:'fractions',learn:4,kind:'num',work:true,prompt:`Solve <span class="eq">${aa}${y} = (${bnum} − ${cnum}${y}) / ${dd} + ${e}</span> for <i>${y}</i>.`,answer:String(y0),show:`${y} = ${y0}`,placeholder:`${y} = …`,
+      variants:[{num:(bb+e)/(aa+cnum),why:`Divided only ${bnum} by ${dd}; the bar is under the whole top, so ${cnum}${y} ÷ ${dd} = ${cc}${y} too.`},{num:(bnum+e)/(aa*dd+cnum)===y0?null:(bnum+e)/(aa*dd+cnum),why:`Multiplied by ${dd} but forgot the + ${e} outside the fraction.`}].filter(v=>v.num!==null),
+      diag:`Simplify the fraction first: (${bnum} − ${cnum}${y})/${dd} = ${bb} − ${cc}${y}. Then ${aa}${y} + ${cc}${y} = ${bb} + ${e}.`});
+  }
+  /* P4 */
+  { const l=ri(20,60), w=ri(8,50); const P=2*l+2*w;
+    probs.push({n:4,title:'The Rectangle',stem:`A rectangle has perimeter <b>${P} in</b> and length <b>${l} in</b>. Perimeter is <span class="eq">P = 2l + 2w</span>.`});
+    items.push({id:'4a',p:4,skill:'literal',learn:3,kind:'expr',var:'w',work:false,prompt:'Solve <span class="eq">P = 2l + 2w</span> for <i>w</i>.',answer:'(p-2l)/2',show:'w = (P − 2l)/2  or  P/2 − l',placeholder:'w = …',
+      variants:[{form:'p-2l/2',why:'Divided only one term by 2; the whole side (P − 2l) gets divided.'},{form:'p-2l',why:'Subtracted 2l but never divided by 2.'},{form:'(p+2l)/2',why:'Added 2l instead of subtracting it.'}],diag:'Subtract 2l from both sides, then divide the whole side by 2.'});
+    items.push({id:'4b',p:4,skill:'verify',learn:6,kind:'num',work:true,prompt:'Find the width (in inches).',answer:String(w),show:`${w} in`,placeholder:'inches',
+      variants:[{num:2*w,why:'Found 2w, not w.'},{num:(P-l)/2,why:'Subtracted l once; the rectangle has two lengths, so subtract 2l.'}],diag:`w = (${P} − 2·${l})/2 = ${w}.`});
+  }
+  /* P5 */
+  { const pair=pick([['BlueBucket','SpringDrop'],['RiverJug','HilltopWater'],['CloudCask','DeepWell Co.'],['FreshFlow','AquaCart']]); let x0,b,dd,a,c,diff; for(let i=0;i<100;i++){ x0=ri(4,12); diff=pick([0.5,1,1.5,2]); if(!Number.isInteger(x0*diff)) continue; b=pick([4.5,5,5.5,6,6.5,7]); dd=b+diff; c=ri(8,15); a=c+x0*diff; break; }
+    probs.push({n:5,title:'Water Delivery',stem:`<b>${pair[0]}</b> charges <b>${money(a)}</b> plus <b>${money(b)} per jug</b>. <b>${pair[1]}</b> charges <b>${money(c)}</b> plus <b>${money(dd)} per jug</b>. Let <i>x</i> = number of jugs. <b>When does ${pair[0]} cost less?</b>`});
+    items.push({id:'5a',p:5,skill:'setup',learn:1,kind:'rel',work:false,prompt:`Write an inequality for when ${pair[0]} costs less than ${pair[1]}.`,answer:`${a}+${b}x<${c}+${dd}x`,show:`${a} + ${F2(b)}x < ${c} + ${F2(dd)}x`,placeholder:'fee + rate·x < fee + rate·x',
+      variants:[{form:`${a}+${b}x>${c}+${dd}x`,why:`Direction reversed: ${pair[0]}'s total should be on the smaller side.`},{form:`${a}+${b}x<=${c}+${dd}x`,why:'"Costs less" is strict: a tie is not cheaper.'}],diag:`Each bill is fee + rate·x. Put ${pair[0]}'s bill on the small side with <.`});
+    items.push({id:'5b',p:5,skill:'solve',learn:2,kind:'rel',solved:'x',work:true,prompt:'Solve your inequality from (a).',answer:`x>${x0}`,show:`x > ${x0}`,placeholder:'x > …',
+      variants:[{form:`x<${x0}`,why:'Direction flipped without dividing by a negative (or did not flip when it was needed).'},{form:`x<-${x0}`,why:'Divided by a negative without flipping the symbol.'},{form:`x>=${x0}`,why:'Added "or equal"; solving keeps the strict symbol from (a).'}],diag:`Subtract ${F2(b)}x and ${c} from both sides: ${a-c} < ${F2(diff)}x, so x > ${x0}.`});
+    items.push({id:'5c',p:5,skill:'solve',learn:2,kind:'num',work:true,prompt:`In real-world terms, what is the smallest number of jugs for which ${pair[0]} is the cheaper plan?`,answer:String(x0+1),show:`${x0+1} jugs`,placeholder:'jugs',
+      variants:[{num:x0,why:`Reported the algebraic boundary; at exactly ${x0} jugs the plans cost the same.`}],diag:`x > ${x0} and jugs are whole, so the first one is ${x0+1}.`});
+  }
+  /* P6 */
+  { const m=ri(8,30), gap=ri(5,8); const L=3*m+3, U=3*(m+gap)+3; const want=[]; for(let x=m+1;x<m+gap;x++) want.push(x);
+    probs.push({n:6,title:'Three in a Row',stem:`Three consecutive integers have a sum <b>greater than ${L}</b> and <b>less than ${U}</b>. Let <i>x</i> = the smallest integer.`});
+    items.push({id:'6a',p:6,skill:'compound',learn:5,kind:'rel',work:false,prompt:'Write a compound inequality for the sum of the three integers.',answer:`${L}<3x+3<${U}`,show:`${L} < 3x + 3 < ${U}`,placeholder:`${L} < ___ < ${U}`,
+      variants:[{form:`${L}<3x<${U}`,why:'Summed to 3x; the integers are x, x + 1, x + 2, so the sum is 3x + 3.'},{form:`${L}<=3x+3<=${U}`,why:'"Greater than" and "less than" are strict; no "or equal".'},{form:`${L}<x<${U}`,why:'Trapped x instead of the sum of the three integers.'}],diag:'Sum = x + (x+1) + (x+2) = 3x + 3, trapped strictly between the two numbers.'});
+    items.push({id:'6b',p:6,skill:'compound',learn:5,kind:'rel',solved:'x',work:true,prompt:'Solve the compound inequality for <i>x</i>.',answer:`${m}<x<${m+gap}`,show:`${m} < x < ${m+gap}`,placeholder:'__ < x < __',
+      variants:[{form:`${m+1}<x<${m+gap+1}`,why:'Subtracted 3 from the middle only; all three parts get the same move.'},{form:`${m}<=x<=${m+gap}`,why:'Symbols stay strict.'},{form:`${L-3}<3x<${U-3}`,why:'Stopped before dividing all three parts by 3.'}],diag:`Subtract 3 everywhere (${L-3} < 3x < ${U-3}), then divide everywhere by 3.`});
+    items.push({id:'6c',p:6,skill:'compound',learn:5,kind:'triples',work:true,want,prompt:'List every possible set of three consecutive integers. (Like 16,17,18; 17,18,19; …)',show:want.map(x=>`(${x},${x+1},${x+2})`).join(' '),placeholder:'a,b,c; d,e,f; …',
+      diag:`x can be ${want.join(', ')}; each starts a triple. The endpoints ${m} and ${m+gap} are not solutions.`});
+    items.push({id:'6d',p:6,skill:'compound',learn:5,kind:'numberline',work:false,prompt:'Graph the solution to (b). Drag the circles; tap one to switch open/closed.',nl:{min:m-4,max:m+gap+4,lo:m,hi:m+gap,loOpen:true,hiOpen:true},show:`open circles at ${m} and ${m+gap}, shaded between`,diag:'Endpoints from (b), open circles for strict, shade between.'});
+  }
+  items.forEach(it=>{ if(it.variants) it.variants=it.variants.filter(v=>{ const raw=v.form?(it.kind==='expr'?it.var+'='+v.form:v.form):String(v.num); return !gradeItem(it,raw,null).ok; }); });
+  return {seed, probs, items};
+}
+function diagnose(it, raw, extra){
+  if(!raw && !extra) return 'Left blank. Any attempt with work shown is worth more than a blank.';
+  for(const v of (it.variants||[])){ try{ if(v.form&&it.kind==='rel'&&M.relEquiv(raw,v.form)) return v.why; if(v.form&&it.kind==='expr'){ const ss=M.solvedSide(raw,it.var); if(ss.expr&&M.exprEquiv(ss.expr,v.form)) return v.why; } if(v.num!==undefined&&it.kind==='num'&&M.numEq(M.toNumber(raw),v.num)) return v.why; }catch(e){} }
+  if(it.kind==='expr'){ const st=M.solvedSide(raw,it.var).status; if(st==='not-solved'||st==='circular') return `Not finished: ${it.var} still appears on both sides or inside the answer.`; if(st==='bad') return 'Could not read the answer as an expression; check parentheses.'; }
+  if(it.kind==='numberline'&&extra){ const w=it.nl; if(extra.lo===w.lo&&extra.hi===w.hi) return 'Endpoints right, but strict inequalities need open circles.'; return 'Endpoints do not match the solution to (b).'; }
+  if(it.kind==='triples'){ const ints=M.integers(raw); if(ints.includes(it.want[0]-1)||ints.includes(it.want[it.want.length-1]+1)) return 'Included a boundary value; the endpoints are not solutions when the symbols are strict.'; if(ints.length<it.want.length*3) return 'Missing some sets; every integer strictly between the endpoints starts one.'; }
+  return null;
+}
+function workPoint(txt){ const t=(txt||'').trim(); return t.length>=6 && /\d/.test(t) && /[=<>+\-*/÷×−·()]/.test(t); }
+
+/* ===== Boss view ===== */
+let boss={test:null, seed:null, result:null};
+VIEWS.boss=(app)=>{
+  if(boss.result) return bossResults(app);
+  if(!boss.test){ app.innerHTML=h`<div class="stack"><div class="block" style="border-color:var(--bad)"><p class="eyebrow" style="color:var(--bad)">Final Boss</p><h1>Same moves. New numbers.</h1><p style="margin-top:6px">Six problems, 19 answers, and work lines on the hard ones. The boss says nothing until you hit <b>Grade</b> at the very end. Then you get a score out of <b class="num">29</b> (19 answers + 10 work lines), a breakdown, and what to practice.</p>
+    <div class="row" style="margin-top:12px"><button class="btn gold" id="startBoss">Start a fresh run</button>${State.s.attempts.length?`<span class="muted">Runs so far: <b class="num">${State.s.attempts.length}</b> · best <b class="num">${Math.max(...State.s.attempts.map(a=>a.pct))}%</b></span>`:''}</div>
+    <details style="margin-top:12px"><summary>Replay a specific run (seed)</summary><div class="lock" style="margin-top:8px"><input type="text" id="seedIn" inputmode="numeric" placeholder="seed number"><button class="btn alt sm" id="seedBtn">Load</button></div></details></div>
+    ${State.s.attempts.length?`<div class="block soft"><p class="eyebrow">Past runs</p><div class="tablewrap"><table><thead><tr><th>When</th><th class="n">Score</th><th>Missed</th></tr></thead><tbody>${[...State.s.attempts].sort((a,b)=>b.ts-a.ts).slice(0,10).map(a=>`<tr><td>${new Date(a.ts).toLocaleDateString()}</td><td class="n"><b>${a.score}/${a.total}</b> (${a.pct}%)</td><td>${a.items.filter(x=>!x.ok).map(x=>x.id).join(', ')||'nothing!'}</td></tr>`).join('')}</tbody></table></div></div>`:''}</div>`;
+    $('#startBoss').onclick=()=>{ boss.seed=Math.floor(Math.random()*90000)+10000; boss.test=genTest(boss.seed); boss.answers={}; render(); };
+    $('#seedBtn').onclick=()=>{ const s=parseInt($('#seedIn').value,10); if(s>0){ boss.seed=s; boss.test=genTest(s); boss.answers={}; render(); } };
+    return;
+  }
+  const T=boss.test; const hpPct=100;
+  app.innerHTML=h`<div class="stack">
+   <div class="block" style="border-color:var(--bad)"><div class="bossbar"><div><p class="eyebrow" style="color:var(--bad)">Final Boss · run ${T.seed}</p><h2>Answer everything, then Grade.</h2></div><div class="row"><span class="muted" id="answered">0/19 answered</span><button class="btn alt sm" id="quitBoss">Leave</button></div></div></div>
+   ${T.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${T.items.filter(i=>i.p===P.n).map(it=>`<div class="item" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()}</div><div>${it.prompt}</div>${it.work?`<label class="muted" style="font-size:.85rem">Show your work (worth a point)</label><textarea class="work" placeholder="Write the steps here. Messy is fine."></textarea>`:''}${answerUI(it,'b')}</div>`).join('')}</div></div>`).join('')}
+   <div class="block" style="border-color:var(--bad)"><div class="row" style="justify-content:space-between"><p>Done? The boss only grades once you say so.</p><button class="btn gold" id="gradeBtn">Grade my test</button></div></div>
+  </div>`;
+  const count=()=>{ let n=0; T.items.forEach(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const r=rawOf(it,el); if(it.kind==='numberline'?true:r.trim()) n++; }); $('#answered').textContent=`${n}/19 answered`; };
+  T.items.forEach(it=>wireAnswerUI(it, app.querySelector(`[data-item="${it.id}"]`), count));
+  $('#quitBoss').onclick=()=>modal('<h2>Leave the boss fight?</h2><p class="muted">This run will not be graded or saved.</p>',[{label:'Stay',cls:'alt'},{label:'Leave',fn:()=>{ boss={test:null,seed:null,result:null}; go('lobby'); }}]);
+  $('#gradeBtn').onclick=()=>{
+    const blanks=T.items.filter(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); return it.kind!=='numberline' && !rawOf(it,el).trim(); });
+    const doGrade=()=>gradeBoss(app);
+    if(blanks.length) modal(`<h2>${blanks.length} part${blanks.length===1?' is':'s are'} blank.</h2><p class="muted">${blanks.map(b=>b.id).join(', ')}. Grade anyway, or go back and try them. A guess with work shown beats a blank.</p>`,[{label:'Go back',cls:'alt'},{label:'Grade anyway',cls:'gold',fn:doGrade}]);
+    else doGrade();
+  };
+};
+async function gradeBoss(app){
+  const T=boss.test; const items=T.items.map(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const raw=rawOf(it,el).trim(); const extra=it.kind==='numberline'?el._nl.get():null; const work=it.work?($('.work',el).value||'').trim():''; const g=gradeItem(it,raw,extra); const wp=it.work?workPoint(work):false; return {id:it.id,p:it.p,skill:it.skill,learn:it.learn,ok:g.ok,partial:g.partial||null,raw:it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:(it.kind==='choice'&&raw!==''?it.options[+raw]:raw),work,workPt:wp,hasWork:!!it.work,show:it.show,diag:g.ok?null:(diagnose(it,raw,extra)||it.diag),skillDiag:it.diag}; });
+  const score=items.filter(x=>x.ok).length+items.filter(x=>x.workPt).length; const total=items.length+items.filter(x=>x.hasWork).length;
+  const att={id:'a'+Date.now(),ts:Date.now(),seed:T.seed,score,total,pct:Math.round(100*score/total),items,ai:null};
+  boss.result=att; render();
+  if(att.pct>=80) State.award('boss'); if(score===total) State.award('perfect'); State.addCoins(Math.round(score*2),'boss run');
+  if(State.sample){ try{ await aiBossFeedback(att); }catch(e){} }
+  await saveAttempt(att); State.save(); if(route.view==='boss') render();
+}
+async function aiBossFeedback(att){
+  const T=boss.test; const missed=att.items.filter(x=>!x.ok||(x.hasWork&&x.work));
+  const payload=missed.map(x=>{ const it=T.items.find(i=>i.id===x.id); return {id:x.id, question:it.prompt.replace(/<[^>]+>/g,''), correct:x.show, student_answer:x.raw, student_work:x.work||'(none)', rubric:it.diag, result:x.ok?'correct':'missed'}; });
+  const prompt=`You are a coach reviewing an 11-year-old's Algebra 1 practice test (reading level: 6th grade; do not simplify the math). Return ONLY JSON: {"items":[{"id":"...","diagnosis":"..."}],"summary":"..."}.
+For each item below, write "diagnosis": 1-2 sentences naming the specific step where the work goes wrong (or, if correct, one sentence on what the work shows), based on the student's work and answer. Never use first person. Do not just restate the rubric.
+Then "summary": 3-5 sentences on what to focus on next, ordered by impact, referring to skills not item numbers. No dates, no urgency language, no mention of the test being soon.
+Problems: ${JSON.stringify(payload)}`;
+  const out=await State.sample.json(prompt,{modelTier:'default',cache:false});
+  if(out&&Array.isArray(out.items)) out.items.forEach(d=>{ const x=att.items.find(i=>i.id===d.id); if(x&&d.diagnosis) x.aiDiag=String(d.diagnosis); });
+  if(out&&out.summary) att.ai=String(out.summary);
+}
+function bossResults(app){
+  const a=boss.result; const byP={}; a.items.forEach(x=>{ (byP[x.p]=byP[x.p]||{ok:0,n:0,w:0,wn:0}); byP[x.p].n++; if(x.ok) byP[x.p].ok++; if(x.hasWork){ byP[x.p].wn++; if(x.workPt) byP[x.p].w++; } });
+  const missedSkills=[...new Set(a.items.filter(x=>!x.ok).map(x=>x.skill))];
+  app.innerHTML=h`<div class="stack">
+   <div class="block" style="border-color:var(--gold)"><p class="eyebrow">Final Boss · run ${a.seed} · results</p>
+    <div class="result"><div class="big">${a.score} / ${a.total}</div><div><h2>${a.pct>=90?'Boss defeated. Clean run.':a.pct>=80?'Boss defeated.':a.pct>=60?'Boss staggered. Rematch?':'Boss took the round. Respawn and go again.'}</h2><p class="muted">${a.items.filter(x=>x.ok).length} of 19 answers correct, plus ${a.items.filter(x=>x.workPt).length} of 10 work points. Total possible: 29.</p></div></div>
+    <div class="row" style="margin-top:12px"><button class="btn gold" id="retake">Retake with new numbers</button><button class="btn alt" data-go="learn">Train in Learn</button><button class="btn alt" data-go="lobby">Lobby</button></div></div>
+   ${a.ai?`<div class="block soft"><p class="eyebrow">Coach: what to focus on next</p><p>${esc(a.ai)}</p></div>`:(State.sample?`<div class="block soft"><p class="eyebrow">Coach</p><p class="muted">Reading your work…</p></div>`:'')}
+   ${missedSkills.length?`<div class="block soft"><p class="eyebrow">Skills to practice</p><div class="row" style="margin-top:6px">${missedSkills.map(s=>`<a class="btn sm alt" href="#level${LEVELS.find(L=>L.skill===s).n}" data-go="level" data-arg="${LEVELS.find(L=>L.skill===s).n}">Level ${LEVELS.find(L=>L.skill===s).n}: ${SKILL_NAMES[s]}</a>`).join('')}</div></div>`:''}
+   <div class="block"><h2>Problem by problem</h2><div class="tablewrap"><table><thead><tr><th>Problem</th><th class="n">Answers</th><th class="n">Work</th></tr></thead><tbody>${boss.test.probs.map(P=>`<tr><td>${P.n}. ${esc(P.title)}</td><td class="n">${byP[P.n].ok}/${byP[P.n].n}</td><td class="n">${byP[P.n].wn?`${byP[P.n].w}/${byP[P.n].wn}`:'—'}</td></tr>`).join('')}</tbody></table></div></div>
+   ${boss.test.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p class="muted" style="margin:6px 0 12px;font-size:.95rem">${P.stem}</p><div class="stack">${a.items.filter(x=>x.p===P.n).map(x=>`<div class="item ${x.ok?'ok':'bad'}"><div class="tag">${x.id.toUpperCase()} ${x.ok?'<span class="ck">✔ correct</span>':'<span style="color:var(--bad)">✘ missed</span>'}${x.hasWork?`<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· work ${x.workPt?'✔ +1':'✘ 0'}</span>`:''}</div><div><span class="muted">Your answer:</span> <span class="eq" style="white-space:normal">${esc(x.raw||'(blank)')}</span></div>${x.ok?'':`<div><span class="muted">Correct:</span> <span class="eq" style="white-space:normal">${esc(x.show)}</span></div><div class="fb bad"><span class="who">What went wrong</span>${esc(x.diag)}<br><span class="who" style="margin-top:6px">Skill to practice</span>${SKILL_NAMES[x.skill]} · ${learnLink(x.learn)}</div>`}${x.aiDiag?`<div class="fb info"><span class="who">Coach on your work</span>${esc(x.aiDiag)}</div>`:''}${x.work?`<div class="workbox">${esc(x.work)}</div>`:''}</div>`).join('')}</div></div>`).join('')}
+  </div>`;
+  $('#retake').onclick=()=>{ boss={test:null,seed:null,result:null}; const seed=Math.floor(Math.random()*90000)+10000; boss.seed=seed; boss.test=genTest(seed); render(); };
+}
+/* ===== Learn: six obby levels ===== */
+const CHARS={
+  coach:{nm:'Coach Block',face:'▣',bg:'var(--grass)',fg:'#fff'},
+  vera:{nm:'Vera the Variable',face:'y',bg:'var(--l4)',fg:'#fff'},
+  nine:{nm:'Negative Nine',face:'−9',bg:'var(--bad)',fg:'#fff'},
+  bar:{nm:'Captain Bar',face:'▬',bg:'var(--gold)',fg:'var(--gold-ink)'},
+  checker:{nm:'The Checker',face:'✔',bg:'var(--l6)',fg:'#fff'},
+  jug:{nm:'Jug',face:'J',bg:'var(--l1)',fg:'#fff'},
+};
+const SCENES={
+1:[
+ {who:'coach',say:'Level 1. A story walks in. Your job: turn it into a symbol sentence.',board:'“The budget is $3,000.”'},
+ {who:'vera',say:'Before anything else, somebody has to say what I stand for. Precisely. I am h. I count additional half-hours. Not hours. Not minutes. Half-hours.',board:'h = number of <span class="hl">additional half-hours</span>'},
+ {who:'coach',say:'Good. Now build the cost. The DJ charges 1600 up front, then 400 for each of Vera’s half-hours.',board:'1600 + 400h'},
+ {who:'coach',say:'That expression is the whole bill. Nobody has solved anything yet. It just describes the party.',board:'Total cost = 1600 + 400h'},
+ {who:'coach',say:'Now the magic words. “Budget 3,000.” “At most 3,000.” “No more than 3,000.” All three mean the same thing.',board:'at most · no more than · budget'},
+ {who:'coach',say:'Here is the rhyme. At most, no more: the little line goes under the door. Less than, under: no line, no equal.',board:'≤ has a floor. &nbsp; < has none.'},
+ {who:'vera',say:'The line under the symbol is a floor the budget can stand on. You are allowed to spend exactly 3,000. So the symbol gets its floor.',board:'1600 + 400h <span class="hl">≤</span> 3000',fx:'hop'},
+ {who:'coach',say:'Read it out loud as a sentence. “Sixteen hundred plus four hundred per half-hour is at most three thousand.” If it does not read like the story, it is wrong.',board:'1600 + 400h ≤ 3000'},
+ {who:'nine',say:'Boring. Let me speed it up. Subtract 1600 right here in the setup!',board:'1600 + 400h ≤ <span class="bad">3000 − 1600</span>',fx:'shake'},
+ {who:'vera',say:'No! That is a solving step stuck inside a setup. Now the sentence says the party costs at most 1,400. That is not the story.',board:'<span class="bad">1600 + 400h ≤ 3000 − 1600</span>'},
+ {who:'coach',say:'The setup describes the situation. Solving comes after. Keep them in separate rooms.',board:'Setup first. Solve later.'},
+ {who:'coach',say:'One more: which company costs less? Each company has a bill. Put the cheaper bill on the small side of the symbol, with no floor, because a tie is not cheaper.',board:'18 + 6.5x <span class="hl">&lt;</span> 12 + 7.5x'},
+ {who:'vera',say:'Define me. Build the cost. Pick the symbol from the magic words. Read it back as a sentence. That is Level 1.',board:'Define → Build → Symbol → Read back',fx:'hop'},
+],
+2:[
+ {who:'coach',say:'Level 2. You have an inequality. Now do the algebra, then ask the real world if it agrees.',board:'1600 + 400h ≤ 3000'},
+ {who:'coach',say:'Undo the plus 1600 by subtracting 1600 from both sides.',board:'400h ≤ 1400'},
+ {who:'coach',say:'Undo the times 400 by dividing both sides by 400.',board:'h ≤ 3.5'},
+ {who:'vera',say:'So I can be 3.5? Three and a half half-hours? The DJ sells whole half-hours. Half of a half-hour is not on the menu.',board:'h ≤ 3.5 … but h is a <span class="hl">whole number</span>'},
+ {who:'coach',say:'That is the move. Algebra answers. The world decides. The biggest whole number of half-hours is 3.',board:'h = 3 half-hours = 1.5 hours'},
+ {who:'coach',say:'The question asked for total time including the first 3 hours. So: 3 plus 1.5.',board:'Total = 3 + 1.5 = <span class="hl">4.5 hours</span>'},
+ {who:'nine',say:'Hi. I am Negative Nine. I live inside inequalities. Divide by me and I turn you around.',board:'−9x &lt; 18',fx:'shake'},
+ {who:'coach',say:'Watch. Divide both sides by negative nine. The symbol flips.',board:'x <span class="hl">&gt;</span> −2',fx:'flip'},
+ {who:'nine',say:'Multiply or divide by any negative, and the sign flips. Add or subtract a negative? Nothing happens. I only bounce you when you divide.',board:'÷ or × by negative → flip'},
+ {who:'coach',say:'Pro move: avoid him. In 18 + 6.5x < 12 + 7.5x, subtract 6.5x instead of 7.5x. Positive x, nobody flips.',board:'18 &lt; 12 + x'},
+ {who:'coach',say:'Subtract 12 from both sides.',board:'6 &lt; x'},
+ {who:'vera',say:'Six is less than x. Which means x is greater than six. Same sentence, read from the other side.',board:'6 &lt; x &nbsp; means &nbsp; x &gt; 6'},
+ {who:'jug',say:'I am a jug. You cannot buy 6.1 of me. The first whole number past 6 is 7. Real-world answer: 7 jugs or more.',board:'x &gt; 6 → <span class="hl">at least 7 jugs</span>',fx:'hop'},
+ {who:'coach',say:'Do the algebra. Then ask: whole units? Can time be negative? Does the story agree? Two answers, both written down.',board:'Algebra answer + real-world answer'},
+],
+3:[
+ {who:'vera',say:'Hi. Vera the Variable. My job is to end up alone on one side of the equals sign. I hate it. It is also my whole job.',board:'3y + k = 8y − ky'},
+ {who:'coach',say:'Literal equations are full of letters. Treat the other letters like numbers you just do not know yet. k is a number. It is just shy.',board:'k is a number in disguise'},
+ {who:'coach',say:'Rule one: undo in reverse order. Whatever was done to the variable last gets undone first.',board:'P = 2l + 2w → subtract 2l first, then ÷ 2'},
+ {who:'vera',say:'But look at my equation. I am on both sides. There is a y here, a y there, and a y hiding inside the ky.',board:'3<span class="hl">y</span> + k = 8<span class="hl">y</span> − k<span class="hl">y</span>'},
+ {who:'coach',say:'Then the chant. Collect. Factor. Divide. Say it with me. Collect, factor, divide.',board:'<span class="hl">Collect · Factor · Divide</span>'},
+ {who:'coach',say:'Collect: get every y term on one side. Subtract 3y from both sides.',board:'k = 8y − ky − 3y'},
+ {who:'coach',say:'Combine the plain y terms. 8y minus 3y is 5y.',board:'k = 5y − ky'},
+ {who:'vera',say:'I am still in two places on that side. Five of me, and a k-of-me. Pull me out of both!',board:'k = <span class="hl">y</span>(5 − k)',fx:'hop'},
+ {who:'coach',say:'Factor: y times the group five minus k. Now y appears exactly once.',board:'k = y(5 − k)'},
+ {who:'coach',say:'Divide: y is being multiplied by the whole group. Divide both sides by the whole group.',board:'y = <span class="hl">k / (5 − k)</span>'},
+ {who:'nine',say:'Could you divide by just the 5? Asking for a friend.',board:'y = k/5 … <span class="bad">no</span>',fx:'shake'},
+ {who:'vera',say:'No. The group is glued. Five minus k, all of it, or nothing. Alone at last. Slightly sweating.',board:'y = k / (5 − k)',fx:'hop'},
+ {who:'coach',say:'Collect, factor, divide. Treat letters like numbers. Undo in reverse. That is the whole level.',board:'Collect · Factor · Divide'},
+],
+4:[
+ {who:'bar',say:'Captain Bar reporting. I am the fraction bar. Everything on top of me is one team. Everything under me is one team.',board:'<span class="hl">(t + 2)</span> / 3'},
+ {who:'bar',say:'When you see t plus 2 over 3, read it as the whole group t plus 2, divided by 3. I am a grouping symbol in a trench coat.',board:'(t + 2) ÷ 3'},
+ {who:'coach',say:'Two fractions equal each other? Cross-multiply. It is a diagonal high-five.',board:'(t + 2)/3 = (t − 4)/5'},
+ {who:'coach',say:'Five high-fives the left top. Three high-fives the right top. And the Captain keeps each top together with parentheses.',board:'5<span class="hl">(t + 2)</span> = 3<span class="hl">(t − 4)</span>'},
+ {who:'nine',say:'Skip the parentheses. 5t plus 2 equals 3t minus 4. Faster.',board:'<span class="bad">5t + 2 = 3t − 4</span>',fx:'shake'},
+ {who:'bar',say:'Treason. The 5 has to reach everyone on my team. Five t AND five times two.',board:'5t + 10 = 3t − 12'},
+ {who:'coach',say:'Now it is a normal equation. Collect t: subtract 3t. Then subtract 10.',board:'2t = −22'},
+ {who:'coach',say:'Divide by 2.',board:'t = <span class="hl">−11</span>'},
+ {who:'bar',say:'Second mission. The bar in the middle of a bigger expression.',board:'2y = (12 − 6y)/3 + 4'},
+ {who:'bar',say:'Order of operations with me: finish the top, finish the bottom, then divide. Or divide every term on top by the bottom. The whole top. Not just the 12.',board:'(12 − 6y)/3 = 12/3 − 6y/3'},
+ {who:'coach',say:'Twelve over three is four. Six y over three is two y.',board:'2y = 4 − 2y + 4'},
+ {who:'coach',say:'Add 2y to both sides. Four y equals eight.',board:'4y = 8 → y = <span class="hl">2</span>'},
+ {who:'bar',say:'One team on top. One team on the bottom. When in doubt, draw the parentheses. Captain Bar, out.',board:'Bar = ( ) in disguise',fx:'hop'},
+],
+5:[
+ {who:'coach',say:'Level 5. Compound inequalities. Two conditions, one sentence.',board:'48 &lt; sum &lt; 69'},
+ {who:'coach',say:'Three consecutive integers. If the smallest is x, the next one is x plus 1, and the next is x plus 2.',board:'x, x + 1, x + 2'},
+ {who:'coach',say:'Add them. Three x plus three.',board:'x + (x + 1) + (x + 2) = 3x + 3'},
+ {who:'vera',say:'The sum is trapped. Bigger than 48, smaller than 69. Both at once. That is the word AND.',board:'48 &lt; 3x + 3 &lt; 69'},
+ {who:'coach',say:'Here is the hook. It is a sandwich. Whatever you do to the middle, you do to both slices of bread.',board:'🍞 &nbsp;3x + 3&nbsp; 🍞'},
+ {who:'nine',say:'Just subtract 3 from the middle. The bread does not care.',board:'48 &lt; <span class="bad">3x</span> &lt; 69',fx:'shake'},
+ {who:'coach',say:'The bread cares. Three parts, three treatments. Subtract 3 from all three.',board:'45 &lt; 3x &lt; 66'},
+ {who:'coach',say:'Divide all three parts by 3.',board:'15 &lt; x &lt; 22'},
+ {who:'nine',say:'If you ever divide all three by me, both symbols flip. Both. I do not do half jobs.',board:'−9 flips both signs'},
+ {who:'coach',say:'Now the graph. An open circle means the number fell through the hole: it is not a solution. Strict symbols get open circles.',board:'○ at 15 &nbsp; ○ at 22'},
+ {who:'coach',say:'A closed circle means the hole is plugged: the number counts. Symbols with the floor, ≤ or ≥, get closed circles.',board:'● for ≤ and ≥'},
+ {who:'coach',say:'Shade between the circles, because x is trapped between them.',board:'○━━━━━━━○'},
+ {who:'vera',say:'And if the story wants integers: 16, 17, 18, 19, 20, 21. Not 15. Not 22. They fell through the holes.',board:'x ∈ {16, 17, 18, 19, 20, 21}',fx:'hop'},
+ {who:'coach',say:'Sandwich rule. Three parts, three treatments. Open means fell through, closed means plugged.',board:'Three parts · three treatments'},
+],
+6:[
+ {who:'checker',say:'The Checker here. I have one move and I love it. Plug it in. Plug it in.',board:'t = −11 ?'},
+ {who:'checker',say:'Take the answer, put it back into the original equation, and see if both sides agree.',board:'(−11 + 2)/3 = (−11 − 4)/5'},
+ {who:'checker',say:'Left side: negative nine over three is negative three. Right side: negative fifteen over five is negative three. They agree. Verified.',board:'−3 = −3 ✔',fx:'hop'},
+ {who:'nine',say:'What if the answer was 11? Plug it in. Thirteen over three versus seven over five. Those are not friends.',board:'13/3 ≠ 7/5 ✘',fx:'shake'},
+ {who:'checker',say:'That is why plugging in matters. The algebra can lie. The original equation never does.',board:'Original never lies'},
+ {who:'checker',say:'Second check: the story. The algebra said x is greater than 6. The story sells whole jugs. So the answer is 7 or more, not 6.',board:'x &gt; 6 → at least 7 jugs'},
+ {who:'checker',say:'Third skill: find the error in someone else’s work. Tests love this. Read line by line and ask: what changed, and was it legal?',board:'Line 1 → Line 2: what changed?'},
+ {who:'coach',say:'Ben solved A equals one-half l p plus B and got p equals 2A minus B over l. Two things went wrong.',board:'p = 2A − B/l'},
+ {who:'checker',say:'He cleared the one-half before subtracting B, so the 2 never reached B. Wrong order of undoing.',board:'should be 2(A − B)'},
+ {who:'checker',say:'Then he divided only B by l, when the whole side needed dividing. The fraction bar should group everything.',board:'should be 2(A − B) / l'},
+ {who:'coach',say:'Chris divided by 2 to undo the one-half. The opposite of multiplying by one-half is multiplying by 2.',board:'(A − B)/(2l) → <span class="bad">÷ 2</span>'},
+ {who:'checker',say:'Explain an error like this: name the step, name what should have happened. “In step 2, the 2 should multiply both A and B.”',board:'Step + what should happen'},
+ {who:'checker',say:'Plug it in. Check the story. Name the step. Three checks, and the boss cannot touch you.',board:'Plug · Story · Step',fx:'hop'},
+],
+};
+
+/* ---- Scene player ---- */
+let player=null;
+function scenePlayer(host, frames, onEnd){
+  let i=0, playing=false, timer=null, startedAt=0, left=0; const DUR=f=>Math.max(3800, 1800+ (f.say.length*52));
+  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="cap" id="cap"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🗣 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
+  const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), cap=$('#cap',host);
+  function setChar(el,who,talk){ const c=CHARS[who]; el.innerHTML=`<div class="face" style="background:${c.bg};color:${c.fg}">${c.face}</div><span class="nm">${c.nm}</span>`; el.classList.toggle('talk',!!talk); }
+  function speak(t){ try{ if(!State.s.voice||!window.speechSynthesis) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t.replace(/<[^>]+>/g,'')); u.rate=1.02; u.pitch=1.05; speechSynthesis.speak(u);}catch(e){} }
+  function show(){
+    const f=frames[i]; const side = (f.who==='coach'||f.who==='checker'||f.who==='bar')?'L':'R';
+    setChar(side==='L'?cL:cR, f.who, true); const other=side==='L'?cR:cL; if(!other.innerHTML) setChar(other, side==='L'?'vera':'coach', false); else other.classList.remove('talk');
+    sb.innerHTML=f.board; sb.classList.remove('shake'); if(f.fx==='shake'){ void sb.offsetWidth; sb.classList.add('shake'); }
+    const me=side==='L'?cL:cR; me.classList.remove('flip'); if(f.fx==='flip'||f.fx==='hop'){ void me.offsetWidth; me.classList.add('flip'); }
+    cap.innerHTML=`<b>${CHARS[f.who].nm}:</b> ${f.say}`; $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
+    speak(f.say);
+  }
+  function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(frames[i])); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
+  function play(){ playing=true; $('#pp',host).textContent='⏸ Pause'; if(left>0&&left<DUR(frames[i])){ schedule(left); } else { show(); schedule(DUR(frames[i])); } }
+  function pause(){ playing=false; clearTimeout(timer); left=Math.max(0,left-(Date.now()-startedAt)); $('#pp',host).textContent='▶ Play'; try{ speechSynthesis&&speechSynthesis.cancel(); }catch(e){} }
+  $('#pp',host).onclick=()=>playing?pause():play();
+  $('#rp',host).onclick=()=>{ pause(); i=0; left=0; play(); };
+  $('#vo',host).onclick=()=>{ State.s.voice=!State.s.voice; State.save(); $('#vo',host).textContent=State.s.voice?'🗣 Voice on':'🔇 Voice off'; if(State.s.voice) speak(frames[i].say); else try{speechSynthesis.cancel();}catch(e){} };
+  const stop=()=>{ pause(); }; 
+  play(); return {stop};
+}
+
+/* ---- Explainers ---- */
+const EXPLAINERS={
+1(host,done){
+  const words=[['at most','≤'],['no more than','≤'],['a budget of','≤'],['less than','<'],['under','<'],['fewer than','<'],['at least','≥'],['a minimum of','≥'],['no less than','≥'],['more than','>'],['over','>'],['exceeds','>']];
+  const order=[3,7,0,10,5,2,8,1,11,4,6,9]; let sel=null, placed={}, correct=0;
+  host.innerHTML=`<p class="eyebrow">Interactive: magic-word sorter</p><h3>Tap a word, then tap the symbol it means.</h3><p class="muted" style="margin-bottom:10px">Rhyme: <b>at most, no more: the line goes under the door.</b> Words with a built-in “equal” get the floor (≤ or ≥).</p><div class="chips" id="pool">${order.map(i=>`<button type="button" class="kw" data-i="${i}">${words[i][0]}</button>`).join('')}</div><div class="grid" style="margin-top:12px;grid-template-columns:repeat(2,1fr)" id="bk">${['≤','<','≥','>'].map(s=>`<div class="bucket" data-s="${s}"><h3>${s} <span class="muted" style="font-size:.75rem;font-family:var(--body)">${{'≤':'at most / floor','<':'strictly less','≥':'at least / floor','>':'strictly more'}[s]}</span></h3></div>`).join('')}</div><p id="msg" class="muted" style="margin-top:8px">0 of 12 sorted.</p>`;
+  host.querySelectorAll('.kw').forEach(k=>k.onclick=()=>{ if(k.classList.contains('good')) return; host.querySelectorAll('.kw').forEach(x=>x.classList.remove('sel')); k.classList.add('sel'); sel=k; host.querySelectorAll('.bucket').forEach(b=>b.classList.add('hot')); });
+  host.querySelectorAll('.bucket').forEach(b=>b.onclick=()=>{ if(!sel) return; const i=+sel.dataset.i; if(words[i][1]===b.dataset.s){ b.appendChild(sel); sel.classList.remove('sel','badk'); sel.classList.add('good'); correct++; ding(); $('#msg',host).textContent=`${correct} of 12 sorted.`; if(correct===12){ $('#msg',host).innerHTML='<b>All sorted. Checkpoint cleared.</b> Next: the video.'; done(); } } else { thud(); sel.classList.add('badk'); $('#msg',host).innerHTML=`<b>“${words[i][0]}”</b> is not ${b.dataset.s}. Does the phrase let the number be <i>equal</i>? Then it needs a floor.`; setTimeout(()=>sel&&sel.classList.remove('badk'),700); } host.querySelectorAll('.bucket').forEach(x=>x.classList.remove('hot')); sel=null; });
+},
+2(host,done){
+  const seen={lo:false,eq:false,hi:false};
+  host.innerHTML=`<p class="eyebrow">Interactive: two plans crossing</p><h3>Slide the number of jugs. Watch which bill is smaller.</h3><p class="muted">ClearSpring: $18 + $6.50 per jug. PureWater: $12 + $7.50 per jug.</p><input type="range" class="range" id="jx" min="0" max="12" value="2" aria-label="jugs"><div class="scale" id="sc"></div><p id="jmsg" style="margin-top:8px"></p><div class="block soft" style="margin-top:12px"><b>Algebra answer:</b> <span class="eq">x &gt; 6</span> &nbsp; <b>Real-world answer:</b> <span class="eq" id="rw">?</span><p class="muted" style="font-size:.9rem;margin-top:4px">Visit a tie, a PureWater win, and a ClearSpring win to clear this checkpoint.</p></div>`;
+  const upd=()=>{ const x=+$('#jx',host).value; const a=18+6.5*x, b=12+7.5*x; const who=a<b?'cs':a>b?'pw':'tie'; seen[who==='cs'?'hi':who==='pw'?'lo':'eq']=true;
+    $('#sc',host).innerHTML=`<div class="pan ${who==='cs'?'':''}" style="border-color:${who==='cs'?'var(--ok)':'var(--ink)'}"><span class="eyebrow">ClearSpring</span><span class="num">$${a.toFixed(2)}</span><div class="bar" style="width:100%"><i style="width:${Math.min(100,a/1.2)}%;background:var(--l1)"></i></div></div><div style="font-family:var(--disp)">${who==='cs'?'&lt;':who==='pw'?'&gt;':'='}</div><div class="pan" style="border-color:${who==='pw'?'var(--ok)':'var(--ink)'}"><span class="eyebrow">PureWater</span><span class="num">$${b.toFixed(2)}</span><div class="bar" style="width:100%"><i style="width:${Math.min(100,b/1.2)}%;background:var(--l5)"></i></div></div>`;
+    $('#jmsg',host).innerHTML=`At <b class="num">${x}</b> jug${x===1?'':'s'}: ${who==='tie'?'<b>a tie.</b> Exactly 6 jugs costs the same either way, so 6 is <i>not</i> a win for ClearSpring.':who==='cs'?'<b>ClearSpring is cheaper.</b>':'<b>PureWater is cheaper.</b>'}`;
+    $('#rw',host).textContent = (seen.hi&&seen.eq)?'at least 7 jugs':'?';
+    if(seen.lo&&seen.eq&&seen.hi){ done(); } };
+  $('#jx',host).addEventListener('input',upd); upd();
+},
+3(host,done){
+  // balance-scale stepper for 3y + k = 8y - ky
+  let step=0; const states=[{L:'3y + k',R:'8y − ky'},{L:'k',R:'5y − ky'},{L:'k',R:'y(5 − k)'},{L:'k / (5 − k)',R:'y'}];
+  const moves=[
+    [{t:'− 3y from both sides',ok:true,say:'Collect. Every y term is now on the right.'},{t:'÷ 8 both sides',ok:false,say:'8 is only attached to one of three y terms. Collect first.'},{t:'− k from both sides',ok:false,say:'Legal, but it moves the wrong thing: we want y terms together, not k alone yet.'}],
+    [{t:'factor y out: y(5 − k)',ok:true,say:'Factor. Now y appears exactly once.'},{t:'÷ 5 both sides',ok:false,say:'Dividing by 5 only hits one of the two y terms. The ky is still there.'},{t:'+ ky both sides',ok:false,say:'That sends a y term back to the left. We just collected them!'}],
+    [{t:'÷ (5 − k) both sides',ok:true,say:'Divide by the whole group. Vera is alone.'},{t:'÷ 5 then ÷ k',ok:false,say:'5 − k is one glued group. You cannot peel it apart.'},{t:'− 5 both sides',ok:false,say:'5 is inside a product with y, not added on. Subtracting does not undo multiplying.'}],
+  ];
+  const draw=(msg,bad)=>{ const s=states[step]; host.innerHTML=`<p class="eyebrow">Interactive: the balance scale</p><h3>Keep both pans equal. Pick the move that isolates y.</h3><p class="muted">Chant: <b>Collect · Factor · Divide.</b> Wrong moves just tilt the scale. No penalty.</p><div class="scale" style="margin:12px 0"><div class="pan ${bad?'tilt':''}">${s.L}</div><div style="font-family:var(--disp)">=</div><div class="pan ${bad?'tilt':''}">${s.R}</div></div>${step<3?`<div class="chips">${moves[step].map((m,i)=>`<button type="button" class="chip" data-i="${i}">${m.t}</button>`).join('')}</div>`:'<div class="fb ok"><b>y = k / (5 − k).</b> Alone on one side. Checkpoint cleared.</div>'}<p id="m3" style="margin-top:10px;min-height:1.5em">${msg||''}</p>`;
+    host.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ const m=moves[step][+c.dataset.i]; if(m.ok){ step++; ding(); draw('<b style="color:var(--ok)">'+m.say+'</b>'); if(step===3) done(); } else { thud(); draw('<b style="color:var(--bad)">Tilt!</b> '+m.say,true); } }); };
+  draw();
+},
+4(host,done){
+  let hug=false, crossed=false, part2=false;
+  const draw=()=>{ host.innerHTML=`<p class="eyebrow">Interactive: the bar is a grouping symbol</p><h3>Tap the fraction to see what Captain Bar is holding.</h3><div style="font-size:1.4rem;margin:12px 0;font-weight:900" id="f1"><span class="fracbar ${hug?'hug':''}" id="fa" role="button" tabindex="0"><span class="top">${hug?'(t + 2)':'t + 2'}</span><span>3</span></span> = <span class="fracbar ${hug?'hug':''}" id="fb" role="button" tabindex="0"><span class="top">${hug?'(t − 4)':'t − 4'}</span><span>5</span></span></div><p class="muted" id="m4">${hug?'Each top is one glued group. Now cross-multiply: 5 high-fives the left top, 3 high-fives the right top.':'Right now the tops look loose. Tap a fraction.'}</p><div class="row" style="margin-top:8px">${hug&&!crossed?'<button class="btn sm" id="cross">Cross-multiply</button>':''}${crossed?'<div class="fb ok" style="width:100%"><b>5(t + 2) = 3(t − 4)</b>. Distribute: 5t + 10 = 3t − 12 → t = −11.</div>':''}</div>
+   ${crossed?`<h3 style="margin-top:18px">Mission 2: divide the whole top.</h3><div style="font-size:1.3rem;margin:10px 0;font-weight:900">2y = <span class="fracbar hug"><span class="top">(12 − 6y)</span><span>3</span></span> + 4</div><div class="chips"><button type="button" class="chip" data-k="bad">Divide only the 12 by 3 → 4 − 6y</button><button type="button" class="chip" data-k="good">Divide both terms by 3 → 4 − 2y</button></div><p id="m5" style="margin-top:8px;min-height:1.5em">${part2?'<b style="color:var(--ok)">2y = 4 − 2y + 4 → 4y = 8 → y = 2. Checkpoint cleared.</b>':''}</p>`:''}`;
+    const tog=()=>{ hug=!hug; draw(); }; ['#fa','#fb'].forEach(s=>{ const e=$(s,host); e.onclick=tog; e.onkeydown=ev=>{ if(ev.key==='Enter'||ev.key===' ') tog(); }; });
+    const cb=$('#cross',host); if(cb) cb.onclick=()=>{ crossed=true; ding(); draw(); };
+    host.querySelectorAll('[data-k]').forEach(c=>c.onclick=()=>{ if(c.dataset.k==='good'){ part2=true; ding(); draw(); done(); } else { thud(); $('#m5',host).innerHTML='<b style="color:var(--bad)">Captain Bar objects.</b> The bar is under 12 <i>and</i> 6y. Both get divided.'; } }); };
+  draw();
+},
+5(host,done){
+  let step=0; const states=['48 &lt; 3x + 3 &lt; 69','45 &lt; 3x &lt; 66','15 &lt; x &lt; 22']; const moves=[[{t:'− 3 from the middle only',ok:false,say:'The bread cares! Three parts, three treatments.'},{t:'− 3 from all three parts',ok:true,say:'All three parts. 45 < 3x < 66.'}],[{t:'÷ 3 all three parts',ok:true,say:'15 < x < 22. Now graph it.'},{t:'÷ 3 the middle only',ok:false,say:'Same rule: whatever the middle gets, the ends get.'}]];
+  let nl=null, graphed=false;
+  const draw=(msg,bad)=>{ host.innerHTML=`<p class="eyebrow">Interactive: the sandwich rule, then the number line</p><h3>Solve all three parts at once.</h3><div class="scale" style="grid-template-columns:1fr;margin:10px 0"><div class="pan ${bad?'tilt':''}" style="font-size:1.4rem">${states[step]}</div></div>${step<2?`<div class="chips">${moves[step].map((m,i)=>`<button type="button" class="chip" data-i="${i}">${m.t}</button>`).join('')}</div>`:''}<p id="m6" style="margin-top:8px;min-height:1.5em">${msg||''}</p>${step===2?`<h3 style="margin-top:10px">Now graph 15 &lt; x &lt; 22.</h3><p class="muted">Open circle = the number fell through (strict). Closed = plugged (≤, ≥).</p><div class="nl" id="nl5"></div><div class="row" style="margin-top:8px"><button class="btn sm" id="chk5">Check my graph</button></div><p id="m7" style="margin-top:6px;min-height:1.5em"></p>`:''}`;
+    host.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ const m=moves[step][+c.dataset.i]; if(m.ok){ step++; ding(); draw('<b style="color:var(--ok)">'+m.say+'</b>'); } else { thud(); draw('<b style="color:var(--bad)">Nope.</b> '+m.say,true); } });
+    if(step===2){ nl=numberLine($('#nl5',host),10,27,null); $('#chk5',host).onclick=()=>{ const s=nl.get(); if(s.lo===15&&s.hi===22&&s.loOpen&&s.hiOpen){ ding(); $('#m7',host).innerHTML='<b style="color:var(--ok)">Open at 15, open at 22, shaded between. Checkpoint cleared.</b>'; if(!graphed){ graphed=true; done(); } } else { thud(); $('#m7',host).innerHTML='<b style="color:var(--bad)">Not yet.</b> '+(s.lo!==15||s.hi!==22?'Endpoints come from 15 < x < 22.':'Strict symbols: both circles should be open.'); } }; } };
+  draw();
+},
+6(host,done){
+  let plugged=false, found=false; const lines=['2y = (12 − 6y)/3 + 4','2y = 4 − 6y + 4','8y = 8','y = 1']; const wrong=1;
+  const draw=()=>{ host.innerHTML=`<p class="eyebrow">Interactive: plug it in, then spot the error</p><h3>Two answers for (t + 2)/3 = (t − 4)/5. Plug each one in.</h3><div class="chips"><button type="button" class="chip" data-t="11">Plug in t = 11</button><button type="button" class="chip" data-t="-11">Plug in t = −11</button></div><p id="m8" style="margin-top:8px;min-height:1.5em"></p>
+   <h3 style="margin-top:16px">Spot the error. Tap the first line that breaks a rule.</h3><div class="opts">${lines.map((l,i)=>`<button type="button" class="opt" data-i="${i}">${i+1}. &nbsp;<span class="eq">${l}</span></button>`).join('')}</div><p id="m9" style="margin-top:8px;min-height:1.5em">${found?'<b style="color:var(--ok)">Line 2: only the 12 was divided by 3. The bar groups the whole top, so 6y ÷ 3 = 2y too. Checkpoint cleared.</b>':''}</p>`;
+    host.querySelectorAll('[data-t]').forEach(c=>c.onclick=()=>{ const t=+c.dataset.t; const L=(t+2)/3, R=(t-4)/5; const ok=Math.abs(L-R)<1e-9; $('#m8',host).innerHTML=`t = ${t}: left = (${t} + 2)/3 = <b class="num">${M.fmt(L)}</b>, right = (${t} − 4)/5 = <b class="num">${M.fmt(R)}</b>. ${ok?'<b style="color:var(--ok)">They agree. Verified.</b>':'<b style="color:var(--bad)">They disagree. Not a solution.</b>'}`; if(ok) ding(); else thud(); plugged=plugged||ok; if(plugged&&found) done(); });
+    host.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{ if(+o.dataset.i===wrong){ found=true; ding(); draw(); if(plugged) done(); } else { thud(); $('#m9',host).innerHTML=`<b style="color:var(--bad)">Line ${+o.dataset.i+1} is fine.</b> Compare it to the line before it: what changed, and was it legal?`; } }); };
+  draw();
+},
+};
+
+/* ---- Mini-boss questions ---- */
+const MINI={
+1:[{kind:'rel',prompt:'A climbing gym charges <b>$25</b> to get in plus <b>$8 per hour</b>. You have <b>$65</b>. Let <i>h</i> = hours. Write the inequality.',answer:'25+8h<=65',placeholder:'e.g. 25 + 8h ≤ 65',hint:'Build the whole bill first (entry + rate × h). “You have $65” is a ceiling with a floor line: ≤.'},
+   {kind:'choice',prompt:'“A team needs <b>at least 12</b> players.” Which inequality?',options:['p < 12','p ≤ 12','p ≥ 12','p > 12'],correct:[2],hint:'“At least” lets 12 itself count. That means a floor line, pointing the right way.'},
+   {kind:'rel',prompt:'Plan A costs <b>$10 + $3 per song</b>. Plan B costs <b>$4 + $5 per song</b>. When is Plan A cheaper? (x = songs)',answer:'10+3x<4+5x',placeholder:'e.g. 10 + 3x < …',hint:'Each plan is a whole bill. Put Plan A on the small side with a strict symbol.'}],
+2:[{kind:'rel',solved:'h',prompt:'Solve <span class="eq">25 + 8h ≤ 65</span> for <i>h</i>.',answer:'h<=5',placeholder:'h ≤ …',hint:'Subtract 25 from both sides, then divide by 8. No negatives, so no flip.'},
+   {kind:'num',prompt:'Cookies cost <b>$2 each</b> and you have <b>$9</b>. What is the most cookies you can buy?',answer:'4',placeholder:'cookies',hint:'The algebra says 4.5. Can you buy half a cookie at this store?'},
+   {kind:'rel',solved:'x',prompt:'Solve <span class="eq">10 + 3x &lt; 4 + 5x</span> for <i>x</i>.',answer:'x>3',placeholder:'x > …',hint:'Subtract 3x (not 5x) so x stays positive and Negative Nine stays home. Then subtract 4.'}],
+3:[{kind:'expr',var:'a',prompt:'Solve <span class="eq">2a + m = 6a − ma</span> for <i>a</i>.',answer:'m/(4-m)',placeholder:'a = …',hint:'Collect, factor, divide. All a terms to one side: m = 4a − ma. Factor a. Divide by the group.'},
+   {kind:'expr',var:'f',prompt:'Solve <span class="eq">C = 5(F − 32) / 9</span> for <i>F</i>.',answer:'9c/5+32',placeholder:'F = …',hint:'Reverse order: ×9, then ÷5, then +32.'},
+   {kind:'expr',var:'h',prompt:'Solve <span class="eq">A = ½bh</span> for <i>h</i>.',answer:'2a/b',placeholder:'h = …',hint:'What undoes multiplying by one-half? Then what undoes multiplying by b?'}],
+4:[{kind:'num',prompt:'Solve <span class="eq">(t + 1) / 2 = (t − 3) / 4</span> for <i>t</i>.',answer:'-5',placeholder:'t = …',hint:'Cross-multiply with parentheses: 4(t + 1) = 2(t − 3). Distribute to both terms.'},
+   {kind:'num',prompt:'Solve <span class="eq">3y = (24 − 6y) / 3 + 2</span> for <i>y</i>.',answer:'2',placeholder:'y = …',hint:'Divide both terms on top by 3: 8 − 2y. Then collect y.'},
+   {kind:'choice',prompt:'Which is equal to <span class="eq">(12 − 6y) / 3</span>?',options:['4 − 6y','4 − 2y','12 − 2y','(12 − 6y) − 3'],correct:[1],hint:'The bar is under both terms. Divide each one by 3.'}],
+5:[{kind:'rel',solved:'x',prompt:'Solve <span class="eq">10 &lt; 2x + 4 &lt; 20</span> for <i>x</i>.',answer:'3<x<8',placeholder:'__ < x < __',hint:'Subtract 4 from all three parts, then divide all three by 2.'},
+   {kind:'triples',want:[10,11,12],prompt:'Three consecutive integers have a sum greater than 30 and less than 42. List every possible set.',placeholder:'a,b,c; d,e,f; …',hint:'30 < 3x + 3 < 42 → 9 < x < 13. Which integers fell through the holes?'},
+   {kind:'numberline',nl:{min:0,max:12,lo:3,hi:8,loOpen:true,hiOpen:false},prompt:'Graph <span class="eq">3 &lt; x ≤ 8</span>. Drag the circles; tap to switch open/closed.',hint:'One symbol is strict and one has a floor. Open for strict, closed for the floor.'}],
+6:[{kind:'choice',prompt:'A student solved <span class="eq">(t + 2)/3 = (t − 4)/5</span> and got <b>t = 11</b>. Plug it in: left side = 13/3, right side = 7/5. Is the answer right?',options:['Yes, 11 works','No, the sides disagree'],correct:[1],hint:'Do 13/3 and 7/5 equal each other? If not, the original equation has spoken.'},
+   {kind:'choice',prompt:'Here is someone’s work for <span class="eq">P = 2l + 2w</span>, solving for w: (1) P − 2l = 2w &nbsp; (2) w = P − 2l/2 &nbsp; (3) w = P − l. Which line has the first error?',options:['Line 1','Line 2','Line 3'],correct:[1],hint:'From line 1 to line 2, what was divided by 2? All of it, or one piece?'},
+   {kind:'num',prompt:'Check: a rectangle has perimeter <b>100 in</b> and length <b>30 in</b>. What width makes <span class="eq">2l + 2w = 100</span> true?',answer:'20',placeholder:'inches',hint:'Plug in l = 30: 60 + 2w = 100. Then verify your w by rebuilding 100.'}],
+};
+const LEVEL_DEFS=LEVELS.map(L=>({n:L.n, boss:MINI[L.n]}));
+
+/* ---- Views ---- */
+let levelTab='explainer', lastLevel=null;
+VIEWS.learn=(app)=>{
+  app.innerHTML=h`<div class="stack"><div class="block"><p class="eyebrow">Learn</p><h1>Six obbies. Clear the checkpoints.</h1><p style="margin-top:6px">Each level: an interactive, a short video, and a mini-boss. Checkpoints earn coins. Clear all of a level for its badge.</p></div>
+  <div class="grid">${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}</div></div>`;
+};
+VIEWS.level=(app,n)=>{
+  n=+n||1; if(n!==lastLevel){ levelTab='explainer'; lastLevel=n; } const L=LEVELS[n-1]; const D=LEVEL_DEFS[n-1]; const st=State.s.learn['l'+n]||(State.s.learn['l'+n]={});
+  if(player){ player.stop(); player=null; }
+  const cps=['Explainer','Video',...D.boss.map((_,i)=>'Boss '+(i+1))]; const keys=['explainer','video',...D.boss.map((_,i)=>'q'+(i+1))]; let cleared=0; for(const k of keys){ if(st[k]) cleared++; else break; }
+  const tabs=[['explainer','1 · Interactive'],['video','2 · Video'],['boss','3 · Mini-boss']];
+  app.innerHTML=h`<div class="stack">
+   <div class="block" style="border-color:${L.color}"><div class="row" style="justify-content:space-between"><div><p class="eyebrow" style="color:${L.color}">Level ${n} of 6</p><h1>${esc(L.title)}</h1><p class="muted">${esc(L.blurb)}</p></div><div class="row">${n>1?`<button class="btn alt sm" data-go="level" data-arg="${n-1}">← L${n-1}</button>`:''}${n<6?`<button class="btn alt sm" data-go="level" data-arg="${n+1}">L${n+1} →</button>`:''}</div></div>
+    ${courseHTML(cps, keys.filter(k=>st[k]).length, L.color)}
+    <div class="steps" style="margin-top:26px">${tabs.map(([k,l])=>`<button class="tab ${(k==='boss'?D.boss.every((_,i)=>st['q'+(i+1)]):st[k])?'done':''}" data-lt="${k}" aria-current="${levelTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
+   <div class="block" id="lbody"></div></div>`;
+  app.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ levelTab=b.dataset.lt; render(); });
+  const body=$('#lbody');
+  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); checkLevelBadge(n); setTimeout(render,900); };
+  if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
+  else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }); }
+  else {
+    body.innerHTML=`<p class="eyebrow">Mini-boss</p><h3>${D.boss.length} questions. Wrong answers respawn you with a hint.</h3><div class="stack" id="mb" style="margin-top:10px"></div>`;
+    D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);
+      let misses=0; $('.check',el).onclick=()=>{ const raw=rawOf(it,el).trim(); if(!raw&&it.kind!=='numberline'){ showFB(el,'info','Type something first.'); return; } const extra=it.kind==='numberline'?el._nl.get():null; const g=gradeItem(it,raw,extra);
+        if(g.ok){ el.classList.add('ok'); el.classList.remove('bad'); showFB(el,'ok',pickPraise({id:'L'+n+'Q'+i})); if(!st[key]){ st[key]=Date.now(); State.addCoins(misses?5:10,'mini-boss'); if(misses) State.award('respawn'); checkLevelBadge(n); $('.tag',el).innerHTML=`BOSS ${i+1} <span class="ck">✔ cleared</span>`; } State.save(); }
+        else { misses++; thud(); el.classList.add('bad'); showFB(el,'bad',`<span class="who">Respawn</span>${g.partial?g.partial+' ':''}${q.hint}${misses>=3&&q.answer?`<br><span class="muted">Stuck? The form of the answer is like: ${esc(String(q.answer).replace(/<=/g,'≤').replace(/>=/g,'≥'))} — but check every number yourself.</span>`:''}`); } }; });
+  }
+};
+function checkLevelBadge(n){ const st=State.s.learn['l'+n]||{}; const D=LEVEL_DEFS[n-1]; if(st.explainer&&st.video&&D.boss.every((_,i)=>st['q'+(i+1)])){ State.award('l'+n); if(State.s.badges.l2&&State.s.badges.l5) State.award('nine'); } }
+/* ===== Parent guide (passphrase-gated) ===== */
+let guideTab='summary';
+VIEWS.guide = (app)=>{
+  if(!State.unlocked){ go('lobby'); openGate(); return; }
+  const tabs=[['summary','What the test shows'],['solutions','Worked solutions'],['dash','Attempt dashboard']];
+  app.innerHTML=h`<div class="stack">
+   <div class="block"><div class="row" style="justify-content:space-between"><div><p class="eyebrow">Parent guide</p><h1>Behind the curtain.</h1></div><button class="btn alt sm" id="lockBtn">Lock & return to lobby</button></div>
+   <p class="muted" style="margin-top:6px">${State.mode==='signed'?'Signed in: saved attempts load from this account.':'Public link: nothing is saved here, so the dashboard shows only this browser session.'}</p>
+   <div class="steps" style="margin-top:12px">${tabs.map(([k,l])=>`<button class="tab" data-t="${k}" aria-current="${guideTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
+   <div id="gbody"></div></div>`;
+  $('#lockBtn').onclick=()=>{ State.unlocked=false; go('lobby'); };
+  app.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ guideTab=b.dataset.t; render(); });
+  const body=$('#gbody'); ({summary:guideSummary, solutions:guideSolutions, dash:guideDash})[guideTab](body);
+};
+function guideSummary(el){
+  el.innerHTML=h`<div class="block stack">
+   <h2>One page: what the practice test shows</h2>
+   <p>Pattern across the test: <b>setup and interpretation are within reach; algebraic manipulation is the gap.</b> Problems 1 and 2 drew real attempts with partial understanding. Problems 3 through 6 were left blank, and Problem 3 (literal equations with the variable on both sides, plus fractions) is both the biggest gap and the largest share of the test. The blank pages matter more than the wrong answers: avoidance costs every point, while a wrong attempt with work shown often earns some.</p>
+   <div class="tablewrap"><table><thead><tr><th>Part</th><th>Observed</th></tr></thead><tbody>${OBSERVED.map(o=>`<tr><td><b>${o.id}</b></td><td>${esc(o.note)}</td></tr>`).join('')}</tbody></table></div>
+   <h3>Three priorities, in order</h3>
+   <ol style="padding-left:22px;display:grid;gap:8px">
+    <li><b>Make attempting cheap.</b> The app respawns with no penalty. At home, the matching move is to reward visible work over correct answers for a week. Ask "show me one step" rather than "what did you get?"</li>
+    <li><b>Literal equations with the variable on both sides (3a).</b> The sequence to drill is: collect every term containing the variable on one side, factor the variable out, divide by the group. Level 3 animates exactly this with the character Vera the Variable.</li>
+    <li><b>Setup discipline (1a, 1b).</b> Before solving, the inequality must read as a sentence about the situation. Ask him to read his inequality aloud as a sentence; the fused solving step in 1a becomes obvious when spoken.</li>
+   </ol>
+   <h3>Talking points that work better than explanations</h3>
+   <ul style="padding-left:22px;display:grid;gap:6px">
+    <li>"What was done to the variable <i>last</i>? Undo that first."</li>
+    <li>"Which terms have the variable hiding in them? Even the sneaky one with a letter in front?"</li>
+    <li>"The fraction bar is a grouping symbol. What is the whole top? Put parentheses around it."</li>
+    <li>"Three parts, three treatments. Did all three parts get it?"</li>
+    <li>"That is the algebra answer. What does the real world say? Can you buy half a jug?"</li>
+    <li>"Plug it back in. Does the original equation hold?"</li>
+   </ul>
+  </div>`;
+}
+function guideSolutions(el){
+  el.innerHTML=h`<div class="block stack"><h2>Worked solutions, step by step</h2><p class="muted">For each part: the answer, every step, the misconception most likely at that step, and a question to ask instead of a lecture.</p>
+   ${PROBLEMS.map(P=>`<h3 style="margin-top:10px">Problem ${P.n}: ${esc(P.title)}</h3><p class="muted" style="font-size:.92rem">${P.stem}</p>${ITEMS.filter(i=>i.p===P.n).map(it=>{ const g=GUIDE[it.id]; const rec=State.s.checks[it.id]; return `<details><summary>${it.id.toUpperCase()} · ${it.prompt.replace(/<[^>]+>/g,'').slice(0,80)}${rec?` <span class="muted" style="font-family:var(--body);font-size:.8rem">(${rec.correct?'cleared':'not yet'}, ${rec.attempts} tr${rec.attempts===1?'y':'ies'})</span>`:''}</summary><p><b>Answer:</b> <span class="eq" style="white-space:normal">${esc(g.answer)}</span></p>${g.steps.map((s,i)=>`<div class="gstep"><span class="k">${i+1}</span><div><div>${esc(s.s)}</div><span class="lbl">Likely misconception</span><div class="m">${esc(s.m)}</div><span class="lbl">Ask</span><div class="ask">${esc(s.ask)}</div></div></div>`).join('')}${rec&&rec.history.length?`<span class="lbl" style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-top:8px">His attempts here</span><div class="row" style="gap:6px">${rec.history.map(x=>`<span class="badge ${x.ok?'got':''}" style="font-size:.8rem">${x.ok?'✔':'✘'} ${esc(x.raw).slice(0,40)}</span>`).join('')}</div>`:''}</details>`; }).join('')}`).join('')}
+  </div>`;
+}
+function skillStats(){
+  const S={}; Object.keys(SKILL_NAMES).forEach(k=>S[k]={checkOk:0,checkTried:0,checkFirst:0,pracOk:0,pracN:0});
+  ITEMS.forEach(it=>{ const r=State.s.checks[it.id]; if(r&&r.attempts){ S[it.skill].checkTried++; if(r.correct) S[it.skill].checkOk++; if(r.firstTry) S[it.skill].checkFirst++; } });
+  State.s.attempts.forEach(a=>(a.items||[]).forEach(x=>{ if(S[x.skill]){ S[x.skill].pracN++; if(x.ok) S[x.skill].pracOk++; } }));
+  return S;
+}
+function guideDash(el){
+  const S=skillStats(); const A=[...State.s.attempts].sort((a,b)=>b.ts-a.ts);
+  const pct=(a,b)=>b?Math.round(100*a/b):null; const bar=(a,b)=>{ const p=pct(a,b); return p===null?'<span class="muted">—</span>':`<div class="row" style="gap:8px;flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p}%"></i></div><span class="num" style="min-width:3.5em;text-align:right">${p}% <span class="muted" style="font-size:.8rem">(${a}/${b})</span></span></div>`; };
+  el.innerHTML=h`<div class="stack">
+   <div class="block"><h2>Per-skill accuracy</h2><p class="muted">Check = his real test items (cleared on first try / attempted). Final Boss = every graded sub-part across all runs.</p>
+    <div class="tablewrap"><table><thead><tr><th>Skill</th><th>Check: first-try</th><th>Check: cleared</th><th>Final Boss</th></tr></thead><tbody>
+    ${Object.keys(SKILL_NAMES).map(k=>`<tr><td><b>${SKILL_NAMES[k]}</b><br><span class="muted" style="font-size:.8rem">Level ${LEVELS.find(L=>L.skill===k).n}</span></td><td>${bar(S[k].checkFirst,S[k].checkTried)}</td><td>${bar(S[k].checkOk,S[k].checkTried)}</td><td>${bar(S[k].pracOk,S[k].pracN)}</td></tr>`).join('')}
+    </tbody></table></div></div>
+   <div class="block"><h2>Final Boss runs</h2>${A.length?`<div class="tablewrap"><table><thead><tr><th>When</th><th class="n">Score</th><th>Missed</th><th>Seed</th></tr></thead><tbody>${A.map(a=>`<tr><td>${new Date(a.ts).toLocaleString()}</td><td class="n"><b>${a.score}/${a.total}</b> (${a.pct}%)</td><td>${(a.items||[]).filter(x=>!x.ok).map(x=>x.id).join(', ')||'none'}</td><td class="num">${a.seed}</td></tr>`).join('')}</tbody></table></div>
+    ${A[0]&&A[0].ai?`<h3 style="margin-top:14px">Latest coach summary</h3><p>${esc(A[0].ai)}</p>`:''}
+    ${A[0]?`<details style="margin-top:12px"><summary>Latest run: his work, item by item</summary>${(A[0].items||[]).map(x=>`<div class="gstep"><span class="k">${x.id}</span><div><div>${x.ok?'<b style="color:var(--ok)">✔ correct</b>':'<b style="color:var(--bad)">✘ missed</b>'} · answer: <span class="eq" style="white-space:normal">${esc(x.raw||'(blank)')}</span></div>${x.work?`<div class="workbox">${esc(x.work)}</div>`:''}${x.diag?`<div class="muted" style="font-size:.9rem">${esc(x.diag)}</div>`:''}</div></div>`).join('')}</details>`:''}`
+    :`<p class="muted">No Final Boss runs yet${State.mode==='signed'?'.':' (and in public mode runs are not saved).'}</p>`}</div>
+   <div class="block"><h2>Check My Answers log</h2><div class="tablewrap"><table><thead><tr><th>Part</th><th>Skill</th><th class="n">Tries</th><th>Status</th><th>Last typed</th></tr></thead><tbody>${ITEMS.map(it=>{ const r=State.s.checks[it.id]; return `<tr><td><b>${it.id}</b></td><td>${SKILL_NAMES[it.skill]}</td><td class="n">${r?r.attempts:0}</td><td>${r?(r.correct?(r.firstTry?'✔ first try':'✔ after respawn'):'✘ open'):'—'}</td><td class="muted" style="font-size:.85rem">${r&&r.history.length?esc(r.history[r.history.length-1].raw).slice(0,40):''}</td></tr>`; }).join('')}</tbody></table></div></div>
+  </div>`;
+}
+/* ===== Boot ===== */
+function routeFromHash(){ const hsh=(location.hash||'').replace('#',''); if(hsh==='guide') return {view:'lobby',arg:null,gate:true}; const m=hsh.match(/^level([1-6])$/); if(m) return {view:'level',arg:+m[1]}; if(['check','boss','learn','lobby'].includes(hsh)) return {view:hsh,arg:null}; return {view:'lobby',arg:null}; }
+function start(hot){
+  if(hot&&hot.s){ State.s=Object.assign(State.s,hot.s); State.unlocked=!!hot.unlocked; }
+  const r=routeFromHash(); route={view:r.view,arg:r.arg}; if(hot&&hot.route&&!location.hash) route=hot.route;
+  render(); if(r.gate) openGate();
+  $('#logoBtn').onclick=()=>go('lobby'); $('#glyph').onclick=openGate;
+  try{ window.claude?.hot?.snapshot?.(()=>({s:State.s, route, unlocked:State.unlocked})); }catch(e){}
+  connect();
+}
+async function connect(){
+  if(!window.claude||typeof window.claude.use!=='function'){ State.ready=true; return; }
+  try{
+    const [user,db,sample]=await Promise.all([claude.use('user'),claude.use('db'),claude.use('sample')]);
+    State.sample=sample||null;
+    if(user&&db){ const uid=await user.id(); if(uid){ State.uid=uid; State.db=db; State.mode='signed'; await loadProfile(); } }
+  }catch(e){ console.warn('capabilities',e); }
+  State.ready=true; render();
+}
+async function loadProfile(){
+  try{
+    const doc=State.db.doc('data/users/'+State.uid+'/profile'); const snap=await doc.get();
+    if(snap.exists){ const d=snap.data()||{}; ['coins','badges','checks','learn','muted','voice'].forEach(k=>{ if(d[k]!==undefined) State.s[k]=d[k]; }); }
+    const q=await doc.collection('attempts').orderBy('ts','desc').limit(50).get(); State.s.attempts=q.docs.map(x=>x.data());
+  }catch(e){ console.warn('load',e); }
+}
+async function saveAttempt(a){ State.s.attempts.unshift(a); if(!State.db||!State.uid) return; try{ await State.db.doc('data/users/'+State.uid+'/profile').collection('attempts').doc(a.id).set(a); }catch(e){ console.warn('attempt save',e); } }
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
