@@ -21,14 +21,22 @@ function rawOf(item, el){
   if(item.kind==='numberline') return JSON.stringify(el._nl.get());
   return ($('.ans',el)||{}).value||'';
 }
+/* Math keypad: inserts symbols and this item's letters at the cursor. */
+function keypadFor(item){
+  const letters=[...new Set(((item.var||'')+(item.kind==='num'?'':(item.answer||''))).replace(/[^a-z]/gi,'').split(''))];
+  const syms = item.kind==='num' ? ['−','/','.'] : item.kind==='triples' ? [',',';'] : ['≤','≥','<','>','(',')','/','−','+','='];
+  return [...syms,...letters];
+}
+function keypadHTML(item){ return `<div class="kp" role="toolbar" aria-label="Math keys">${keypadFor(item).map(k=>`<button type="button" class="key" data-k="${k}" tabindex="-1">${k}</button>`).join('')}</div>`; }
+function wireKeypad(el){ const inp=$('.ans',el); if(!inp) return; el.querySelectorAll('.key').forEach(b=>b.addEventListener('pointerdown',e=>{ e.preventDefault(); const k=b.dataset.k; const st=inp.selectionStart??inp.value.length, en=inp.selectionEnd??st; inp.value=inp.value.slice(0,st)+k+inp.value.slice(en); inp.focus(); inp.setSelectionRange(st+k.length,st+k.length); inp.dispatchEvent(new Event('input',{bubbles:true})); })); }
 function answerUI(item, idx){
   const id=`in-${idx}-${item.id}`;
   switch(item.kind){
     case 'choice': return `<div class="opts" role="group">${item.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>${item.explain?`<label for="${id}x" class="muted" style="font-size:.9rem">Optional: explain the error in your own words</label><textarea id="${id}x" placeholder="Ben… Chris…"></textarea>`:''}`;
     case 'order': return `<div class="chips pool">${item.steps.map((s,i)=>i).sort((a,b)=>((a*7+3)%5)-((b*7+3)%5)).map(i=>`<button type="button" class="chip" data-i="${i}">${item.steps[i]}</button>`).join('')}</div><p class="muted" style="font-size:.85rem">Your solution (tap a step to remove it):</p><div class="seq"></div>`;
     case 'numberline': return `<div class="nl" data-min="${item.nl.min}" data-max="${item.nl.max}"></div>`;
-    case 'triples': return `<textarea class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off"></textarea>`;
-    default: return `<input type="text" class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="${item.kind==='num'?'decimal':'text'}">`;
+    case 'triples': return `<textarea class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off"></textarea>${keypadHTML(item)}`;
+    default: return `<input type="text" class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="${item.kind==='num'?'decimal':'text'}">${keypadHTML(item)}`;
   }
 }
 function wireAnswerUI(item, el, onChange){
@@ -36,7 +44,7 @@ function wireAnswerUI(item, el, onChange){
   if(item.kind==='order'){ const pool=$('.pool',el), seq=$('.seq',el); const upd=()=>{ el.dataset.order=[...seq.children].map(c=>c.dataset.i).join(''); onChange&&onChange(); };
     pool.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ seq.appendChild(c); upd(); }); seq.addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(c){ pool.appendChild(c); upd(); } }); }
   if(item.kind==='numberline'){ el._nl=numberLine($('.nl',el), item.nl.min, item.nl.max, onChange); }
-  if(item.kind==='num'||item.kind==='rel'||item.kind==='expr'||item.kind==='triples'){ const i=$('.ans',el); i.addEventListener('input',()=>onChange&&onChange()); }
+  if(item.kind==='num'||item.kind==='rel'||item.kind==='expr'||item.kind==='triples'){ const i=$('.ans',el); i.addEventListener('input',()=>onChange&&onChange()); i.addEventListener('keydown',e=>{ if(e.key==='Enter'&&i.tagName==='INPUT'){ e.preventDefault(); const b=$('.check',el); b&&b.click(); } }); wireKeypad(el); }
 }
 /* Draggable number line: two handles, tap to toggle open/closed, shade between. */
 function numberLine(host, min, max, onChange, init){
@@ -59,22 +67,36 @@ function numberLine(host, min, max, onChange, init){
   return {get:()=>({...st}), set:(o)=>{Object.assign(st,o);sync();}};
 }
 
-/* ===== Check My Answers ===== */
+/* ===== Check My Answers: one problem at a time ===== */
+let checkProb=null;
+function firstOpenProblem(){ for(const P of PROBLEMS){ if(ITEMS.some(i=>i.p===P.n&&!State.s.checks[i.id]?.correct)) return P.n; } return 1; }
 VIEWS.check = (app)=>{
-  const cleared=ITEMS.filter(i=>State.s.checks[i.id]?.correct).length;
+  if(checkProb===null) checkProb=firstOpenProblem();
+  const cleared=ITEMS.filter(i=>State.s.checks[i.id]?.correct).length; const P=PROBLEMS.find(x=>x.n===checkProb); const its=ITEMS.filter(i=>i.p===P.n);
+  const pdone=n=>ITEMS.filter(i=>i.p===n&&State.s.checks[i.id]?.correct).length, pn=n=>ITEMS.filter(i=>i.p===n).length;
   app.innerHTML=h`<div class="stack">
-   <div class="block"><p class="eyebrow">Check my answers</p><h1>Your practice test, graded live.</h1><p style="margin-top:6px">Same problems, same numbers. Type an answer and tap <b>Check</b>. Right: coins. Wrong: you respawn with a hint about <i>your</i> answer, never the answer itself. Three tries unlocks "show me the first step."</p>
-   <div class="row" style="margin-top:10px"><span class="pill badges">${cleared}/${ITEMS.length} cleared</span><span class="muted" style="font-size:.9rem">Typing tips: ≤ can be typed as &lt;=, fractions as k/(5-k), and 2x means 2·x.</span></div></div>
-   ${PROBLEMS.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack" style="--gap:10px">${ITEMS.filter(i=>i.p===P.n).map((it,k)=>itemHTML(it,'c')).join('')}</div></div>`).join('')}
+   <div class="block"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><p class="eyebrow">Check my answers</p><h1>Your practice test, one problem at a time.</h1></div><span class="pill badges num">${cleared}/${ITEMS.length} cleared</span></div>
+    <p style="margin-top:6px">Type an answer and tap <b>Check</b>. Right: coins. Wrong: you respawn with a hint about <i>your</i> answer, never the answer itself. Stuck? Every part has a worked example with different numbers.</p>
+    <nav class="pnav" aria-label="Problems">${PROBLEMS.map(x=>`<button class="pbtn ${x.n===checkProb?'cur':''} ${pdone(x.n)===pn(x.n)?'done':''}" data-p="${x.n}" aria-current="${x.n===checkProb?'page':'false'}"><b>${x.n}</b><span class="num">${pdone(x.n)}/${pn(x.n)}</span></button>`).join('')}</nav></div>
+   <div class="block" id="probBlock"><p class="eyebrow">Problem ${P.n} of 6</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${its.map(it=>itemHTML(it,'c')).join('')}</div>
+    <div class="row" style="justify-content:space-between;margin-top:18px"><button class="btn alt" id="prevP" ${P.n===1?'disabled':''}>← Problem ${P.n-1||1}</button><span class="muted num">${pdone(P.n)}/${pn(P.n)} cleared here</span><button class="btn" id="nextP" ${P.n===6?'disabled':''}>Problem ${Math.min(6,P.n+1)} →</button></div></div>
   </div>`;
-  ITEMS.forEach(it=>wireCheckItem(it, app.querySelector(`[data-item="${it.id}"]`)));
+  its.forEach(it=>wireCheckItem(it, app.querySelector(`[data-item="${it.id}"]`)));
+  const jump=n=>{ checkProb=n; render(); const pb=$('#probBlock'); if(pb) pb.scrollIntoView({block:'start'}); };
+  app.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>jump(+b.dataset.p));
+  $('#prevP').onclick=()=>jump(Math.max(1,checkProb-1)); $('#nextP').onclick=()=>jump(Math.min(6,checkProb+1));
 };
+function refreshPnav(){ const pdone=n=>ITEMS.filter(i=>i.p===n&&State.s.checks[i.id]?.correct).length, pn=n=>ITEMS.filter(i=>i.p===n).length; document.querySelectorAll('.pbtn').forEach(b=>{ const n=+b.dataset.p; b.querySelector('.num').textContent=`${pdone(n)}/${pn(n)}`; b.classList.toggle('done',pdone(n)===pn(n)); }); const here=document.querySelector('#probBlock .row .muted.num'); if(here&&checkProb) here.textContent=`${pdone(checkProb)}/${pn(checkProb)} cleared here`; const pill=document.querySelector('.pill.badges.num'); if(pill) pill.textContent=`${ITEMS.filter(i=>State.s.checks[i.id]?.correct).length}/${ITEMS.length} cleared`; }
 function itemHTML(it, prefix){
-  const rec=State.s.checks[it.id]; const done=rec&&rec.correct;
-  return `<div class="item ${done?'ok':''}" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()} ${done?'<span class="ck">✔ cleared</span>':''}<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· ${SKILL_NAMES[it.skill]}</span></div><div>${it.prompt}</div>${answerUI(it,prefix)}<div class="row"><button type="button" class="btn sm check">${done?'Check again':'Check'}</button><span class="muted tries" style="font-size:.85rem">${rec&&rec.attempts?`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`:''}</span></div><div class="fbwrap"></div></div>`;
+  const rec=State.s.checks[it.id]; const done=rec&&rec.correct; const ex=EXAMPLES[it.id];
+  return `<div class="item ${done?'ok':''}" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()} ${done?'<span class="ck">✔ cleared</span>':''}<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· ${SKILL_NAMES[it.skill]}</span></div><div>${it.prompt}</div>
+   <label class="muted" style="font-size:.85rem" for="w-${it.id}">Work it out here (not graded${State.mode==='signed'?', saved for later':''})</label><textarea class="scratch" id="w-${it.id}" placeholder="Steps, scribbles, anything.">${esc(rec?.work||'')}</textarea>
+   ${answerUI(it,prefix)}<div class="row"><button type="button" class="btn sm check">${done?'Check again':'Check'}</button><span class="muted tries" style="font-size:.85rem">${rec&&rec.attempts?`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`:''}</span></div><div class="fbwrap"></div>
+   ${ex?`<details class="ex"><summary>Show me a similar one, worked out</summary><p class="muted" style="margin:6px 0">${esc(ex.stem)}</p><ol class="exsteps">${ex.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`:''}</div>`;
 }
 function wireCheckItem(it, el){
   wireAnswerUI(it, el);
+  const sc=$('.scratch',el); let st=null; sc.addEventListener('input',()=>{ clearTimeout(st); st=setTimeout(()=>{ const rec=State.s.checks[it.id]||(State.s.checks[it.id]={attempts:0,correct:false,firstTry:false,history:[]}); rec.work=sc.value.slice(0,2000); State.save(); },600); });
   $('.check',el).onclick=async()=>{
     const raw=rawOf(it,el).trim(); if(!raw||raw==='{}'){ showFB(el,'info','Type something first. Any attempt is free.'); return; }
     const extra = it.kind==='numberline'? el._nl.get() : null;
@@ -84,7 +106,7 @@ function wireCheckItem(it, el){
     $('.tries',el).textContent=`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`;
     if(res.ok){
       const first=!rec.correct; const hadMiss=rec.history.some(x=>!x.ok);
-      if(first){ rec.correct=true; rec.firstTry=rec.attempts===1; rec.clearedAt=Date.now(); State.addCoins(rec.firstTry?10:5,'checkpoint cleared'); if(hadMiss) State.award('respawn'); }
+      if(first){ rec.correct=true; rec.firstTry=rec.attempts===1; rec.clearedAt=Date.now(); State.addCoins(rec.firstTry?10:5,'checkpoint cleared'); if(hadMiss) State.award('respawn'); State.checkpoint(); refreshPnav(); }
       else State.save();
       el.classList.add('ok'); el.classList.remove('bad'); $('.tag',el).innerHTML=`${it.id.toUpperCase()} <span class="ck">✔ cleared</span>`;
       showFB(el,'ok',first?pickPraise(it):'Still right. Checkpoint stays cleared.');

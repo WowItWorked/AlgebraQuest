@@ -106,6 +106,18 @@ textarea{min-height:88px;resize:vertical}
 .nl .tick{stroke:var(--ink);stroke-width:2} .nl .lab{font-size:11px;font-weight:800;fill:var(--ink);text-anchor:middle;font-family:var(--body)}
 .nl .shade{stroke:var(--accent);stroke-width:8;stroke-linecap:butt}
 .nl .dot{stroke:var(--ink);stroke-width:3;cursor:grab} .nl .dot.open{fill:var(--panel)} .nl .dot.closed{fill:var(--accent)}
+/* Keypad, scratch, examples, problem nav, daily */
+.kp{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.key{min-width:42px;min-height:40px;padding:0 10px;border:2px solid var(--ink);border-radius:6px;background:var(--panel2);color:var(--ink);font-weight:900;font-size:1.05rem;cursor:pointer;box-shadow:0 2px 0 var(--ink);font-variant-numeric:tabular-nums}
+.key:active{transform:translateY(2px);box-shadow:none}
+.scratch{min-height:64px;font-size:.95rem;background:var(--panel2)}
+.ex{margin-top:4px;border-color:var(--line);background:var(--panel2)} .ex summary{font-family:var(--body);font-size:.9rem;color:var(--accent)} .exsteps{margin:0;padding-left:22px;display:grid;gap:6px;font-size:.95rem}
+.pnav{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:14px}
+.pbtn{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 4px;border:3px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--ink);cursor:pointer;font-weight:800;font-size:.8rem;line-height:1.2}
+.pbtn b{font-family:var(--disp);font-size:1.05rem} .pbtn.cur{border-color:var(--accent);background:var(--panel2);box-shadow:0 3px 0 var(--accent)} .pbtn.done{border-color:var(--ok)} .pbtn.done b{color:var(--ok)}
+.daily{display:flex;gap:24px;flex-wrap:wrap;padding:12px 14px;border:3px solid var(--line);border-radius:var(--r);background:var(--panel2)}
+.dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink);background:var(--panel);display:inline-block} .dot.on{background:var(--gold)}
+.stage.mini{min-height:132px} .stage.mini .char .face{width:40px;height:40px;font-size:1rem} .stage.mini .board{font-size:1.05rem;padding:6px 10px} .stage.mini .char{bottom:24%}
 /* Toasts & modals */
 .toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:50;pointer-events:none}
 .toast{background:var(--ink);color:var(--panel);border:3px solid var(--gold);border-radius:var(--r);padding:8px 14px;font-weight:900;animation:pop .3s cubic-bezier(.3,1.5,.5,1)}
@@ -121,14 +133,14 @@ footer .wrap{padding-block:14px 24px;display:flex;justify-content:space-between;
 .stage .board .hl{background:var(--gold);color:var(--gold-ink);border-radius:4px;padding:0 4px}
 .stage .board .bad{color:var(--bad);text-decoration:line-through}
 .stage .char{position:absolute;bottom:22%;display:flex;flex-direction:column;align-items:center;gap:4px;transition:left .5s,right .5s,transform .3s}
-.stage .char .face{width:56px;height:56px;border:3px solid var(--ink);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:1.4rem;box-shadow:0 4px 0 var(--shadow)}
+.stage .char .face{width:56px;height:56px;border:3px solid var(--ink);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--body);font-weight:900;font-size:1.5rem;box-shadow:0 4px 0 var(--shadow)}
 .stage .char .nm{font-size:.7rem;font-weight:900;background:var(--panel);border:2px solid var(--ink);border-radius:4px;padding:0 6px}
 .stage .char.talk .face{animation:bob .6s infinite alternate} @keyframes bob{to{transform:translateY(-6px)}}
 .stage .char.flip .face{animation:spin .8s} @keyframes spin{to{transform:rotateY(360deg)}}
 .chat{display:grid;gap:8px;max-height:min(46vh,360px);overflow-y:auto;padding:10px;border:3px solid var(--ink);border-radius:var(--r);background:var(--panel2);margin-top:10px;scroll-behavior:smooth}
 .msg{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start}
 .msg.r{grid-template-columns:1fr 34px} .msg.r .av{order:2} .msg.r .bub{order:1;border-color:var(--accent)}
-.msg .av{width:32px;height:32px;border:2px solid var(--ink);border-radius:5px;font-family:var(--disp);font-size:.8rem;display:flex;align-items:center;justify-content:center;margin-top:4px}
+.msg .av{width:32px;height:32px;border:2px solid var(--ink);border-radius:5px;font-family:var(--body);font-weight:900;font-size:.95rem;display:flex;align-items:center;justify-content:center;margin-top:4px}
 .msg .bub{background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:8px 12px;min-width:0;animation:pop .25s}
 .msg .nm{font-size:.68rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;display:block}
 .msg .say{font-weight:700}
@@ -173,7 +185,7 @@ details{border:3px solid var(--line);border-radius:var(--r);padding:10px 14px;ba
 .result{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
 .result .big{font-family:var(--disp);font-size:clamp(2rem,7vw,3.2rem);color:var(--accent);font-variant-numeric:tabular-nums}
 .workbox{font-size:.95rem;white-space:pre-wrap;background:var(--panel2);border-radius:6px;padding:8px 10px;font-weight:700}
-@media (max-width:560px){ .hud .wrap{gap:6px} .nav{width:100%;order:3} .tab{flex:1;text-align:center;padding:6px 8px;font-size:.85rem} .block{padding:14px} .result{grid-template-columns:1fr} .scale{grid-template-columns:1fr;gap:6px} }
+@media (max-width:560px){ .hud .wrap{gap:6px} .nav{width:100%;order:3} .tab{flex:1;text-align:center;padding:6px 4px;font-size:.8rem;white-space:nowrap} .pnav{gap:5px} .pbtn{font-size:.72rem} .block{padding:14px} .result{grid-template-columns:1fr} .scale{grid-template-columns:1fr;gap:6px} }
 </style>
 <div class="hud"><div class="wrap">
   <button class="logo" id="logoBtn" type="button"><span class="cube"></span>Algebra Quest</button>
@@ -662,6 +674,28 @@ const OBSERVED = [
   {id:'2c', note:'"Ben forgot to multiply A and B." Half right: sees the missing distribution but not the order-of-operations problem, and did not address Chris.'},
   {id:'3', note:'Problems 3 through 6 left blank. Problem 3 (literal equations with the variable on both sides, and fractions) is the biggest gap and the biggest share of the test. He avoided attempting, so this tool makes attempting cheap: no penalty, respawn with a hint.'},
 ];
+/* Worked examples: a similar problem with different numbers, fully worked. Shown on demand in Check My Answers. */
+const EXAMPLES = {
+ '1a':{stem:'A photographer charges $500 for the first 2 hours, then $150 per additional half-hour. Budget: $1,100. Let h = additional half-hours.',steps:['Fixed part: 500. Variable part: 150 per half-hour, so 150h.','Total cost = 500 + 150h. (Nothing solved yet; this is just the bill.)','“Budget $1,100” means the total can be 1,100 or less: 500 + 150h ≤ 1100.']},
+ '1b':{stem:'Same photographer. Let t = total hours including the first 2.',steps:['Extra hours = t − 2 (the first 2 are already paid for).','One extra hour has two half-hours, so it costs 2 × 150 = 300.','Cost = 500 + 300(t − 2). Budget: 500 + 300(t − 2) ≤ 1100.']},
+ '1c':{stem:'Solve 500 + 150h ≤ 1100 and find the maximum total time.',steps:['Subtract 500 from both sides: 150h ≤ 600.','Divide both sides by 150: h ≤ 4.','h = 4 whole half-hours = 2 hours of extra time.','Total = 2 + 2 = 4 hours. (If h had come out 4.5, only 4 half-hours could be bought.)']},
+ '2a':{stem:'V = ⅓Bh + C, solved for h by three students: (1) h = 3(V − C)/B, (2) h = 3V − C/B, (3) h = (V − C)/(3B).',steps:['Pick easy numbers that make the original true: B = 3, C = 1, h = 2 gives V = 3.','Test (1): 3(3 − 1)/3 = 2 ✔. Test (2): 9 − 1/3 ✘. Test (3): 2/9 ✘.','Only (1) returns the h we started with, so (1) is correct.']},
+ '2b':{stem:'Solve V = ⅓Bh + C for h, showing each step.',steps:['Subtract C from both sides: V − C = ⅓Bh.','Multiply both sides by 3 (undo the ⅓): 3(V − C) = Bh.','Divide both sides by B: h = 3(V − C)/B.']},
+ '2c':{stem:'Explain what went wrong in h = 3V − C/B and in h = (V − C)/(3B).',steps:['Correct undo order: subtract C, multiply by 3, divide by B.','h = 3V − C/B: the 3 was applied before C was subtracted (so it never reached C), and then only C was divided by B instead of the whole side.','h = (V − C)/(3B): dividing by 3 was used to undo ⅓. The opposite of multiplying by one-third is multiplying by 3.']},
+ '3a':{stem:'Solve 2a + m = 6a − ma for a.',steps:['Collect: subtract 2a from both sides → m = 4a − ma. (ma has an a in it, so it stays with the a terms.)','Factor a out: m = a(4 − m).','Divide both sides by the whole group: a = m/(4 − m).']},
+ '3b':{stem:'Solve w = 3(y − b)/n for y.',steps:['Multiply both sides by n: nw = 3(y − b).','Divide both sides by 3: nw/3 = y − b.','Add b to both sides: y = nw/3 + b.']},
+ '3c':{stem:'Solve (t + 1)/2 = (t − 3)/4 for t.',steps:['Cross-multiply, keeping each top in parentheses: 4(t + 1) = 2(t − 3).','Distribute both sides: 4t + 4 = 2t − 6.','Subtract 2t: 2t + 4 = −6. Subtract 4: 2t = −10.','Divide by 2: t = −5. Check: (−5 + 1)/2 = −2 and (−5 − 3)/4 = −2 ✔.']},
+ '3d':{stem:'Solve 3y = (24 − 6y)/3 + 2 for y.',steps:['Divide every term on top by 3: (24 − 6y)/3 = 8 − 2y.','Rewrite: 3y = 8 − 2y + 2 = 10 − 2y.','Add 2y to both sides: 5y = 10.','Divide by 5: y = 2. Check: 3(2) = 6 and (24 − 12)/3 + 2 = 4 + 2 = 6 ✔.']},
+ '4a':{stem:'Solve A = 2b + 2c for c.',steps:['Subtract 2b from both sides: A − 2b = 2c.','Divide the whole side by 2: c = (A − 2b)/2, which is also A/2 − b.']},
+ '4b':{stem:'A rectangle has perimeter 100 in and length 30 in. Find the width.',steps:['Use w = (P − 2l)/2 with P = 100 and l = 30.','w = (100 − 60)/2 = 40/2 = 20 in.','Check: 2(30) + 2(20) = 60 + 40 = 100 ✔.']},
+ '5a':{stem:'Plan A: $10 + $3 per song. Plan B: $4 + $5 per song. When is Plan A cheaper? (x = songs)',steps:['Plan A total: 10 + 3x. Plan B total: 4 + 5x.','“Cheaper” means strictly less: 10 + 3x < 4 + 5x.']},
+ '5b':{stem:'Solve 10 + 3x < 4 + 5x.',steps:['Subtract 3x from both sides (keeps x positive, no flipping): 10 < 4 + 2x.','Subtract 4: 6 < 2x.','Divide by 2: 3 < x, which reads x > 3.']},
+ '5c':{stem:'Plan A is cheaper when x > 3. Smallest number of songs that makes Plan A cheaper?',steps:['At exactly 3 songs: 10 + 9 = 19 and 4 + 15 = 19, a tie. Not cheaper.','Songs are whole, so the first number greater than 3 is 4.']},
+ '6a':{stem:'Three consecutive integers have a sum greater than 30 and less than 42. x = smallest.',steps:['The integers: x, x + 1, x + 2.','Sum: 3x + 3.','Trap it: 30 < 3x + 3 < 42 (strict on both sides).']},
+ '6b':{stem:'Solve 30 < 3x + 3 < 42.',steps:['Subtract 3 from all three parts: 27 < 3x < 39.','Divide all three parts by 3: 9 < x < 13.']},
+ '6c':{stem:'List the sets of three consecutive integers for 9 < x < 13.',steps:['Integers strictly between 9 and 13: 10, 11, 12.','Sets: (10,11,12), (11,12,13), (12,13,14).','Check an edge: 12 + 13 + 14 = 39 < 42 ✔; 13 + 14 + 15 = 42, not less than 42.']},
+ '6d':{stem:'Graph 9 < x < 13.',steps:['Endpoints are 9 and 13, straight from the inequality.','Both symbols are strict, so both circles are open.','Shade between them, because x is trapped between.']},
+};
 /* ===== Engine: state, persistence, routing, HUD, lobby, gate ===== */
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -679,6 +713,9 @@ const BADGES = [
   {id:'perfect', name:'Flawless', ico:'💎', how:'A perfect Final Boss run.'},
 ];
 
+const DAILY_GOAL=3;
+function localDay(off){ const d=new Date(); d.setDate(d.getDate()+off); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dailyInfo(){ const d=State.s.daily||{}; const today=localDay(0), yest=localDay(-1); const count=d.date===today?d.count:0; const streak=(d.lastMet===today||d.lastMet===yest)?(d.streak||0):0; return {count:Math.min(count,DAILY_GOAL),met:count>=DAILY_GOAL,streak}; }
 const State = {
   s:{coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:false, voice:true},
   mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false,
@@ -688,6 +725,11 @@ const State = {
   save(){ renderHUD(); if(!this.db||!this.uid) return; clearTimeout(this._t); this._t=setTimeout(()=>this.flush(),700); },
   async flush(){ if(!this.db||!this.uid) return; try{ const {attempts,...rest}=this.s; await this.db.doc('data/users/'+this.uid+'/profile').set({...rest, updatedAt:Date.now()}); }catch(e){ console.warn('save failed',e); } },
   addCoins(n,why){ this.s.coins+=n; toast(`+${n} coins${why?' · '+why:''}`); ding(); if(!this.s.badges.first) this.award('first'); this.save(); },
+  /* Daily goal: 3 checkpoints a day earns a bonus; consecutive days build a streak. */
+  checkpoint(){ const today=localDay(0), yest=localDay(-1); const d=this.s.daily||(this.s.daily={date:today,count:0,streak:0,lastMet:null});
+    if(d.date!==today){ d.date=today; d.count=0; } d.count++;
+    if(d.count===DAILY_GOAL){ d.streak = d.lastMet===yest ? (d.streak||0)+1 : (d.lastMet===today ? d.streak : 1); d.lastMet=today; this.addCoins(15,'daily goal'); toast(d.streak>1?`🔥 ${d.streak}-day streak`:'🔥 Streak started'); }
+    this.save(); },
   award(id){ if(this.s.badges[id]) return; this.s.badges[id]=Date.now(); const b=BADGES.find(x=>x.id===id); toast(`🏅 Badge: ${b?b.name:id}`); this.save(); },
 };
 
@@ -695,7 +737,7 @@ const State = {
 let actx=null; function ding(){ if(State.s.muted) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type='square'; o.frequency.setValueAtTime(880,actx.currentTime); o.frequency.setValueAtTime(1320,actx.currentTime+.08); g.gain.setValueAtTime(.06,actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.25); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+.26);}catch(e){} }
 function thud(){ if(State.s.muted) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type='triangle'; o.frequency.setValueAtTime(220,actx.currentTime); o.frequency.exponentialRampToValueAtTime(90,actx.currentTime+.2); g.gain.setValueAtTime(.08,actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.25); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+.26);}catch(e){} }
 
-function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; $('#toasts').appendChild(t); setTimeout(()=>t.remove(),2600); }
+function toast(msg){ const box=$('#toasts'); while(box.children.length>=3) box.firstChild.remove(); const t=document.createElement('div'); t.className='toast'; t.textContent=msg; box.appendChild(t); setTimeout(()=>t.remove(),2600); }
 function modal(html, actions){ const m=document.createElement('div'); m.className='modal'; m.innerHTML=`<div class="block" role="dialog" aria-modal="true"><div class="stack">${html}<div class="row" id="mact"></div></div></div>`; actions.forEach(a=>{ const b=document.createElement('button'); b.className='btn '+(a.cls||''); b.textContent=a.label; b.onclick=()=>{ m.remove(); a.fn&&a.fn(); }; $('#mact',m).appendChild(b); }); document.body.appendChild(m); return m; }
 
 /* ---- avatar + course ---- */
@@ -745,6 +787,7 @@ VIEWS.lobby = (app)=>{
     <p class="eyebrow">Spawn lobby</p>
     <h1>Pick a portal.</h1>
     <p style="margin-top:6px">Six Learn levels are obbies: clear checkpoints, earn coins. <b>Check My Answers</b> grades your real practice test. The <b>Final Boss</b> is a fresh test with new numbers. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
+    <div class="daily" style="margin-top:14px">${(()=>{ const d=dailyInfo(); return `<div><span class="eyebrow">Today's goal</span><div class="row" style="gap:6px;margin-top:4px">${[0,1,2].map(i=>`<span class="dot ${i<d.count?'on':''}"></span>`).join('')}<b class="num" style="margin-left:4px">${d.count}/${DAILY_GOAL} checkpoints</b>${d.met?'<span class="muted">· bonus earned</span>':''}</div></div><div><span class="eyebrow">Streak</span><div style="font-family:var(--disp);font-size:1.3rem;font-variant-numeric:tabular-nums">${d.streak>0?`🔥 ${d.streak} day${d.streak===1?'':'s'}`:'—'}</div></div>`; })()}</div>
     <div class="row" style="margin-top:12px">
       <button class="btn" data-go="check">Check My Answers</button>
       <button class="btn gold" data-go="boss">Fight the Final Boss</button>
@@ -823,14 +866,22 @@ function rawOf(item, el){
   if(item.kind==='numberline') return JSON.stringify(el._nl.get());
   return ($('.ans',el)||{}).value||'';
 }
+/* Math keypad: inserts symbols and this item's letters at the cursor. */
+function keypadFor(item){
+  const letters=[...new Set(((item.var||'')+(item.kind==='num'?'':(item.answer||''))).replace(/[^a-z]/gi,'').split(''))];
+  const syms = item.kind==='num' ? ['−','/','.'] : item.kind==='triples' ? [',',';'] : ['≤','≥','<','>','(',')','/','−','+','='];
+  return [...syms,...letters];
+}
+function keypadHTML(item){ return `<div class="kp" role="toolbar" aria-label="Math keys">${keypadFor(item).map(k=>`<button type="button" class="key" data-k="${k}" tabindex="-1">${k}</button>`).join('')}</div>`; }
+function wireKeypad(el){ const inp=$('.ans',el); if(!inp) return; el.querySelectorAll('.key').forEach(b=>b.addEventListener('pointerdown',e=>{ e.preventDefault(); const k=b.dataset.k; const st=inp.selectionStart??inp.value.length, en=inp.selectionEnd??st; inp.value=inp.value.slice(0,st)+k+inp.value.slice(en); inp.focus(); inp.setSelectionRange(st+k.length,st+k.length); inp.dispatchEvent(new Event('input',{bubbles:true})); })); }
 function answerUI(item, idx){
   const id=`in-${idx}-${item.id}`;
   switch(item.kind){
     case 'choice': return `<div class="opts" role="group">${item.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>${item.explain?`<label for="${id}x" class="muted" style="font-size:.9rem">Optional: explain the error in your own words</label><textarea id="${id}x" placeholder="Ben… Chris…"></textarea>`:''}`;
     case 'order': return `<div class="chips pool">${item.steps.map((s,i)=>i).sort((a,b)=>((a*7+3)%5)-((b*7+3)%5)).map(i=>`<button type="button" class="chip" data-i="${i}">${item.steps[i]}</button>`).join('')}</div><p class="muted" style="font-size:.85rem">Your solution (tap a step to remove it):</p><div class="seq"></div>`;
     case 'numberline': return `<div class="nl" data-min="${item.nl.min}" data-max="${item.nl.max}"></div>`;
-    case 'triples': return `<textarea class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off"></textarea>`;
-    default: return `<input type="text" class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="${item.kind==='num'?'decimal':'text'}">`;
+    case 'triples': return `<textarea class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off"></textarea>${keypadHTML(item)}`;
+    default: return `<input type="text" class="ans" id="${id}" placeholder="${esc(item.placeholder||'')}" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="${item.kind==='num'?'decimal':'text'}">${keypadHTML(item)}`;
   }
 }
 function wireAnswerUI(item, el, onChange){
@@ -838,7 +889,7 @@ function wireAnswerUI(item, el, onChange){
   if(item.kind==='order'){ const pool=$('.pool',el), seq=$('.seq',el); const upd=()=>{ el.dataset.order=[...seq.children].map(c=>c.dataset.i).join(''); onChange&&onChange(); };
     pool.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ seq.appendChild(c); upd(); }); seq.addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(c){ pool.appendChild(c); upd(); } }); }
   if(item.kind==='numberline'){ el._nl=numberLine($('.nl',el), item.nl.min, item.nl.max, onChange); }
-  if(item.kind==='num'||item.kind==='rel'||item.kind==='expr'||item.kind==='triples'){ const i=$('.ans',el); i.addEventListener('input',()=>onChange&&onChange()); }
+  if(item.kind==='num'||item.kind==='rel'||item.kind==='expr'||item.kind==='triples'){ const i=$('.ans',el); i.addEventListener('input',()=>onChange&&onChange()); i.addEventListener('keydown',e=>{ if(e.key==='Enter'&&i.tagName==='INPUT'){ e.preventDefault(); const b=$('.check',el); b&&b.click(); } }); wireKeypad(el); }
 }
 /* Draggable number line: two handles, tap to toggle open/closed, shade between. */
 function numberLine(host, min, max, onChange, init){
@@ -861,22 +912,36 @@ function numberLine(host, min, max, onChange, init){
   return {get:()=>({...st}), set:(o)=>{Object.assign(st,o);sync();}};
 }
 
-/* ===== Check My Answers ===== */
+/* ===== Check My Answers: one problem at a time ===== */
+let checkProb=null;
+function firstOpenProblem(){ for(const P of PROBLEMS){ if(ITEMS.some(i=>i.p===P.n&&!State.s.checks[i.id]?.correct)) return P.n; } return 1; }
 VIEWS.check = (app)=>{
-  const cleared=ITEMS.filter(i=>State.s.checks[i.id]?.correct).length;
+  if(checkProb===null) checkProb=firstOpenProblem();
+  const cleared=ITEMS.filter(i=>State.s.checks[i.id]?.correct).length; const P=PROBLEMS.find(x=>x.n===checkProb); const its=ITEMS.filter(i=>i.p===P.n);
+  const pdone=n=>ITEMS.filter(i=>i.p===n&&State.s.checks[i.id]?.correct).length, pn=n=>ITEMS.filter(i=>i.p===n).length;
   app.innerHTML=h`<div class="stack">
-   <div class="block"><p class="eyebrow">Check my answers</p><h1>Your practice test, graded live.</h1><p style="margin-top:6px">Same problems, same numbers. Type an answer and tap <b>Check</b>. Right: coins. Wrong: you respawn with a hint about <i>your</i> answer, never the answer itself. Three tries unlocks "show me the first step."</p>
-   <div class="row" style="margin-top:10px"><span class="pill badges">${cleared}/${ITEMS.length} cleared</span><span class="muted" style="font-size:.9rem">Typing tips: ≤ can be typed as &lt;=, fractions as k/(5-k), and 2x means 2·x.</span></div></div>
-   ${PROBLEMS.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack" style="--gap:10px">${ITEMS.filter(i=>i.p===P.n).map((it,k)=>itemHTML(it,'c')).join('')}</div></div>`).join('')}
+   <div class="block"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><p class="eyebrow">Check my answers</p><h1>Your practice test, one problem at a time.</h1></div><span class="pill badges num">${cleared}/${ITEMS.length} cleared</span></div>
+    <p style="margin-top:6px">Type an answer and tap <b>Check</b>. Right: coins. Wrong: you respawn with a hint about <i>your</i> answer, never the answer itself. Stuck? Every part has a worked example with different numbers.</p>
+    <nav class="pnav" aria-label="Problems">${PROBLEMS.map(x=>`<button class="pbtn ${x.n===checkProb?'cur':''} ${pdone(x.n)===pn(x.n)?'done':''}" data-p="${x.n}" aria-current="${x.n===checkProb?'page':'false'}"><b>${x.n}</b><span class="num">${pdone(x.n)}/${pn(x.n)}</span></button>`).join('')}</nav></div>
+   <div class="block" id="probBlock"><p class="eyebrow">Problem ${P.n} of 6</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${its.map(it=>itemHTML(it,'c')).join('')}</div>
+    <div class="row" style="justify-content:space-between;margin-top:18px"><button class="btn alt" id="prevP" ${P.n===1?'disabled':''}>← Problem ${P.n-1||1}</button><span class="muted num">${pdone(P.n)}/${pn(P.n)} cleared here</span><button class="btn" id="nextP" ${P.n===6?'disabled':''}>Problem ${Math.min(6,P.n+1)} →</button></div></div>
   </div>`;
-  ITEMS.forEach(it=>wireCheckItem(it, app.querySelector(`[data-item="${it.id}"]`)));
+  its.forEach(it=>wireCheckItem(it, app.querySelector(`[data-item="${it.id}"]`)));
+  const jump=n=>{ checkProb=n; render(); const pb=$('#probBlock'); if(pb) pb.scrollIntoView({block:'start'}); };
+  app.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>jump(+b.dataset.p));
+  $('#prevP').onclick=()=>jump(Math.max(1,checkProb-1)); $('#nextP').onclick=()=>jump(Math.min(6,checkProb+1));
 };
+function refreshPnav(){ const pdone=n=>ITEMS.filter(i=>i.p===n&&State.s.checks[i.id]?.correct).length, pn=n=>ITEMS.filter(i=>i.p===n).length; document.querySelectorAll('.pbtn').forEach(b=>{ const n=+b.dataset.p; b.querySelector('.num').textContent=`${pdone(n)}/${pn(n)}`; b.classList.toggle('done',pdone(n)===pn(n)); }); const here=document.querySelector('#probBlock .row .muted.num'); if(here&&checkProb) here.textContent=`${pdone(checkProb)}/${pn(checkProb)} cleared here`; const pill=document.querySelector('.pill.badges.num'); if(pill) pill.textContent=`${ITEMS.filter(i=>State.s.checks[i.id]?.correct).length}/${ITEMS.length} cleared`; }
 function itemHTML(it, prefix){
-  const rec=State.s.checks[it.id]; const done=rec&&rec.correct;
-  return `<div class="item ${done?'ok':''}" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()} ${done?'<span class="ck">✔ cleared</span>':''}<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· ${SKILL_NAMES[it.skill]}</span></div><div>${it.prompt}</div>${answerUI(it,prefix)}<div class="row"><button type="button" class="btn sm check">${done?'Check again':'Check'}</button><span class="muted tries" style="font-size:.85rem">${rec&&rec.attempts?`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`:''}</span></div><div class="fbwrap"></div></div>`;
+  const rec=State.s.checks[it.id]; const done=rec&&rec.correct; const ex=EXAMPLES[it.id];
+  return `<div class="item ${done?'ok':''}" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()} ${done?'<span class="ck">✔ cleared</span>':''}<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· ${SKILL_NAMES[it.skill]}</span></div><div>${it.prompt}</div>
+   <label class="muted" style="font-size:.85rem" for="w-${it.id}">Work it out here (not graded${State.mode==='signed'?', saved for later':''})</label><textarea class="scratch" id="w-${it.id}" placeholder="Steps, scribbles, anything.">${esc(rec?.work||'')}</textarea>
+   ${answerUI(it,prefix)}<div class="row"><button type="button" class="btn sm check">${done?'Check again':'Check'}</button><span class="muted tries" style="font-size:.85rem">${rec&&rec.attempts?`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`:''}</span></div><div class="fbwrap"></div>
+   ${ex?`<details class="ex"><summary>Show me a similar one, worked out</summary><p class="muted" style="margin:6px 0">${esc(ex.stem)}</p><ol class="exsteps">${ex.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`:''}</div>`;
 }
 function wireCheckItem(it, el){
   wireAnswerUI(it, el);
+  const sc=$('.scratch',el); let st=null; sc.addEventListener('input',()=>{ clearTimeout(st); st=setTimeout(()=>{ const rec=State.s.checks[it.id]||(State.s.checks[it.id]={attempts:0,correct:false,firstTry:false,history:[]}); rec.work=sc.value.slice(0,2000); State.save(); },600); });
   $('.check',el).onclick=async()=>{
     const raw=rawOf(it,el).trim(); if(!raw||raw==='{}'){ showFB(el,'info','Type something first. Any attempt is free.'); return; }
     const extra = it.kind==='numberline'? el._nl.get() : null;
@@ -886,7 +951,7 @@ function wireCheckItem(it, el){
     $('.tries',el).textContent=`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`;
     if(res.ok){
       const first=!rec.correct; const hadMiss=rec.history.some(x=>!x.ok);
-      if(first){ rec.correct=true; rec.firstTry=rec.attempts===1; rec.clearedAt=Date.now(); State.addCoins(rec.firstTry?10:5,'checkpoint cleared'); if(hadMiss) State.award('respawn'); }
+      if(first){ rec.correct=true; rec.firstTry=rec.attempts===1; rec.clearedAt=Date.now(); State.addCoins(rec.firstTry?10:5,'checkpoint cleared'); if(hadMiss) State.award('respawn'); State.checkpoint(); refreshPnav(); }
       else State.save();
       el.classList.add('ok'); el.classList.remove('bad'); $('.tag',el).innerHTML=`${it.id.toUpperCase()} <span class="ck">✔ cleared</span>`;
       showFB(el,'ok',first?pickPraise(it):'Still right. Checkpoint stays cleared.');
@@ -1049,7 +1114,7 @@ async function gradeBoss(app){
   const att={id:'a'+Date.now(),ts:Date.now(),seed:T.seed,score,total,pct:Math.round(100*score/total),items,ai:null};
   boss.result=att; render();
   if(att.pct>=80) State.award('boss'); if(score===total) State.award('perfect'); State.addCoins(Math.round(score*2),'boss run');
-  if(State.sample){ try{ await aiBossFeedback(att); }catch(e){} }
+  if(State.sample){ try{ await aiBossFeedback(att); }catch(e){} } att.aiDone=true;
   await saveAttempt(att); State.save(); if(route.view==='boss') render();
 }
 async function aiBossFeedback(att){
@@ -1070,7 +1135,7 @@ function bossResults(app){
    <div class="block" style="border-color:var(--gold)"><p class="eyebrow">Final Boss · run ${a.seed} · results</p>
     <div class="result"><div class="big">${a.score} / ${a.total}</div><div><h2>${a.pct>=90?'Boss defeated. Clean run.':a.pct>=80?'Boss defeated.':a.pct>=60?'Boss staggered. Rematch?':'Boss took the round. Respawn and go again.'}</h2><p class="muted">${a.items.filter(x=>x.ok).length} of 19 answers correct, plus ${a.items.filter(x=>x.workPt).length} of 10 work points. Total possible: 29.</p></div></div>
     <div class="row" style="margin-top:12px"><button class="btn gold" id="retake">Retake with new numbers</button><button class="btn alt" data-go="learn">Train in Learn</button><button class="btn alt" data-go="lobby">Lobby</button></div></div>
-   ${a.ai?`<div class="block soft"><p class="eyebrow">Coach: what to focus on next</p><p>${esc(a.ai)}</p></div>`:(State.sample?`<div class="block soft"><p class="eyebrow">Coach</p><p class="muted">Reading your work…</p></div>`:'')}
+   ${a.ai?`<div class="block soft"><p class="eyebrow">Coach: what to focus on next</p><p>${esc(a.ai)}</p></div>`:(State.sample&&!a.aiDone?`<div class="block soft"><p class="eyebrow">Coach</p><p class="muted">Reading your work…</p></div>`:'')}
    ${missedSkills.length?`<div class="block soft"><p class="eyebrow">Skills to practice</p><div class="row" style="margin-top:6px">${missedSkills.map(s=>`<a class="btn sm alt" href="#level${LEVELS.find(L=>L.skill===s).n}" data-go="level" data-arg="${LEVELS.find(L=>L.skill===s).n}">Level ${LEVELS.find(L=>L.skill===s).n}: ${SKILL_NAMES[s]}</a>`).join('')}</div></div>`:''}
    <div class="block"><h2>Problem by problem</h2><div class="tablewrap"><table><thead><tr><th>Problem</th><th class="n">Answers</th><th class="n">Work</th></tr></thead><tbody>${boss.test.probs.map(P=>`<tr><td>${P.n}. ${esc(P.title)}</td><td class="n">${byP[P.n].ok}/${byP[P.n].n}</td><td class="n">${byP[P.n].wn?`${byP[P.n].w}/${byP[P.n].wn}`:'—'}</td></tr>`).join('')}</tbody></table></div></div>
    ${boss.test.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p class="muted" style="margin:6px 0 12px;font-size:.95rem">${P.stem}</p><div class="stack">${a.items.filter(x=>x.p===P.n).map(x=>`<div class="item ${x.ok?'ok':'bad'}"><div class="tag">${x.id.toUpperCase()} ${x.ok?'<span class="ck">✔ correct</span>':'<span style="color:var(--bad)">✘ missed</span>'}${x.hasWork?`<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· work ${x.workPt?'✔ +1':'✘ 0'}</span>`:''}</div><div><span class="muted">Your answer:</span> <span class="eq" style="white-space:normal">${esc(x.raw||'(blank)')}</span></div>${x.ok?'':`<div><span class="muted">Correct:</span> <span class="eq" style="white-space:normal">${esc(x.show)}</span></div><div class="fb bad"><span class="who">What went wrong</span>${esc(x.diag)}<br><span class="who" style="margin-top:6px">Skill to practice</span>${SKILL_NAMES[x.skill]} · ${learnLink(x.learn)}</div>`}${x.aiDiag?`<div class="fb info"><span class="who">Coach on your work</span>${esc(x.aiDiag)}</div>`:''}${x.work?`<div class="workbox">${esc(x.work)}</div>`:''}</div>`).join('')}</div></div>`).join('')}
@@ -1198,7 +1263,7 @@ function scenePlayer(host, frames, onEnd, lvl){
     setChar(side==='L'?cL:cR, f.who, true); const other=side==='L'?cR:cL; if(!other.innerHTML) setChar(other, side==='L'?'vera':'coach', false); else other.classList.remove('talk');
     sb.innerHTML=f.board; sb.classList.remove('shake'); if(f.fx==='shake'){ void sb.offsetWidth; sb.classList.add('shake'); }
     const me=side==='L'?cL:cR; me.classList.remove('flip'); if(f.fx==='flip'||f.fx==='hop'){ void me.offsetWidth; me.classList.add('flip'); }
-    if(i<shown){ chat.innerHTML=''; shown=0; } while(shown<=i){ addMsg(shown); shown++; } $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
+    if(i<shown){ chat.innerHTML=''; shown=0; } while(shown<=i){ addMsg(shown); shown++; } $('.stage',host).classList.toggle('mini',shown>=2); $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
     speak(i);
   }
   function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
@@ -1261,8 +1326,18 @@ const EXPLAINERS={
 },
 6(host,done){
   let plugged=false, found=false; const lines=['2y = (12 − 6y)/3 + 4','2y = 4 − 6y + 4','8y = 8','y = 1']; const wrong=1;
+  const EXPL=[{id:'ex1',q:'Solving <span class="eq">2y = (12 − 6y)/3 + 4</span>, a student wrote <span class="eq">2y = 4 − 6y + 4</span> as the next line. Explain what went wrong.',rubric:'Only the 12 was divided by 3. The fraction bar groups the whole top, so 6y must be divided by 3 as well, giving 4 − 2y.',keys:[/6y/,/too|also|both|whole|group|bar|each|as well|divid|2y/i]},
+   {id:'ex2',q:'Solving <span class="eq">P = 2l + 2w</span> for w, a student wrote <span class="eq">w = P − 2l/2</span>. Explain what went wrong.',rubric:'Only 2l was divided by 2. After subtracting 2l, the whole side (P − 2l) has to be divided by 2, so w = (P − 2l)/2. Parentheses would have prevented it.',keys:[/both|whole|entire|all|group|parenth|p ?[-−] ?2l|everything/i]}];
   const draw=()=>{ host.innerHTML=`<p class="eyebrow">Interactive: plug it in, then spot the error</p><h3>Two answers for (t + 2)/3 = (t − 4)/5. Plug each one in.</h3><div class="chips"><button type="button" class="chip" data-t="11">Plug in t = 11</button><button type="button" class="chip" data-t="-11">Plug in t = −11</button></div><p id="m8" style="margin-top:8px;min-height:1.5em"></p>
-   <h3 style="margin-top:16px">Spot the error. Tap the first line that breaks a rule.</h3><div class="opts">${lines.map((l,i)=>`<button type="button" class="opt" data-i="${i}">${i+1}. &nbsp;<span class="eq">${l}</span></button>`).join('')}</div><p id="m9" style="margin-top:8px;min-height:1.5em">${found?'<b style="color:var(--ok)">Line 2: only the 12 was divided by 3. The bar groups the whole top, so 6y ÷ 3 = 2y too. Checkpoint cleared.</b>':''}</p>`;
+   <h3 style="margin-top:16px">Spot the error. Tap the first line that breaks a rule.</h3><div class="opts">${lines.map((l,i)=>`<button type="button" class="opt" data-i="${i}">${i+1}. &nbsp;<span class="eq">${l}</span></button>`).join('')}</div><p id="m9" style="margin-top:8px;min-height:1.5em">${found?'<b style="color:var(--ok)">Line 2: only the 12 was divided by 3. The bar groups the whole top, so 6y ÷ 3 = 2y too. Checkpoint cleared.</b>':''}</p>
+   <h3 style="margin-top:18px">Bonus: explain it in words.</h3><p class="muted" style="font-size:.9rem">The test asks you to explain someone else's error. Name the step, then say what should have happened. ${State.sample?'The coach reads your explanation.':'You get a model answer to compare with.'} 10 coins each.</p>
+   ${EXPL.map(x=>{ const st6=State.s.learn.l6||{}; return `<div class="item" data-ex="${x.id}" style="margin-top:10px"><div>${x.q}</div><textarea class="expl" placeholder="In step ..., the student ... It should have been ..."></textarea><div class="row"><button type="button" class="btn sm chk">Check my explanation</button>${st6[x.id]?'<span class="ck" style="color:var(--ok);font-weight:900">✔ earned</span>':''}</div><div class="fbwrap"></div></div>`; }).join('')}`;
+    host.querySelectorAll('[data-ex]').forEach(box=>{ const x=EXPL.find(e=>e.id===box.dataset.ex); $('.chk',box).onclick=async()=>{ const t=$('.expl',box).value.trim(); if(t.length<12){ showFB(box,'info','Write at least a sentence: which step, and what should have happened?'); return; }
+      const st6=State.s.learn.l6||(State.s.learn.l6={}); let ok=false, msg='';
+      if(State.sample){ showFB(box,'info','Coach is reading…'); try{ const r=await State.sample.json(`A student (age 11, Algebra 1) was asked to explain an error. Correct explanation: "${x.rubric}" Student wrote: "${t}". Return ONLY JSON {"score":0|1|2,"feedback":"..."} where 2 = names the step and what should have happened, 1 = names one of those, 0 = neither. Feedback: 1-2 sentences, no first person, as a question the student can act on if score < 2.`,{modelTier:'quick',cache:false}); ok=(r&&r.score>=1); msg=esc(String(r&&r.feedback||'')); }catch(e){ msg=''; } }
+      if(!State.sample||!msg){ ok = x.keys.every(k=>k.test(t)); msg = ok?'You named the right piece. Compare with the model answer below.':'Does your explanation say <i>which term</i> was handled wrong, and what the whole step should look like? Compare with the model answer.'; }
+      showFB(box, ok?'ok':'warn', `${msg}<div class="fb info" style="margin-top:8px"><span class="who">Model answer</span>${x.rubric}</div>`);
+      if(ok&&!st6[x.id]){ st6[x.id]=Date.now(); State.addCoins(10,'explained it'); State.checkpoint(); const r=$('.row',box); r.insertAdjacentHTML('beforeend','<span class="ck" style="color:var(--ok);font-weight:900">✔ earned</span>'); } State.save(); }; });
     host.querySelectorAll('[data-t]').forEach(c=>c.onclick=()=>{ const t=+c.dataset.t; const L=(t+2)/3, R=(t-4)/5; const ok=Math.abs(L-R)<1e-9; $('#m8',host).innerHTML=`t = ${t}: left = (${t} + 2)/3 = <b class="num">${M.fmt(L)}</b>, right = (${t} − 4)/5 = <b class="num">${M.fmt(R)}</b>. ${ok?'<b style="color:var(--ok)">They agree. Verified.</b>':'<b style="color:var(--bad)">They disagree. Not a solution.</b>'}`; if(ok) ding(); else thud(); plugged=plugged||ok; if(plugged&&found) done(); });
     host.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{ if(+o.dataset.i===wrong){ found=true; ding(); draw(); if(plugged) done(); } else { thud(); $('#m9',host).innerHTML=`<b style="color:var(--bad)">Line ${+o.dataset.i+1} is fine.</b> Compare it to the line before it: what changed, and was it legal?`; } }); };
   draw();
@@ -1312,15 +1387,15 @@ VIEWS.level=(app,n)=>{
    <div class="block" id="lbody"></div></div>`;
   app.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ levelTab=b.dataset.lt; render(); });
   const body=$('#lbody');
-  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
+  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); State.checkpoint(); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
   if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
   else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n); }
   else {
     body.innerHTML=`<p class="eyebrow">Mini-boss</p><h3>${D.boss.length} questions. Wrong answers respawn you with a hint.</h3><div class="stack" id="mb" style="margin-top:10px"></div>`;
     D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);
       let misses=0; $('.check',el).onclick=()=>{ const raw=rawOf(it,el).trim(); if(!raw&&it.kind!=='numberline'){ showFB(el,'info','Type something first.'); return; } const extra=it.kind==='numberline'?el._nl.get():null; const g=gradeItem(it,raw,extra);
-        if(g.ok){ el.classList.add('ok'); el.classList.remove('bad'); showFB(el,'ok',pickPraise({id:'L'+n+'Q'+i})); if(!st[key]){ st[key]=Date.now(); State.addCoins(misses?5:10,'mini-boss'); if(misses) State.award('respawn'); checkLevelBadge(n); $('.tag',el).innerHTML=`BOSS ${i+1} <span class="ck">✔ cleared</span>`; } State.save(); }
-        else { misses++; thud(); el.classList.add('bad'); showFB(el,'bad',`<span class="who">Respawn</span>${g.partial?g.partial+' ':''}${q.hint}${misses>=3&&q.answer?`<br><span class="muted">Stuck? The form of the answer is like: ${esc(String(q.answer).replace(/<=/g,'≤').replace(/>=/g,'≥'))} — but check every number yourself.</span>`:''}`); } }; });
+        if(g.ok){ el.classList.add('ok'); el.classList.remove('bad'); showFB(el,'ok',pickPraise({id:'L'+n+'Q'+i})); if(!st[key]){ st[key]=Date.now(); State.addCoins(misses?5:10,'mini-boss'); State.checkpoint(); if(misses) State.award('respawn'); checkLevelBadge(n); $('.tag',el).innerHTML=`BOSS ${i+1} <span class="ck">✔ cleared</span>`; } State.save(); }
+        else { misses++; thud(); el.classList.add('bad'); showFB(el,'bad',`<span class="who">Respawn</span>${g.partial?g.partial+' ':''}${q.hint}${misses>=3?`<br><span class="muted">Three tries, no penalty. Rewatch this level's video for the move, then come back. The checkpoint stays open.</span>`:''}`); } }; });
   }
 };
 function checkLevelBadge(n){ const st=State.s.learn['l'+n]||{}; const D=LEVEL_DEFS[n-1]; if(st.explainer&&st.video&&D.boss.every((_,i)=>st['q'+(i+1)])){ State.award('l'+n); if(State.s.badges.l2&&State.s.badges.l5) State.award('nine'); } }
@@ -1362,7 +1437,7 @@ function guideSummary(el){
 }
 function guideSolutions(el){
   el.innerHTML=h`<div class="block stack"><h2>Worked solutions, step by step</h2><p class="muted">For each part: the answer, every step, the misconception most likely at that step, and a question to ask instead of a lecture.</p>
-   ${PROBLEMS.map(P=>`<h3 style="margin-top:10px">Problem ${P.n}: ${esc(P.title)}</h3><p class="muted" style="font-size:.92rem">${P.stem}</p>${ITEMS.filter(i=>i.p===P.n).map(it=>{ const g=GUIDE[it.id]; const rec=State.s.checks[it.id]; return `<details><summary>${it.id.toUpperCase()} · ${it.prompt.replace(/<[^>]+>/g,'').slice(0,80)}${rec?` <span class="muted" style="font-family:var(--body);font-size:.8rem">(${rec.correct?'cleared':'not yet'}, ${rec.attempts} tr${rec.attempts===1?'y':'ies'})</span>`:''}</summary><p><b>Answer:</b> <span class="eq" style="white-space:normal">${esc(g.answer)}</span></p>${g.steps.map((s,i)=>`<div class="gstep"><span class="k">${i+1}</span><div><div>${esc(s.s)}</div><span class="lbl">Likely misconception</span><div class="m">${esc(s.m)}</div><span class="lbl">Ask</span><div class="ask">${esc(s.ask)}</div></div></div>`).join('')}${rec&&rec.history.length?`<span class="lbl" style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-top:8px">His attempts here</span><div class="row" style="gap:6px">${rec.history.map(x=>`<span class="badge ${x.ok?'got':''}" style="font-size:.8rem">${x.ok?'✔':'✘'} ${esc(x.raw).slice(0,40)}</span>`).join('')}</div>`:''}</details>`; }).join('')}`).join('')}
+   ${PROBLEMS.map(P=>`<h3 style="margin-top:10px">Problem ${P.n}: ${esc(P.title)}</h3><p class="muted" style="font-size:.92rem">${P.stem}</p>${ITEMS.filter(i=>i.p===P.n).map(it=>{ const g=GUIDE[it.id]; const rec=State.s.checks[it.id]; return `<details><summary>${it.id.toUpperCase()} · ${it.prompt.replace(/<[^>]+>/g,'').slice(0,80)}${rec?` <span class="muted" style="font-family:var(--body);font-size:.8rem">(${rec.correct?'cleared':'not yet'}, ${rec.attempts} tr${rec.attempts===1?'y':'ies'})</span>`:''}</summary><p><b>Answer:</b> <span class="eq" style="white-space:normal">${esc(g.answer)}</span></p>${g.steps.map((s,i)=>`<div class="gstep"><span class="k">${i+1}</span><div><div>${esc(s.s)}</div><span class="lbl">Likely misconception</span><div class="m">${esc(s.m)}</div><span class="lbl">Ask</span><div class="ask">${esc(s.ask)}</div></div></div>`).join('')}${rec&&rec.work?`<span class="lbl" style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-top:8px">His scratch work</span><div class="workbox">${esc(rec.work)}</div>`:''}${rec&&rec.history.length?`<span class="lbl" style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-top:8px">His attempts here</span><div class="row" style="gap:6px">${rec.history.map(x=>`<span class="badge ${x.ok?'got':''}" style="font-size:.8rem">${x.ok?'✔':'✘'} ${esc(x.raw).slice(0,40)}</span>`).join('')}</div>`:''}</details>`; }).join('')}`).join('')}
   </div>`;
 }
 function skillStats(){
@@ -1395,6 +1470,7 @@ function start(hot){
   $('#logoBtn').onclick=()=>go('lobby'); $('#glyph').onclick=openGate;
   try{ window.claude?.hot?.snapshot?.(()=>({s:State.s, route, unlocked:State.unlocked})); }catch(e){}
   connect();
+  window.addEventListener('hashchange',()=>{ const r=routeFromHash(); route={view:r.view,arg:r.arg}; render(); if(r.gate) openGate(); });
 }
 async function connect(){
   if(!window.claude||typeof window.claude.use!=='function'){ State.ready=true; return; }
@@ -1408,7 +1484,7 @@ async function connect(){
 async function loadProfile(){
   try{
     const doc=State.db.doc('data/users/'+State.uid+'/profile'); const snap=await doc.get();
-    if(snap.exists){ const d=snap.data()||{}; ['coins','badges','checks','learn','muted','voice'].forEach(k=>{ if(d[k]!==undefined) State.s[k]=d[k]; }); }
+    if(snap.exists){ const d=snap.data()||{}; ['coins','badges','checks','learn','muted','voice','daily'].forEach(k=>{ if(d[k]!==undefined) State.s[k]=d[k]; }); }
     const q=await doc.collection('attempts').orderBy('ts','desc').limit(50).get(); State.s.attempts=q.docs.map(x=>x.data());
   }catch(e){ console.warn('load',e); }
 }

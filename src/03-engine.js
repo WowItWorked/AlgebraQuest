@@ -15,6 +15,9 @@ const BADGES = [
   {id:'perfect', name:'Flawless', ico:'💎', how:'A perfect Final Boss run.'},
 ];
 
+const DAILY_GOAL=3;
+function localDay(off){ const d=new Date(); d.setDate(d.getDate()+off); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dailyInfo(){ const d=State.s.daily||{}; const today=localDay(0), yest=localDay(-1); const count=d.date===today?d.count:0; const streak=(d.lastMet===today||d.lastMet===yest)?(d.streak||0):0; return {count:Math.min(count,DAILY_GOAL),met:count>=DAILY_GOAL,streak}; }
 const State = {
   s:{coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:false, voice:true},
   mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false,
@@ -24,6 +27,11 @@ const State = {
   save(){ renderHUD(); if(!this.db||!this.uid) return; clearTimeout(this._t); this._t=setTimeout(()=>this.flush(),700); },
   async flush(){ if(!this.db||!this.uid) return; try{ const {attempts,...rest}=this.s; await this.db.doc('data/users/'+this.uid+'/profile').set({...rest, updatedAt:Date.now()}); }catch(e){ console.warn('save failed',e); } },
   addCoins(n,why){ this.s.coins+=n; toast(`+${n} coins${why?' · '+why:''}`); ding(); if(!this.s.badges.first) this.award('first'); this.save(); },
+  /* Daily goal: 3 checkpoints a day earns a bonus; consecutive days build a streak. */
+  checkpoint(){ const today=localDay(0), yest=localDay(-1); const d=this.s.daily||(this.s.daily={date:today,count:0,streak:0,lastMet:null});
+    if(d.date!==today){ d.date=today; d.count=0; } d.count++;
+    if(d.count===DAILY_GOAL){ d.streak = d.lastMet===yest ? (d.streak||0)+1 : (d.lastMet===today ? d.streak : 1); d.lastMet=today; this.addCoins(15,'daily goal'); toast(d.streak>1?`🔥 ${d.streak}-day streak`:'🔥 Streak started'); }
+    this.save(); },
   award(id){ if(this.s.badges[id]) return; this.s.badges[id]=Date.now(); const b=BADGES.find(x=>x.id===id); toast(`🏅 Badge: ${b?b.name:id}`); this.save(); },
 };
 
@@ -31,7 +39,7 @@ const State = {
 let actx=null; function ding(){ if(State.s.muted) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type='square'; o.frequency.setValueAtTime(880,actx.currentTime); o.frequency.setValueAtTime(1320,actx.currentTime+.08); g.gain.setValueAtTime(.06,actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.25); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+.26);}catch(e){} }
 function thud(){ if(State.s.muted) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.type='triangle'; o.frequency.setValueAtTime(220,actx.currentTime); o.frequency.exponentialRampToValueAtTime(90,actx.currentTime+.2); g.gain.setValueAtTime(.08,actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.25); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime+.26);}catch(e){} }
 
-function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; $('#toasts').appendChild(t); setTimeout(()=>t.remove(),2600); }
+function toast(msg){ const box=$('#toasts'); while(box.children.length>=3) box.firstChild.remove(); const t=document.createElement('div'); t.className='toast'; t.textContent=msg; box.appendChild(t); setTimeout(()=>t.remove(),2600); }
 function modal(html, actions){ const m=document.createElement('div'); m.className='modal'; m.innerHTML=`<div class="block" role="dialog" aria-modal="true"><div class="stack">${html}<div class="row" id="mact"></div></div></div>`; actions.forEach(a=>{ const b=document.createElement('button'); b.className='btn '+(a.cls||''); b.textContent=a.label; b.onclick=()=>{ m.remove(); a.fn&&a.fn(); }; $('#mact',m).appendChild(b); }); document.body.appendChild(m); return m; }
 
 /* ---- avatar + course ---- */
@@ -81,6 +89,7 @@ VIEWS.lobby = (app)=>{
     <p class="eyebrow">Spawn lobby</p>
     <h1>Pick a portal.</h1>
     <p style="margin-top:6px">Six Learn levels are obbies: clear checkpoints, earn coins. <b>Check My Answers</b> grades your real practice test. The <b>Final Boss</b> is a fresh test with new numbers. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
+    <div class="daily" style="margin-top:14px">${(()=>{ const d=dailyInfo(); return `<div><span class="eyebrow">Today's goal</span><div class="row" style="gap:6px;margin-top:4px">${[0,1,2].map(i=>`<span class="dot ${i<d.count?'on':''}"></span>`).join('')}<b class="num" style="margin-left:4px">${d.count}/${DAILY_GOAL} checkpoints</b>${d.met?'<span class="muted">· bonus earned</span>':''}</div></div><div><span class="eyebrow">Streak</span><div style="font-family:var(--disp);font-size:1.3rem;font-variant-numeric:tabular-nums">${d.streak>0?`🔥 ${d.streak} day${d.streak===1?'':'s'}`:'—'}</div></div>`; })()}</div>
     <div class="row" style="margin-top:12px">
       <button class="btn" data-go="check">Check My Answers</button>
       <button class="btn gold" data-go="boss">Fight the Final Boss</button>

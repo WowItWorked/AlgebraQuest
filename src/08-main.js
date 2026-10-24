@@ -7,6 +7,7 @@ function start(hot){
   $('#logoBtn').onclick=()=>go('lobby'); $('#glyph').onclick=openGate;
   try{ window.claude?.hot?.snapshot?.(()=>({s:State.s, route, unlocked:State.unlocked})); }catch(e){}
   connect();
+  window.addEventListener('hashchange',()=>{ const r=routeFromHash(); route={view:r.view,arg:r.arg}; render(); if(r.gate) openGate(); });
 }
 async function connect(){
   if(!window.claude||typeof window.claude.use!=='function'){ State.ready=true; return; }
@@ -20,7 +21,7 @@ async function connect(){
 async function loadProfile(){
   try{
     const doc=State.db.doc('data/users/'+State.uid+'/profile'); const snap=await doc.get();
-    if(snap.exists){ const d=snap.data()||{}; ['coins','badges','checks','learn','muted','voice'].forEach(k=>{ if(d[k]!==undefined) State.s[k]=d[k]; }); }
+    if(snap.exists){ const d=snap.data()||{}; ['coins','badges','checks','learn','muted','voice','daily'].forEach(k=>{ if(d[k]!==undefined) State.s[k]=d[k]; }); }
     const q=await doc.collection('attempts').orderBy('ts','desc').limit(50).get(); State.s.attempts=q.docs.map(x=>x.data());
   }catch(e){ console.warn('load',e); }
 }
