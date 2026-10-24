@@ -23,10 +23,11 @@ const PROBLEMS = [
 /* Each item: kind rel|expr|num|choice|order|numberline|triples.
    hints: tried in order; first matching `when` wins. The renderer appends the Learn link. */
 const ITEMS = [
- {id:'1a', p:1, skill:'setup', learn:1, kind:'rel', work:false,
-  prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation.',
+ {id:'1a', p:1, skill:'setup', learn:1, kind:'rel', setup:true, work:false,
+  prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation. (The setup only; solving is part c.)',
   answer:'1600 + 400h <= 3000', placeholder:'e.g. 1600 + 400h ≤ 3000',
   hints:[
+   {when:(r,H)=>H.rel('h<=3.5')||H.rel('h<3.5'), text:'That is the solved answer, and it is the job of part (c). Part (a) wants the inequality that describes the situation before anything is solved: total cost compared to the budget.'},
    {when:(r,H)=>H.has(/3000\s*-\s*1600|1400/)||H.rel('400h<=1400'), text:'Freeze! The inequality should describe the party <i>before</i> you solve anything. Nobody has subtracted anything yet. What does the DJ charge in total for 3 hours plus <i>h</i> extra half-hours? That total is what has to fit the budget.'},
    {when:(r,H)=>H.rel('1600+400h<3000'), text:'So close. "Budget $3,000" means $3,000 is still okay to spend. Which symbol lets the total <i>equal</i> 3,000?'},
    {when:(r,H)=>H.rel('1600+400h>=3000')||H.rel('1600+400h>3000'), text:'Your symbol says the cost has to be <i>bigger</i> than the budget. Is a budget a floor or a ceiling? Point the symbol at the smaller side.'},
@@ -35,7 +36,7 @@ const ITEMS = [
   ],
   generic:['Build the total cost first: fixed part + (price per half-hour)(number of half-hours). Then compare that total to the budget with the symbol that matches "budget".','Total cost = 1600 + 400h. "Budget $3,000" means the total can be 3,000 or anything smaller. Put those two facts together with one symbol.'],
   firstStep:'Total cost = 1600 + 400h. Now compare that to 3000.'},
- {id:'1b', p:1, skill:'setup', learn:1, kind:'rel', work:false,
+ {id:'1b', p:1, skill:'setup', learn:1, kind:'rel', setup:true, work:false,
   prompt:'Now let <i>t</i> = the <b>total</b> time in hours (including the first 3). Write a new inequality using <i>t</i>.',
   answer:'1600 + 800(t - 3) <= 3000', placeholder:'e.g. 1600 + ___(t − 3) ≤ 3000',
   hints:[
@@ -152,10 +153,11 @@ const ITEMS = [
   ],
   generic:['Use your formula from (a): w = (P − 2l)/2 with P = 156 and l = 42.','(156 − 84)/2 = ?'],
   firstStep:'w = (156 − 2·42)/2.'},
- {id:'5a', p:5, skill:'setup', learn:1, kind:'rel', work:false,
-  prompt:'Write an inequality for when ClearSpring costs less than PureWater.',
+ {id:'5a', p:5, skill:'setup', learn:1, kind:'rel', setup:true, work:false,
+  prompt:'Write the inequality that compares the two bills and says ClearSpring costs less than PureWater. (The setup only; solving is part b.)',
   answer:'18 + 6.5x < 12 + 7.5x', placeholder:'e.g. 18 + 6.5x < …',
   hints:[
+   {when:(r,H)=>H.rel('x>6')||H.rel('x>=6')||H.num(7)||H.num(6), text:'That is where solving leads, and it is the job of parts (b) and (c). Part (a) wants the comparison itself: ClearSpring\'s whole bill on one side, PureWater\'s on the other.'},
    {when:(r,H)=>H.rel('18+6.5x>12+7.5x'), text:'Which company is supposed to be cheaper? Put ClearSpring\'s total on the small side of the symbol.'},
    {when:(r,H)=>H.rel('18+6.5x<=12+7.5x'), text:'"Costs less" is strict. If the two bills are equal, is ClearSpring cheaper? Choose the symbol without the "or equal" line.'},
    {when:(r,H)=>H.has(/=/)&&!H.has(/[<>]/), text:'An equals sign finds where the two plans cost the same. The question asks when one costs <i>less</i>. Use an inequality symbol.'},
@@ -185,10 +187,11 @@ const ITEMS = [
   ],
   generic:['x > 6 is the algebra. Jugs are whole things. What is the smallest whole number that is greater than 6?','The first whole number greater than 6 is 7.'],
   firstStep:'x > 6 means strictly more than 6.'},
- {id:'6a', p:6, skill:'compound', learn:5, kind:'rel', work:false,
-  prompt:'Write a compound inequality for the sum of the three integers.',
+ {id:'6a', p:6, skill:'compound', learn:5, kind:'rel', setup:true, work:false,
+  prompt:'Write a compound inequality for the sum of the three integers. (The setup only; solving is part b.)',
   answer:'48 < 3x + 3 < 69', placeholder:'e.g. 48 < ___ < 69',
   hints:[
+   {when:(r,H)=>H.rel('15<x<22'), text:'That is the solved answer, which belongs to part (b). Part (a) wants the sum itself trapped between 48 and 69.'},
    {when:(r,H)=>H.rel('48<3x<69'), text:'Three consecutive integers are x, x + 1, and x + 2. Their sum is not just 3x. Add all three.'},
    {when:(r,H)=>H.rel('48<=3x+3<=69')||H.rel('48<=3x+3<69')||H.rel('48<3x+3<=69'), text:'"Greater than 48" and "less than 69" are both strict. No "or equal" lines here.'},
    {when:(r,H)=>H.rel('3x+3>48')||H.rel('3x+3<69')||H.rel('x+x+1+x+2>48'), text:'You have half of it. The sum has to be greater than 48 <b>and</b> less than 69. Write both conditions in one three-part inequality.'},

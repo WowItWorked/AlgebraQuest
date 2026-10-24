@@ -104,12 +104,13 @@ const SCENES={
 
 /* ---- Scene player: captions + pre-rendered voice clips (voices/<id>.mp3) ---- */
 let player=null;
-function scenePlayer(host, frames, onEnd, lvl){
-  let i=0, playing=false, timer=null, startedAt=0, left=0;
+function scenePlayer(host, frames, onEnd, lvl, opts={}){
+  let i=Math.max(0,Math.min(frames.length-2,opts.start||0)), playing=false, timer=null, startedAt=0, left=0, ended=false;
   const id=k=>`l${lvl}-${String(k+1).padStart(2,'0')}`;
+  const finish=()=>{ if(ended) return; ended=true; onEnd&&onEnd(); };
   const DUR=k=>Math.max(3800, 1800+(frames[k].say.length*52), ((typeof VOICE_DUR!=='undefined'&&VOICE_DUR[id(k)])||0)*1000+700);
   const audio=new Audio(); audio.preload='auto';
-  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="chat" id="chat" aria-live="polite"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
+  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="chat" id="chat" aria-live="polite"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="pv" aria-label="Previous line">⏮</button><button class="btn sm alt" id="nx" aria-label="Next line">⏭</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
   const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), chat=$('#chat',host); let shown=0;
   function addMsg(k){ const f=frames[k], c=CHARS[f.who]; const right=!(f.who==='coach'||f.who==='checker'||f.who==='bar'); chat.querySelectorAll('.msg.now').forEach(m=>m.classList.remove('now')); const m=document.createElement('div'); m.className='msg now'+(right?' r':''); m.innerHTML=`<div class="av" style="background:${c.bg};color:${c.fg}">${c.face}</div><div class="bub"><span class="nm">${c.nm}</span><span class="say">${f.say}</span>${f.board?`<div class="mth">${f.board}</div>`:''}</div>`; chat.appendChild(m); chat.scrollTop=chat.scrollHeight; }
   function setChar(el,who,talk){ const c=CHARS[who]; el.innerHTML=`<div class="face" style="background:${c.bg};color:${c.fg}">${c.face}</div><span class="nm">${c.nm}</span>`; el.classList.toggle('talk',!!talk); }
@@ -120,15 +121,18 @@ function scenePlayer(host, frames, onEnd, lvl){
     sb.innerHTML=f.board; sb.classList.remove('shake'); if(f.fx==='shake'){ void sb.offsetWidth; sb.classList.add('shake'); }
     const me=side==='L'?cL:cR; me.classList.remove('flip'); if(f.fx==='flip'||f.fx==='hop'){ void me.offsetWidth; me.classList.add('flip'); }
     if(i<shown){ chat.innerHTML=''; shown=0; } while(shown<=i){ addMsg(shown); shown++; } $('.stage',host).classList.toggle('mini',shown>=2); $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
-    speak(i);
+    speak(i); opts.onFrame&&opts.onFrame(i); if(i===frames.length-1) finish();
   }
-  function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
+  function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; finish(); } }, ms); }
+  function jump(k){ i=Math.max(0,Math.min(frames.length-1,k)); left=0; show(); if(playing) schedule(DUR(i)); else { clearTimeout(timer); audio.pause(); } }
   function play(){ playing=true; $('#pp',host).textContent='⏸ Pause'; if(left>0&&left<DUR(i)){ schedule(left); if(State.s.voice) audio.play().catch(()=>{}); } else { show(); schedule(DUR(i)); } }
   function pause(){ playing=false; clearTimeout(timer); left=Math.max(0,left-(Date.now()-startedAt)); $('#pp',host).textContent='▶ Play'; try{ audio.pause(); }catch(e){} }
   $('#pp',host).onclick=()=>playing?pause():play();
   $('#rp',host).onclick=()=>{ pause(); i=0; left=0; play(); };
+  $('#pv',host).onclick=()=>jump(i-1); $('#nx',host).onclick=()=>jump(i+1);
   $('#vo',host).onclick=()=>{ State.s.voice=!State.s.voice; State.save(); $('#vo',host).textContent=State.s.voice?'🔊 Voice on':'🔇 Voice off'; if(State.s.voice){ if(playing) speak(i); } else audio.pause(); };
   const stop=()=>{ pause(); audio.src=''; };
+  if(i>0){ const n=document.createElement('p'); n.className='muted'; n.style.cssText='font-size:.85rem;margin-top:6px'; n.textContent=`Picking up where you left off (line ${i+1} of ${frames.length}). Tap Replay to start from the top.`; host.appendChild(n); }
   play(); return {stop};
 }
 
@@ -143,13 +147,15 @@ const EXPLAINERS={
 },
 2(host,done){
   const seen={lo:false,eq:false,hi:false};
-  host.innerHTML=`<p class="eyebrow">Interactive: two plans crossing</p><h3>Slide the number of jugs. Watch which bill is smaller.</h3><p class="muted">ClearSpring: $18 + $6.50 per jug. PureWater: $12 + $7.50 per jug.</p><input type="range" class="range" id="jx" min="0" max="12" value="2" aria-label="jugs"><div class="scale" id="sc"></div><p id="jmsg" style="margin-top:8px"></p><div class="block soft" style="margin-top:12px"><b>Algebra answer:</b> <span class="eq">x &gt; 6</span> &nbsp; <b>Real-world answer:</b> <span class="eq" id="rw">?</span><p class="muted" style="font-size:.9rem;margin-top:4px">Visit a tie, a PureWater win, and a ClearSpring win to clear this checkpoint.</p></div>`;
+  host.innerHTML=`<p class="eyebrow">Interactive: two plans crossing</p><h3>Slide the number of jugs. Watch which bill is smaller.</h3><p class="muted">ClearSpring: $18 + $6.50 per jug. PureWater: $12 + $7.50 per jug.</p><input type="range" class="range" id="jx" min="0" max="12" value="2" aria-label="jugs"><div class="row" style="justify-content:space-between;margin-bottom:8px"><button type="button" class="btn sm alt" id="jm">− 1 jug</button><button type="button" class="btn sm alt" id="j6">Exactly 6</button><button type="button" class="btn sm alt" id="jp">+ 1 jug</button></div><div class="scale" id="sc"></div><p id="jmsg" style="margin-top:8px"></p><div class="block soft" style="margin-top:12px"><b>Algebra answer:</b> <span class="eq">x &gt; 6</span> &nbsp; <b>Real-world answer:</b> <span class="eq" id="rw">?</span><p class="muted" style="font-size:.9rem;margin-top:4px">Visit a tie, a PureWater win, and a ClearSpring win to clear this checkpoint.</p></div>`;
   const upd=()=>{ const x=+$('#jx',host).value; const a=18+6.5*x, b=12+7.5*x; const who=a<b?'cs':a>b?'pw':'tie'; seen[who==='cs'?'hi':who==='pw'?'lo':'eq']=true;
     $('#sc',host).innerHTML=`<div class="pan ${who==='cs'?'':''}" style="border-color:${who==='cs'?'var(--ok)':'var(--ink)'}"><span class="eyebrow">ClearSpring</span><span class="num">$${a.toFixed(2)}</span><div class="bar" style="width:100%"><i style="width:${Math.min(100,a/1.2)}%;background:var(--l1)"></i></div></div><div style="font-family:var(--disp)">${who==='cs'?'&lt;':who==='pw'?'&gt;':'='}</div><div class="pan" style="border-color:${who==='pw'?'var(--ok)':'var(--ink)'}"><span class="eyebrow">PureWater</span><span class="num">$${b.toFixed(2)}</span><div class="bar" style="width:100%"><i style="width:${Math.min(100,b/1.2)}%;background:var(--l5)"></i></div></div>`;
     $('#jmsg',host).innerHTML=`At <b class="num">${x}</b> jug${x===1?'':'s'}: ${who==='tie'?'<b>a tie.</b> Exactly 6 jugs costs the same either way, so 6 is <i>not</i> a win for ClearSpring.':who==='cs'?'<b>ClearSpring is cheaper.</b>':'<b>PureWater is cheaper.</b>'}`;
+    if(seen.lo&&seen.hi) seen.eq=true; // crossing from one side to the other passes the tie
     $('#rw',host).textContent = (seen.hi&&seen.eq)?'at least 7 jugs':'?';
     if(seen.lo&&seen.eq&&seen.hi){ done(); } };
-  $('#jx',host).addEventListener('input',upd); upd();
+  const jx=$('#jx',host); jx.addEventListener('input',upd); const setJ=v=>{ jx.value=Math.max(0,Math.min(12,v)); upd(); };
+  $('#jm',host).onclick=()=>setJ(+jx.value-1); $('#jp',host).onclick=()=>setJ(+jx.value+1); $('#j6',host).onclick=()=>setJ(6); upd();
 },
 3(host,done){
   // balance-scale stepper for 3y + k = 8y - ky
@@ -202,9 +208,9 @@ const EXPLAINERS={
 
 /* ---- Mini-boss questions ---- */
 const MINI={
-1:[{kind:'rel',prompt:'A climbing gym charges <b>$25</b> to get in plus <b>$8 per hour</b>. You have <b>$65</b>. Let <i>h</i> = hours. Write the inequality.',answer:'25+8h<=65',placeholder:'e.g. 25 + 8h ≤ 65',hint:'Build the whole bill first (entry + rate × h). “You have $65” is a ceiling with a floor line: ≤.'},
+1:[{kind:'rel',prompt:'A climbing gym charges <b>$25</b> to get in plus <b>$8 per hour</b>. You have <b>$65</b>. Let <i>h</i> = hours. <b>Write the inequality</b> that describes the situation (do not solve it yet).',answer:'25+8h<=65',setup:true,placeholder:'e.g. 25 + 8h ≤ 65',hint:'Build the whole bill first (entry + rate × h). “You have $65” is a ceiling with a floor line: ≤.'},
    {kind:'choice',prompt:'“A team needs <b>at least 12</b> players.” Which inequality?',options:['p < 12','p ≤ 12','p ≥ 12','p > 12'],correct:[2],hint:'“At least” lets 12 itself count. That means a floor line, pointing the right way.'},
-   {kind:'rel',prompt:'Plan A costs <b>$10 + $3 per song</b>. Plan B costs <b>$4 + $5 per song</b>. When is Plan A cheaper? (x = songs)',answer:'10+3x<4+5x',placeholder:'e.g. 10 + 3x < …',hint:'Each plan is a whole bill. Put Plan A on the small side with a strict symbol.'}],
+   {kind:'rel',prompt:'Plan A costs <b>$10 + $3 per song</b>. Plan B costs <b>$4 + $5 per song</b>. Let <i>x</i> = songs. <b>Write the inequality</b> that compares the two bills and says Plan A costs less. (Do not solve it yet; that is Level 2.)',answer:'10+3x<4+5x',placeholder:'e.g. 10 + 3x < …',setup:true,hint:'Each plan is a whole bill: fee + rate × x. Put Plan A\'s whole bill on the small side with a strict symbol.'}],
 2:[{kind:'rel',solved:'h',prompt:'Solve <span class="eq">25 + 8h ≤ 65</span> for <i>h</i>.',answer:'h<=5',placeholder:'h ≤ …',hint:'Subtract 25 from both sides, then divide by 8. No negatives, so no flip.'},
    {kind:'num',prompt:'Cookies cost <b>$2 each</b> and you have <b>$9</b>. What is the most cookies you can buy?',answer:'4',placeholder:'cookies',hint:'The algebra says 4.5. Can you buy half a cookie at this store?'},
    {kind:'rel',solved:'x',prompt:'Solve <span class="eq">10 + 3x &lt; 4 + 5x</span> for <i>x</i>.',answer:'x>3',placeholder:'x > …',hint:'Subtract 3x (not 5x) so x stays positive and Negative Nine stays home. Then subtract 4.'}],
@@ -222,6 +228,7 @@ const MINI={
    {kind:'num',prompt:'Check: a rectangle has perimeter <b>100 in</b> and length <b>30 in</b>. What width makes <span class="eq">2l + 2w = 100</span> true?',answer:'20',placeholder:'inches',hint:'Plug in l = 30: 60 + 2w = 100. Then verify your w by rebuilding 100.'}],
 };
 const LEVEL_DEFS=LEVELS.map(L=>({n:L.n, boss:MINI[L.n]}));
+const EXPL_HOW={1:'sort all 12 words',2:'slide to a tie, a PureWater win, and a ClearSpring win',3:'isolate y on the scale',4:'cross-multiply, then divide the whole top',5:'solve all three parts, then graph it',6:'plug in the right answer and tap the wrong line'};
 
 /* ---- Views ---- */
 let levelTab='explainer', lastLevel=null;
@@ -239,16 +246,18 @@ VIEWS.level=(app,n)=>{
   app.innerHTML=h`<div class="stack">
    <div class="block" style="border-color:${L.color}"><div class="row" style="justify-content:space-between"><div><p class="eyebrow" style="color:${L.color}">Level ${n} of 6</p><h1>${esc(L.title)}</h1><p class="muted">${esc(L.blurb)}</p></div><div class="row">${n>1?`<button class="btn alt sm" data-go="level" data-arg="${n-1}">← L${n-1}</button>`:''}${n<6?`<button class="btn alt sm" data-go="level" data-arg="${n+1}">L${n+1} →</button>`:''}</div></div>
     ${courseHTML(cps, keys.filter(k=>st[k]).length, L.color)}
+    ${(()=>{ const open=keys.filter(k=>!st[k]); if(!open.length) return '<p class="muted" style="margin-top:22px"><b style="color:var(--ok)">Level clear.</b> Everything here is replayable.</p>'; const how={explainer:'Interactive: '+EXPL_HOW[n], video:'Video: reach the last line (play through, or use ⏭)', q1:'Mini-boss 1', q2:'Mini-boss 2', q3:'Mini-boss 3'}; return `<p class="muted" style="margin-top:22px;font-size:.9rem"><b>Still open:</b> ${open.map(k=>how[k]).join(' · ')}</p>`; })()}
     <div class="steps" style="margin-top:26px">${tabs.map(([k,l])=>`<button class="tab ${(k==='boss'?D.boss.every((_,i)=>st['q'+(i+1)]):st[k])?'done':''}" data-lt="${k}" aria-current="${levelTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
    <div class="block" id="lbody"></div></div>`;
   app.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ levelTab=b.dataset.lt; render(); });
   const body=$('#lbody');
-  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); State.checkpoint(); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
+  const clear=(k,coins)=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(cur[k]) return; cur[k]=Date.now(); st[k]=cur[k]; State.addCoins(coins,'checkpoint'); State.checkpoint(); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
   if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
-  else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n); }
+  else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n, {start: st.video?0:(st.vpos||0), onFrame:k=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(cur.vpos!==k){ cur.vpos=k; State.save(); } }}); }
   else {
     body.innerHTML=`<p class="eyebrow">Mini-boss</p><h3>${D.boss.length} questions. Wrong answers respawn you with a hint.</h3><div class="stack" id="mb" style="margin-top:10px"></div>`;
-    D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);
+    D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div><label class="muted" style="font-size:.85rem" for="mw-${n}-${i}">Work it out here (not graded)</label><textarea class="scratch" id="mw-${n}-${i}" placeholder="Steps, scribbles, anything.">${esc(st['w'+key]||'')}</textarea>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);
+      const sc=$('.scratch',el); let wt=null; sc.addEventListener('input',()=>{ clearTimeout(wt); wt=setTimeout(()=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); cur['w'+key]=sc.value.slice(0,1500); State.save(); },600); });
       let misses=0; $('.check',el).onclick=()=>{ const raw=rawOf(it,el).trim(); if(!raw&&it.kind!=='numberline'){ showFB(el,'info','Type something first.'); return; } const extra=it.kind==='numberline'?el._nl.get():null; const g=gradeItem(it,raw,extra);
         if(g.ok){ el.classList.add('ok'); el.classList.remove('bad'); showFB(el,'ok',pickPraise({id:'L'+n+'Q'+i})); if(!st[key]){ st[key]=Date.now(); State.addCoins(misses?5:10,'mini-boss'); State.checkpoint(); if(misses) State.award('respawn'); checkLevelBadge(n); $('.tag',el).innerHTML=`BOSS ${i+1} <span class="ck">✔ cleared</span>`; } State.save(); }
         else { misses++; thud(); el.classList.add('bad'); showFB(el,'bad',`<span class="who">Respawn</span>${g.partial?g.partial+' ':''}${q.hint}${misses>=3?`<br><span class="muted">Three tries, no penalty. Rewatch this level's video for the move, then come back. The checkpoint stays open.</span>`:''}`); } }; });

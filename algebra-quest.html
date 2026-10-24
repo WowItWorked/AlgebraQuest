@@ -365,10 +365,11 @@ const PROBLEMS = [
 /* Each item: kind rel|expr|num|choice|order|numberline|triples.
    hints: tried in order; first matching `when` wins. The renderer appends the Learn link. */
 const ITEMS = [
- {id:'1a', p:1, skill:'setup', learn:1, kind:'rel', work:false,
-  prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation.',
+ {id:'1a', p:1, skill:'setup', learn:1, kind:'rel', setup:true, work:false,
+  prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation. (The setup only; solving is part c.)',
   answer:'1600 + 400h <= 3000', placeholder:'e.g. 1600 + 400h ≤ 3000',
   hints:[
+   {when:(r,H)=>H.rel('h<=3.5')||H.rel('h<3.5'), text:'That is the solved answer, and it is the job of part (c). Part (a) wants the inequality that describes the situation before anything is solved: total cost compared to the budget.'},
    {when:(r,H)=>H.has(/3000\s*-\s*1600|1400/)||H.rel('400h<=1400'), text:'Freeze! The inequality should describe the party <i>before</i> you solve anything. Nobody has subtracted anything yet. What does the DJ charge in total for 3 hours plus <i>h</i> extra half-hours? That total is what has to fit the budget.'},
    {when:(r,H)=>H.rel('1600+400h<3000'), text:'So close. "Budget $3,000" means $3,000 is still okay to spend. Which symbol lets the total <i>equal</i> 3,000?'},
    {when:(r,H)=>H.rel('1600+400h>=3000')||H.rel('1600+400h>3000'), text:'Your symbol says the cost has to be <i>bigger</i> than the budget. Is a budget a floor or a ceiling? Point the symbol at the smaller side.'},
@@ -377,7 +378,7 @@ const ITEMS = [
   ],
   generic:['Build the total cost first: fixed part + (price per half-hour)(number of half-hours). Then compare that total to the budget with the symbol that matches "budget".','Total cost = 1600 + 400h. "Budget $3,000" means the total can be 3,000 or anything smaller. Put those two facts together with one symbol.'],
   firstStep:'Total cost = 1600 + 400h. Now compare that to 3000.'},
- {id:'1b', p:1, skill:'setup', learn:1, kind:'rel', work:false,
+ {id:'1b', p:1, skill:'setup', learn:1, kind:'rel', setup:true, work:false,
   prompt:'Now let <i>t</i> = the <b>total</b> time in hours (including the first 3). Write a new inequality using <i>t</i>.',
   answer:'1600 + 800(t - 3) <= 3000', placeholder:'e.g. 1600 + ___(t − 3) ≤ 3000',
   hints:[
@@ -494,10 +495,11 @@ const ITEMS = [
   ],
   generic:['Use your formula from (a): w = (P − 2l)/2 with P = 156 and l = 42.','(156 − 84)/2 = ?'],
   firstStep:'w = (156 − 2·42)/2.'},
- {id:'5a', p:5, skill:'setup', learn:1, kind:'rel', work:false,
-  prompt:'Write an inequality for when ClearSpring costs less than PureWater.',
+ {id:'5a', p:5, skill:'setup', learn:1, kind:'rel', setup:true, work:false,
+  prompt:'Write the inequality that compares the two bills and says ClearSpring costs less than PureWater. (The setup only; solving is part b.)',
   answer:'18 + 6.5x < 12 + 7.5x', placeholder:'e.g. 18 + 6.5x < …',
   hints:[
+   {when:(r,H)=>H.rel('x>6')||H.rel('x>=6')||H.num(7)||H.num(6), text:'That is where solving leads, and it is the job of parts (b) and (c). Part (a) wants the comparison itself: ClearSpring\'s whole bill on one side, PureWater\'s on the other.'},
    {when:(r,H)=>H.rel('18+6.5x>12+7.5x'), text:'Which company is supposed to be cheaper? Put ClearSpring\'s total on the small side of the symbol.'},
    {when:(r,H)=>H.rel('18+6.5x<=12+7.5x'), text:'"Costs less" is strict. If the two bills are equal, is ClearSpring cheaper? Choose the symbol without the "or equal" line.'},
    {when:(r,H)=>H.has(/=/)&&!H.has(/[<>]/), text:'An equals sign finds where the two plans cost the same. The question asks when one costs <i>less</i>. Use an inequality symbol.'},
@@ -527,10 +529,11 @@ const ITEMS = [
   ],
   generic:['x > 6 is the algebra. Jugs are whole things. What is the smallest whole number that is greater than 6?','The first whole number greater than 6 is 7.'],
   firstStep:'x > 6 means strictly more than 6.'},
- {id:'6a', p:6, skill:'compound', learn:5, kind:'rel', work:false,
-  prompt:'Write a compound inequality for the sum of the three integers.',
+ {id:'6a', p:6, skill:'compound', learn:5, kind:'rel', setup:true, work:false,
+  prompt:'Write a compound inequality for the sum of the three integers. (The setup only; solving is part b.)',
   answer:'48 < 3x + 3 < 69', placeholder:'e.g. 48 < ___ < 69',
   hints:[
+   {when:(r,H)=>H.rel('15<x<22'), text:'That is the solved answer, which belongs to part (b). Part (a) wants the sum itself trapped between 48 and 69.'},
    {when:(r,H)=>H.rel('48<3x<69'), text:'Three consecutive integers are x, x + 1, and x + 2. Their sum is not just 3x. Add all three.'},
    {when:(r,H)=>H.rel('48<=3x+3<=69')||H.rel('48<=3x+3<69')||H.rel('48<3x+3<=69'), text:'"Greater than 48" and "less than 69" are both strict. No "or equal" lines here.'},
    {when:(r,H)=>H.rel('3x+3>48')||H.rel('3x+3<69')||H.rel('x+x+1+x+2>48'), text:'You have half of it. The sum has to be greater than 48 <b>and</b> less than 69. Write both conditions in one three-part inequality.'},
@@ -852,7 +855,8 @@ Student typed: ${raw}`;
 function gradeItem(item, raw, extra){
   // returns {ok:boolean, partial?:string}
   switch(item.kind){
-    case 'rel': { if(!M.relEquiv(raw,item.answer)) return {ok:false}; if(item.solved){ const t=M.tryParse(raw); const bare=t.parts.filter(x=>x.t==='v'&&x.v===item.solved).length; const others=t.parts.filter(x=>!(x.t==='v'&&x.v===item.solved)); if(bare!==1||others.some(x=>M.vars(x).has(item.solved))) return {ok:false,partial:'That is true, but not finished: get '+item.solved+' alone in its own part.'}; } return {ok:true}; }
+    case 'rel': { if(item.setup){ const t=M.tryParse(raw); if(t&&t.t==='rel'&&t.parts.some(x=>x.t==='v')&&t.parts.filter(x=>x.t!=='v').every(x=>M.vars(x).size===0)) return {ok:false,partial:'That is the solved form. This part asks for the setup: the inequality that describes the situation before any solving.'}; }
+      if(!M.relEquiv(raw,item.answer)){ if(M.toNumber(raw)!==null&&!/[<>=]/.test(M.clean(raw))) return {ok:false,partial:'An inequality needs a symbol (<, ≤, >, ≥) and the variable. Which symbol, and which side is the variable on?'}; return {ok:false}; } if(item.solved){ const t=M.tryParse(raw); const bare=t.parts.filter(x=>x.t==='v'&&x.v===item.solved).length; const others=t.parts.filter(x=>!(x.t==='v'&&x.v===item.solved)); if(bare!==1||others.some(x=>M.vars(x).has(item.solved))) return {ok:false,partial:'That is true, but not finished: get '+item.solved+' alone in its own part.'}; } return {ok:true}; }
     case 'expr': { const ss=M.solvedSide(raw,item.var); return {ok: ss.status==='ok' && M.exprEquiv(ss.expr,item.answer)}; }
     case 'num': { const n=M.toNumber(raw); const want=M.toNumber(item.answer); if(M.numEq(n,want)) return {ok:true}; if(item.partial&&n!==null){ for(const k in item.partial) if(M.numEq(n,+k)) return {ok:false,partial:item.partial[k]}; } return {ok:false}; }
     case 'choice': return {ok:item.correct.includes(+raw)};
@@ -1002,10 +1006,10 @@ function genTest(seed){
   { const v=pick([{who:'A DJ',ev:'party'},{who:'A bounce-house company',ev:'block party'},{who:'A photo-booth company',ev:'dance'},{who:'A magician',ev:'birthday'},{who:'A food truck',ev:'fundraiser'}]);
     const H0=pick([2,3,4]), R=pick([200,250,300,400,500]), n=ri(2,6), F=pick([800,1000,1200,1500,1600,2000]); const B=F+R*(n+0.5); const tot=H0+n/2;
     probs.push({n:1,title:'The '+v.ev.replace(/^\w/,c=>c.toUpperCase())+' Budget',stem:`${v.who} charges <b>${money(F)}</b> for the first <b>${H0} hours</b> of a ${v.ev}, then <b>${money(R)}</b> for each <b>additional half-hour</b>. The budget is <b>${money(B)}</b>.`});
-    items.push({id:'1a',p:1,skill:'setup',learn:1,kind:'rel',work:false,prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation.',answer:`${F}+${R}h<=${B}`,show:`${F} + ${R}h ≤ ${B}`,placeholder:'e.g. fixed cost + ___h ≤ budget',
+    items.push({id:'1a',p:1,skill:'setup',learn:1,kind:'rel',setup:true,work:false,prompt:'Let <i>h</i> = the number of additional half-hours. Write an inequality that describes the situation. (The setup only; solving is part c.)',answer:`${F}+${R}h<=${B}`,show:`${F} + ${R}h ≤ ${B}`,placeholder:'e.g. fixed cost + ___h ≤ budget',
       variants:[{form:`${F}+${R}h<${B}`,why:'Used a strict symbol; "budget" allows spending exactly the budget, so it needs ≤.'},{form:`${F}+${R}h>=${B}`,why:'Symbol points the wrong way; a budget is a ceiling, not a floor.'},{form:`${R}h<=${B}`,why:'Left out the fixed cost for the first hours.'},{form:`${F}+${R}h<=${B-F}`,why:'Fused a solving step into the setup; the inequality has to describe the situation before anything is moved.'}],
       diag:'Build the total cost (fixed part + rate × h), then compare it to the budget with ≤.'});
-    items.push({id:'1b',p:1,skill:'setup',learn:1,kind:'rel',work:false,prompt:`Now let <i>t</i> = the <b>total</b> time in hours (including the first ${H0}). Write a new inequality using <i>t</i>.`,answer:`${F}+${2*R}(t-${H0})<=${B}`,show:`${F} + ${2*R}(t − ${H0}) ≤ ${B}`,placeholder:'e.g. ___ + ___(t − __) ≤ ___',
+    items.push({id:'1b',p:1,skill:'setup',learn:1,kind:'rel',setup:true,work:false,prompt:`Now let <i>t</i> = the <b>total</b> time in hours (including the first ${H0}). Write a new inequality using <i>t</i>.`,answer:`${F}+${2*R}(t-${H0})<=${B}`,show:`${F} + ${2*R}(t − ${H0}) ≤ ${B}`,placeholder:'e.g. ___ + ___(t − __) ≤ ___',
       variants:[{form:`${F}+${2*R}t<=${B}`,why:`Charged for all t hours, but the first ${H0} are already covered by the fixed cost: extra hours are t − ${H0}.`},{form:`${F}+${R}(t-${H0})<=${B}`,why:`Used the half-hour price for a whole hour; one extra hour has two half-hours, so it costs ${2*R}.`},{form:`${F}+${R}t<=${B}`,why:'Mixed up the variable: t is total hours, not extra half-hours.'}],
       diag:`Extra hours = t − ${H0}; each costs 2 × ${R} = ${2*R}. Then compare to the budget with ≤.`});
     items.push({id:'1c',p:1,skill:'solve',learn:2,kind:'num',work:true,prompt:`Solve your inequality from (a). What is the <b>maximum total time</b> for the ${v.ev}, including the first ${H0} hours? (Answer in hours.)`,answer:String(tot),show:`${F2(tot)} hours`,placeholder:'hours',partial:{[String(H0+(n+0.5)/2)]:'The algebra was right, but only whole half-hours can be bought.'},
@@ -1054,8 +1058,8 @@ function genTest(seed){
   /* P5 */
   { const pair=pick([['BlueBucket','SpringDrop'],['RiverJug','HilltopWater'],['CloudCask','DeepWell Co.'],['FreshFlow','AquaCart']]); let x0,b,dd,a,c,diff; for(let i=0;i<100;i++){ x0=ri(4,12); diff=pick([0.5,1,1.5,2]); if(!Number.isInteger(x0*diff)) continue; b=pick([4.5,5,5.5,6,6.5,7]); dd=b+diff; c=ri(8,15); a=c+x0*diff; break; }
     probs.push({n:5,title:'Water Delivery',stem:`<b>${pair[0]}</b> charges <b>${money(a)}</b> plus <b>${money(b)} per jug</b>. <b>${pair[1]}</b> charges <b>${money(c)}</b> plus <b>${money(dd)} per jug</b>. Let <i>x</i> = number of jugs. <b>When does ${pair[0]} cost less?</b>`});
-    items.push({id:'5a',p:5,skill:'setup',learn:1,kind:'rel',work:false,prompt:`Write an inequality for when ${pair[0]} costs less than ${pair[1]}.`,answer:`${a}+${b}x<${c}+${dd}x`,show:`${a} + ${F2(b)}x < ${c} + ${F2(dd)}x`,placeholder:'fee + rate·x < fee + rate·x',
-      variants:[{form:`${a}+${b}x>${c}+${dd}x`,why:`Direction reversed: ${pair[0]}'s total should be on the smaller side.`},{form:`${a}+${b}x<=${c}+${dd}x`,why:'"Costs less" is strict: a tie is not cheaper.'}],diag:`Each bill is fee + rate·x. Put ${pair[0]}'s bill on the small side with <.`});
+    items.push({id:'5a',p:5,skill:'setup',learn:1,kind:'rel',setup:true,work:false,prompt:`Write the inequality that compares the two bills and says ${pair[0]} costs less than ${pair[1]}. (The setup only; solving is part b.)`,answer:`${a}+${b}x<${c}+${dd}x`,show:`${a} + ${F2(b)}x < ${c} + ${F2(dd)}x`,placeholder:'fee + rate·x < fee + rate·x',
+      variants:[{form:`x>${x0}`,why:'Gave the solved answer; part (a) asks for the inequality comparing the two bills.'},{form:`${a}+${b}x>${c}+${dd}x`,why:`Direction reversed: ${pair[0]}'s total should be on the smaller side.`},{form:`${a}+${b}x<=${c}+${dd}x`,why:'"Costs less" is strict: a tie is not cheaper.'}],diag:`Each bill is fee + rate·x. Put ${pair[0]}'s bill on the small side with <.`});
     items.push({id:'5b',p:5,skill:'solve',learn:2,kind:'rel',solved:'x',work:true,prompt:'Solve your inequality from (a).',answer:`x>${x0}`,show:`x > ${x0}`,placeholder:'x > …',
       variants:[{form:`x<${x0}`,why:'Direction flipped without dividing by a negative (or did not flip when it was needed).'},{form:`x<-${x0}`,why:'Divided by a negative without flipping the symbol.'},{form:`x>=${x0}`,why:'Added "or equal"; solving keeps the strict symbol from (a).'}],diag:`Subtract ${F2(b)}x and ${c} from both sides: ${a-c} < ${F2(diff)}x, so x > ${x0}.`});
     items.push({id:'5c',p:5,skill:'solve',learn:2,kind:'num',work:true,prompt:`In real-world terms, what is the smallest number of jugs for which ${pair[0]} is the cheaper plan?`,answer:String(x0+1),show:`${x0+1} jugs`,placeholder:'jugs',
@@ -1064,7 +1068,7 @@ function genTest(seed){
   /* P6 */
   { const m=ri(8,30), gap=ri(5,8); const L=3*m+3, U=3*(m+gap)+3; const want=[]; for(let x=m+1;x<m+gap;x++) want.push(x);
     probs.push({n:6,title:'Three in a Row',stem:`Three consecutive integers have a sum <b>greater than ${L}</b> and <b>less than ${U}</b>. Let <i>x</i> = the smallest integer.`});
-    items.push({id:'6a',p:6,skill:'compound',learn:5,kind:'rel',work:false,prompt:'Write a compound inequality for the sum of the three integers.',answer:`${L}<3x+3<${U}`,show:`${L} < 3x + 3 < ${U}`,placeholder:`${L} < ___ < ${U}`,
+    items.push({id:'6a',p:6,skill:'compound',learn:5,kind:'rel',setup:true,work:false,prompt:'Write a compound inequality for the sum of the three integers. (The setup only; solving is part b.)',answer:`${L}<3x+3<${U}`,show:`${L} < 3x + 3 < ${U}`,placeholder:`${L} < ___ < ${U}`,
       variants:[{form:`${L}<3x<${U}`,why:'Summed to 3x; the integers are x, x + 1, x + 2, so the sum is 3x + 3.'},{form:`${L}<=3x+3<=${U}`,why:'"Greater than" and "less than" are strict; no "or equal".'},{form:`${L}<x<${U}`,why:'Trapped x instead of the sum of the three integers.'}],diag:'Sum = x + (x+1) + (x+2) = 3x + 3, trapped strictly between the two numbers.'});
     items.push({id:'6b',p:6,skill:'compound',learn:5,kind:'rel',solved:'x',work:true,prompt:'Solve the compound inequality for <i>x</i>.',answer:`${m}<x<${m+gap}`,show:`${m} < x < ${m+gap}`,placeholder:'__ < x < __',
       variants:[{form:`${m+1}<x<${m+gap+1}`,why:'Subtracted 3 from the middle only; all three parts get the same move.'},{form:`${m}<=x<=${m+gap}`,why:'Symbols stay strict.'},{form:`${L-3}<3x<${U-3}`,why:'Stopped before dividing all three parts by 3.'}],diag:`Subtract 3 everywhere (${L-3} < 3x < ${U-3}), then divide everywhere by 3.`});
@@ -1100,7 +1104,7 @@ VIEWS.boss=(app)=>{
   const T=boss.test; const hpPct=100;
   app.innerHTML=h`<div class="stack">
    <div class="block" style="border-color:var(--bad)"><div class="bossbar"><div><p class="eyebrow" style="color:var(--bad)">Final Boss · run ${T.seed}</p><h2>Answer everything, then Grade.</h2></div><div class="row"><span class="muted" id="answered">0/19 answered</span><button class="btn alt sm" id="quitBoss">Leave</button></div></div></div>
-   ${T.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${T.items.filter(i=>i.p===P.n).map(it=>`<div class="item" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()}</div><div>${it.prompt}</div>${it.work?`<label class="muted" style="font-size:.85rem">Show your work (worth a point)</label><textarea class="work" placeholder="Write the steps here. Messy is fine."></textarea>`:''}${answerUI(it,'b')}</div>`).join('')}</div></div>`).join('')}
+   ${T.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${T.items.filter(i=>i.p===P.n).map(it=>`<div class="item" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()}</div><div>${it.prompt}</div><label class="muted" style="font-size:.85rem">${it.work?'Show your work (worth a point)':'Work it out here (not graded)'}</label><textarea class="work" placeholder="Write the steps here. Messy is fine."></textarea>${answerUI(it,'b')}</div>`).join('')}</div></div>`).join('')}
    <div class="block" style="border-color:var(--bad)"><div class="row" style="justify-content:space-between"><p>Done? The boss only grades once you say so.</p><button class="btn gold" id="gradeBtn">Grade my test</button></div></div>
   </div>`;
   const count=()=>{ let n=0; T.items.forEach(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const r=rawOf(it,el); if(it.kind==='numberline'?true:r.trim()) n++; }); $('#answered').textContent=`${n}/19 answered`; };
@@ -1114,7 +1118,7 @@ VIEWS.boss=(app)=>{
   };
 };
 async function gradeBoss(app){
-  const T=boss.test; const items=T.items.map(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const raw=rawOf(it,el).trim(); const extra=it.kind==='numberline'?el._nl.get():null; const work=it.work?($('.work',el).value||'').trim():''; const g=gradeItem(it,raw,extra); const wp=it.work?workPoint(work):false; return {id:it.id,p:it.p,skill:it.skill,learn:it.learn,ok:g.ok,partial:g.partial||null,raw:it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:(it.kind==='choice'&&raw!==''?it.options[+raw]:raw),work,workPt:wp,hasWork:!!it.work,show:it.show,diag:g.ok?null:(diagnose(it,raw,extra)||it.diag),skillDiag:it.diag}; });
+  const T=boss.test; const items=T.items.map(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const raw=rawOf(it,el).trim(); const extra=it.kind==='numberline'?el._nl.get():null; const work=($('.work',el).value||'').trim(); const g=gradeItem(it,raw,extra); const wp=it.work?workPoint(work):false; return {id:it.id,p:it.p,skill:it.skill,learn:it.learn,ok:g.ok,partial:g.partial||null,raw:it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:(it.kind==='choice'&&raw!==''?it.options[+raw]:raw),work,workPt:wp,hasWork:!!it.work,show:it.show,diag:g.ok?null:(diagnose(it,raw,extra)||it.diag),skillDiag:it.diag}; });
   const score=items.filter(x=>x.ok).length+items.filter(x=>x.workPt).length; const total=items.length+items.filter(x=>x.hasWork).length;
   const att={id:'a'+Date.now(),ts:Date.now(),seed:T.seed,score,total,pct:Math.round(100*score/total),items,ai:null};
   boss.result=att; render();
@@ -1253,12 +1257,13 @@ const SCENES={
 
 /* ---- Scene player: captions + pre-rendered voice clips (voices/<id>.mp3) ---- */
 let player=null;
-function scenePlayer(host, frames, onEnd, lvl){
-  let i=0, playing=false, timer=null, startedAt=0, left=0;
+function scenePlayer(host, frames, onEnd, lvl, opts={}){
+  let i=Math.max(0,Math.min(frames.length-2,opts.start||0)), playing=false, timer=null, startedAt=0, left=0, ended=false;
   const id=k=>`l${lvl}-${String(k+1).padStart(2,'0')}`;
+  const finish=()=>{ if(ended) return; ended=true; onEnd&&onEnd(); };
   const DUR=k=>Math.max(3800, 1800+(frames[k].say.length*52), ((typeof VOICE_DUR!=='undefined'&&VOICE_DUR[id(k)])||0)*1000+700);
   const audio=new Audio(); audio.preload='auto';
-  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="chat" id="chat" aria-live="polite"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
+  host.innerHTML=`<div class="stage" aria-live="off"><div class="board" id="sb"></div><div class="char" id="cL" style="left:6%"></div><div class="char" id="cR" style="right:6%"></div></div><div class="chat" id="chat" aria-live="polite"></div><div class="vbar"><button class="btn sm" id="pp">⏸ Pause</button><button class="btn sm alt" id="pv" aria-label="Previous line">⏮</button><button class="btn sm alt" id="nx" aria-label="Next line">⏭</button><button class="btn sm alt" id="rp">↺ Replay</button><button class="btn sm alt" id="vo">${State.s.voice?'🔊 Voice on':'🔇 Voice off'}</button><div class="prog"><i id="pg" style="width:0%"></i></div><span class="muted num" id="fr"></span></div>`;
   const cL=$('#cL',host), cR=$('#cR',host), sb=$('#sb',host), chat=$('#chat',host); let shown=0;
   function addMsg(k){ const f=frames[k], c=CHARS[f.who]; const right=!(f.who==='coach'||f.who==='checker'||f.who==='bar'); chat.querySelectorAll('.msg.now').forEach(m=>m.classList.remove('now')); const m=document.createElement('div'); m.className='msg now'+(right?' r':''); m.innerHTML=`<div class="av" style="background:${c.bg};color:${c.fg}">${c.face}</div><div class="bub"><span class="nm">${c.nm}</span><span class="say">${f.say}</span>${f.board?`<div class="mth">${f.board}</div>`:''}</div>`; chat.appendChild(m); chat.scrollTop=chat.scrollHeight; }
   function setChar(el,who,talk){ const c=CHARS[who]; el.innerHTML=`<div class="face" style="background:${c.bg};color:${c.fg}">${c.face}</div><span class="nm">${c.nm}</span>`; el.classList.toggle('talk',!!talk); }
@@ -1269,15 +1274,18 @@ function scenePlayer(host, frames, onEnd, lvl){
     sb.innerHTML=f.board; sb.classList.remove('shake'); if(f.fx==='shake'){ void sb.offsetWidth; sb.classList.add('shake'); }
     const me=side==='L'?cL:cR; me.classList.remove('flip'); if(f.fx==='flip'||f.fx==='hop'){ void me.offsetWidth; me.classList.add('flip'); }
     if(i<shown){ chat.innerHTML=''; shown=0; } while(shown<=i){ addMsg(shown); shown++; } $('.stage',host).classList.toggle('mini',shown>=2); $('#fr',host).textContent=`${i+1}/${frames.length}`; $('#pg',host).style.width=Math.round(100*(i+1)/frames.length)+'%';
-    speak(i);
+    speak(i); opts.onFrame&&opts.onFrame(i); if(i===frames.length-1) finish();
   }
-  function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; onEnd&&onEnd(); } }, ms); }
+  function schedule(ms){ clearTimeout(timer); startedAt=Date.now(); left=ms; timer=setTimeout(()=>{ if(i<frames.length-1){ i++; show(); schedule(DUR(i)); } else { playing=false; $('#pp',host).textContent='▶ Play'; finish(); } }, ms); }
+  function jump(k){ i=Math.max(0,Math.min(frames.length-1,k)); left=0; show(); if(playing) schedule(DUR(i)); else { clearTimeout(timer); audio.pause(); } }
   function play(){ playing=true; $('#pp',host).textContent='⏸ Pause'; if(left>0&&left<DUR(i)){ schedule(left); if(State.s.voice) audio.play().catch(()=>{}); } else { show(); schedule(DUR(i)); } }
   function pause(){ playing=false; clearTimeout(timer); left=Math.max(0,left-(Date.now()-startedAt)); $('#pp',host).textContent='▶ Play'; try{ audio.pause(); }catch(e){} }
   $('#pp',host).onclick=()=>playing?pause():play();
   $('#rp',host).onclick=()=>{ pause(); i=0; left=0; play(); };
+  $('#pv',host).onclick=()=>jump(i-1); $('#nx',host).onclick=()=>jump(i+1);
   $('#vo',host).onclick=()=>{ State.s.voice=!State.s.voice; State.save(); $('#vo',host).textContent=State.s.voice?'🔊 Voice on':'🔇 Voice off'; if(State.s.voice){ if(playing) speak(i); } else audio.pause(); };
   const stop=()=>{ pause(); audio.src=''; };
+  if(i>0){ const n=document.createElement('p'); n.className='muted'; n.style.cssText='font-size:.85rem;margin-top:6px'; n.textContent=`Picking up where you left off (line ${i+1} of ${frames.length}). Tap Replay to start from the top.`; host.appendChild(n); }
   play(); return {stop};
 }
 
@@ -1292,13 +1300,15 @@ const EXPLAINERS={
 },
 2(host,done){
   const seen={lo:false,eq:false,hi:false};
-  host.innerHTML=`<p class="eyebrow">Interactive: two plans crossing</p><h3>Slide the number of jugs. Watch which bill is smaller.</h3><p class="muted">ClearSpring: $18 + $6.50 per jug. PureWater: $12 + $7.50 per jug.</p><input type="range" class="range" id="jx" min="0" max="12" value="2" aria-label="jugs"><div class="scale" id="sc"></div><p id="jmsg" style="margin-top:8px"></p><div class="block soft" style="margin-top:12px"><b>Algebra answer:</b> <span class="eq">x &gt; 6</span> &nbsp; <b>Real-world answer:</b> <span class="eq" id="rw">?</span><p class="muted" style="font-size:.9rem;margin-top:4px">Visit a tie, a PureWater win, and a ClearSpring win to clear this checkpoint.</p></div>`;
+  host.innerHTML=`<p class="eyebrow">Interactive: two plans crossing</p><h3>Slide the number of jugs. Watch which bill is smaller.</h3><p class="muted">ClearSpring: $18 + $6.50 per jug. PureWater: $12 + $7.50 per jug.</p><input type="range" class="range" id="jx" min="0" max="12" value="2" aria-label="jugs"><div class="row" style="justify-content:space-between;margin-bottom:8px"><button type="button" class="btn sm alt" id="jm">− 1 jug</button><button type="button" class="btn sm alt" id="j6">Exactly 6</button><button type="button" class="btn sm alt" id="jp">+ 1 jug</button></div><div class="scale" id="sc"></div><p id="jmsg" style="margin-top:8px"></p><div class="block soft" style="margin-top:12px"><b>Algebra answer:</b> <span class="eq">x &gt; 6</span> &nbsp; <b>Real-world answer:</b> <span class="eq" id="rw">?</span><p class="muted" style="font-size:.9rem;margin-top:4px">Visit a tie, a PureWater win, and a ClearSpring win to clear this checkpoint.</p></div>`;
   const upd=()=>{ const x=+$('#jx',host).value; const a=18+6.5*x, b=12+7.5*x; const who=a<b?'cs':a>b?'pw':'tie'; seen[who==='cs'?'hi':who==='pw'?'lo':'eq']=true;
     $('#sc',host).innerHTML=`<div class="pan ${who==='cs'?'':''}" style="border-color:${who==='cs'?'var(--ok)':'var(--ink)'}"><span class="eyebrow">ClearSpring</span><span class="num">$${a.toFixed(2)}</span><div class="bar" style="width:100%"><i style="width:${Math.min(100,a/1.2)}%;background:var(--l1)"></i></div></div><div style="font-family:var(--disp)">${who==='cs'?'&lt;':who==='pw'?'&gt;':'='}</div><div class="pan" style="border-color:${who==='pw'?'var(--ok)':'var(--ink)'}"><span class="eyebrow">PureWater</span><span class="num">$${b.toFixed(2)}</span><div class="bar" style="width:100%"><i style="width:${Math.min(100,b/1.2)}%;background:var(--l5)"></i></div></div>`;
     $('#jmsg',host).innerHTML=`At <b class="num">${x}</b> jug${x===1?'':'s'}: ${who==='tie'?'<b>a tie.</b> Exactly 6 jugs costs the same either way, so 6 is <i>not</i> a win for ClearSpring.':who==='cs'?'<b>ClearSpring is cheaper.</b>':'<b>PureWater is cheaper.</b>'}`;
+    if(seen.lo&&seen.hi) seen.eq=true; // crossing from one side to the other passes the tie
     $('#rw',host).textContent = (seen.hi&&seen.eq)?'at least 7 jugs':'?';
     if(seen.lo&&seen.eq&&seen.hi){ done(); } };
-  $('#jx',host).addEventListener('input',upd); upd();
+  const jx=$('#jx',host); jx.addEventListener('input',upd); const setJ=v=>{ jx.value=Math.max(0,Math.min(12,v)); upd(); };
+  $('#jm',host).onclick=()=>setJ(+jx.value-1); $('#jp',host).onclick=()=>setJ(+jx.value+1); $('#j6',host).onclick=()=>setJ(6); upd();
 },
 3(host,done){
   // balance-scale stepper for 3y + k = 8y - ky
@@ -1351,9 +1361,9 @@ const EXPLAINERS={
 
 /* ---- Mini-boss questions ---- */
 const MINI={
-1:[{kind:'rel',prompt:'A climbing gym charges <b>$25</b> to get in plus <b>$8 per hour</b>. You have <b>$65</b>. Let <i>h</i> = hours. Write the inequality.',answer:'25+8h<=65',placeholder:'e.g. 25 + 8h ≤ 65',hint:'Build the whole bill first (entry + rate × h). “You have $65” is a ceiling with a floor line: ≤.'},
+1:[{kind:'rel',prompt:'A climbing gym charges <b>$25</b> to get in plus <b>$8 per hour</b>. You have <b>$65</b>. Let <i>h</i> = hours. <b>Write the inequality</b> that describes the situation (do not solve it yet).',answer:'25+8h<=65',setup:true,placeholder:'e.g. 25 + 8h ≤ 65',hint:'Build the whole bill first (entry + rate × h). “You have $65” is a ceiling with a floor line: ≤.'},
    {kind:'choice',prompt:'“A team needs <b>at least 12</b> players.” Which inequality?',options:['p < 12','p ≤ 12','p ≥ 12','p > 12'],correct:[2],hint:'“At least” lets 12 itself count. That means a floor line, pointing the right way.'},
-   {kind:'rel',prompt:'Plan A costs <b>$10 + $3 per song</b>. Plan B costs <b>$4 + $5 per song</b>. When is Plan A cheaper? (x = songs)',answer:'10+3x<4+5x',placeholder:'e.g. 10 + 3x < …',hint:'Each plan is a whole bill. Put Plan A on the small side with a strict symbol.'}],
+   {kind:'rel',prompt:'Plan A costs <b>$10 + $3 per song</b>. Plan B costs <b>$4 + $5 per song</b>. Let <i>x</i> = songs. <b>Write the inequality</b> that compares the two bills and says Plan A costs less. (Do not solve it yet; that is Level 2.)',answer:'10+3x<4+5x',placeholder:'e.g. 10 + 3x < …',setup:true,hint:'Each plan is a whole bill: fee + rate × x. Put Plan A\'s whole bill on the small side with a strict symbol.'}],
 2:[{kind:'rel',solved:'h',prompt:'Solve <span class="eq">25 + 8h ≤ 65</span> for <i>h</i>.',answer:'h<=5',placeholder:'h ≤ …',hint:'Subtract 25 from both sides, then divide by 8. No negatives, so no flip.'},
    {kind:'num',prompt:'Cookies cost <b>$2 each</b> and you have <b>$9</b>. What is the most cookies you can buy?',answer:'4',placeholder:'cookies',hint:'The algebra says 4.5. Can you buy half a cookie at this store?'},
    {kind:'rel',solved:'x',prompt:'Solve <span class="eq">10 + 3x &lt; 4 + 5x</span> for <i>x</i>.',answer:'x>3',placeholder:'x > …',hint:'Subtract 3x (not 5x) so x stays positive and Negative Nine stays home. Then subtract 4.'}],
@@ -1371,6 +1381,7 @@ const MINI={
    {kind:'num',prompt:'Check: a rectangle has perimeter <b>100 in</b> and length <b>30 in</b>. What width makes <span class="eq">2l + 2w = 100</span> true?',answer:'20',placeholder:'inches',hint:'Plug in l = 30: 60 + 2w = 100. Then verify your w by rebuilding 100.'}],
 };
 const LEVEL_DEFS=LEVELS.map(L=>({n:L.n, boss:MINI[L.n]}));
+const EXPL_HOW={1:'sort all 12 words',2:'slide to a tie, a PureWater win, and a ClearSpring win',3:'isolate y on the scale',4:'cross-multiply, then divide the whole top',5:'solve all three parts, then graph it',6:'plug in the right answer and tap the wrong line'};
 
 /* ---- Views ---- */
 let levelTab='explainer', lastLevel=null;
@@ -1388,16 +1399,18 @@ VIEWS.level=(app,n)=>{
   app.innerHTML=h`<div class="stack">
    <div class="block" style="border-color:${L.color}"><div class="row" style="justify-content:space-between"><div><p class="eyebrow" style="color:${L.color}">Level ${n} of 6</p><h1>${esc(L.title)}</h1><p class="muted">${esc(L.blurb)}</p></div><div class="row">${n>1?`<button class="btn alt sm" data-go="level" data-arg="${n-1}">← L${n-1}</button>`:''}${n<6?`<button class="btn alt sm" data-go="level" data-arg="${n+1}">L${n+1} →</button>`:''}</div></div>
     ${courseHTML(cps, keys.filter(k=>st[k]).length, L.color)}
+    ${(()=>{ const open=keys.filter(k=>!st[k]); if(!open.length) return '<p class="muted" style="margin-top:22px"><b style="color:var(--ok)">Level clear.</b> Everything here is replayable.</p>'; const how={explainer:'Interactive: '+EXPL_HOW[n], video:'Video: reach the last line (play through, or use ⏭)', q1:'Mini-boss 1', q2:'Mini-boss 2', q3:'Mini-boss 3'}; return `<p class="muted" style="margin-top:22px;font-size:.9rem"><b>Still open:</b> ${open.map(k=>how[k]).join(' · ')}</p>`; })()}
     <div class="steps" style="margin-top:26px">${tabs.map(([k,l])=>`<button class="tab ${(k==='boss'?D.boss.every((_,i)=>st['q'+(i+1)]):st[k])?'done':''}" data-lt="${k}" aria-current="${levelTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
    <div class="block" id="lbody"></div></div>`;
   app.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ levelTab=b.dataset.lt; render(); });
   const body=$('#lbody');
-  const clear=(k,coins)=>{ if(st[k]) return; st[k]=Date.now(); State.addCoins(coins,'checkpoint'); State.checkpoint(); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
+  const clear=(k,coins)=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(cur[k]) return; cur[k]=Date.now(); st[k]=cur[k]; State.addCoins(coins,'checkpoint'); State.checkpoint(); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
   if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
-  else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n); }
+  else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n, {start: st.video?0:(st.vpos||0), onFrame:k=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(cur.vpos!==k){ cur.vpos=k; State.save(); } }}); }
   else {
     body.innerHTML=`<p class="eyebrow">Mini-boss</p><h3>${D.boss.length} questions. Wrong answers respawn you with a hint.</h3><div class="stack" id="mb" style="margin-top:10px"></div>`;
-    D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);
+    D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div><label class="muted" style="font-size:.85rem" for="mw-${n}-${i}">Work it out here (not graded)</label><textarea class="scratch" id="mw-${n}-${i}" placeholder="Steps, scribbles, anything.">${esc(st['w'+key]||'')}</textarea>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);
+      const sc=$('.scratch',el); let wt=null; sc.addEventListener('input',()=>{ clearTimeout(wt); wt=setTimeout(()=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); cur['w'+key]=sc.value.slice(0,1500); State.save(); },600); });
       let misses=0; $('.check',el).onclick=()=>{ const raw=rawOf(it,el).trim(); if(!raw&&it.kind!=='numberline'){ showFB(el,'info','Type something first.'); return; } const extra=it.kind==='numberline'?el._nl.get():null; const g=gradeItem(it,raw,extra);
         if(g.ok){ el.classList.add('ok'); el.classList.remove('bad'); showFB(el,'ok',pickPraise({id:'L'+n+'Q'+i})); if(!st[key]){ st[key]=Date.now(); State.addCoins(misses?5:10,'mini-boss'); State.checkpoint(); if(misses) State.award('respawn'); checkLevelBadge(n); $('.tag',el).innerHTML=`BOSS ${i+1} <span class="ck">✔ cleared</span>`; } State.save(); }
         else { misses++; thud(); el.classList.add('bad'); showFB(el,'bad',`<span class="who">Respawn</span>${g.partial?g.partial+' ':''}${q.hint}${misses>=3?`<br><span class="muted">Three tries, no penalty. Rewatch this level's video for the move, then come back. The checkpoint stays open.</span>`:''}`); } }; });
@@ -1470,6 +1483,7 @@ function guideDash(el){
     ${A[0]&&A[0].ai?`<h3 style="margin-top:14px">Latest coach summary</h3><p>${esc(A[0].ai)}</p>`:''}
     ${A[0]?`<details style="margin-top:12px"><summary>Latest run: his work, item by item</summary>${(A[0].items||[]).map(x=>`<div class="gstep"><span class="k">${x.id}</span><div><div>${x.ok?'<b style="color:var(--ok)">✔ correct</b>':'<b style="color:var(--bad)">✘ missed</b>'} · answer: <span class="eq" style="white-space:normal">${esc(x.raw||'(blank)')}</span></div>${x.work?`<div class="workbox">${esc(x.work)}</div>`:''}${x.diag?`<div class="muted" style="font-size:.9rem">${esc(x.diag)}</div>`:''}</div></div>`).join('')}</details>`:''}`
     :`<p class="muted">No Final Boss runs yet${State.mode==='signed'?'.':' (and in public mode runs are not saved).'}</p>`}</div>
+   <div class="block"><h2>Learn progress</h2><div class="tablewrap"><table><thead><tr><th>Level</th><th>Interactive</th><th>Video</th><th>Mini-boss</th><th>Work notes</th></tr></thead><tbody>${LEVELS.map(L=>{ const st=State.s.learn['l'+L.n]||{}; const q=[1,2,3].map(i=>st['q'+i]?'✔':'·').join(' '); const notes=[1,2,3].map(i=>st['wq'+i]).filter(Boolean); return `<tr><td><b>${L.n}</b> ${esc(L.short)}</td><td>${st.explainer?'✔':'—'}</td><td>${st.video?'✔':'—'}</td><td class="num">${q}</td><td>${notes.length?notes.map(x=>`<div class="workbox" style="font-size:.85rem">${esc(x)}</div>`).join(''):'<span class="muted">—</span>'}</td></tr>`; }).join('')}</tbody></table></div></div>
    <div class="block"><h2>Check My Answers log</h2><div class="tablewrap"><table><thead><tr><th>Part</th><th>Skill</th><th class="n">Tries</th><th>Status</th><th>Last typed</th></tr></thead><tbody>${ITEMS.map(it=>{ const r=State.s.checks[it.id]; return `<tr><td><b>${it.id}</b></td><td>${SKILL_NAMES[it.skill]}</td><td class="n">${r?r.attempts:0}</td><td>${r?(r.correct?(r.firstTry?'✔ first try':'✔ after respawn'):'✘ open'):'—'}</td><td class="muted" style="font-size:.85rem">${r&&r.history.length?esc(r.history[r.history.length-1].raw).slice(0,40):''}</td></tr>`; }).join('')}</tbody></table></div></div>
   </div>`;
 }

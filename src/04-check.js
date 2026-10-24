@@ -2,7 +2,8 @@
 function gradeItem(item, raw, extra){
   // returns {ok:boolean, partial?:string}
   switch(item.kind){
-    case 'rel': { if(!M.relEquiv(raw,item.answer)) return {ok:false}; if(item.solved){ const t=M.tryParse(raw); const bare=t.parts.filter(x=>x.t==='v'&&x.v===item.solved).length; const others=t.parts.filter(x=>!(x.t==='v'&&x.v===item.solved)); if(bare!==1||others.some(x=>M.vars(x).has(item.solved))) return {ok:false,partial:'That is true, but not finished: get '+item.solved+' alone in its own part.'}; } return {ok:true}; }
+    case 'rel': { if(item.setup){ const t=M.tryParse(raw); if(t&&t.t==='rel'&&t.parts.some(x=>x.t==='v')&&t.parts.filter(x=>x.t!=='v').every(x=>M.vars(x).size===0)) return {ok:false,partial:'That is the solved form. This part asks for the setup: the inequality that describes the situation before any solving.'}; }
+      if(!M.relEquiv(raw,item.answer)){ if(M.toNumber(raw)!==null&&!/[<>=]/.test(M.clean(raw))) return {ok:false,partial:'An inequality needs a symbol (<, ≤, >, ≥) and the variable. Which symbol, and which side is the variable on?'}; return {ok:false}; } if(item.solved){ const t=M.tryParse(raw); const bare=t.parts.filter(x=>x.t==='v'&&x.v===item.solved).length; const others=t.parts.filter(x=>!(x.t==='v'&&x.v===item.solved)); if(bare!==1||others.some(x=>M.vars(x).has(item.solved))) return {ok:false,partial:'That is true, but not finished: get '+item.solved+' alone in its own part.'}; } return {ok:true}; }
     case 'expr': { const ss=M.solvedSide(raw,item.var); return {ok: ss.status==='ok' && M.exprEquiv(ss.expr,item.answer)}; }
     case 'num': { const n=M.toNumber(raw); const want=M.toNumber(item.answer); if(M.numEq(n,want)) return {ok:true}; if(item.partial&&n!==null){ for(const k in item.partial) if(M.numEq(n,+k)) return {ok:false,partial:item.partial[k]}; } return {ok:false}; }
     case 'choice': return {ok:item.correct.includes(+raw)};
