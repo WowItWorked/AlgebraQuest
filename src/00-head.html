@@ -10,6 +10,7 @@
   --disp:'Bungee','Arial Black',Impact,sans-serif; --body:'Nunito','Segoe UI',system-ui,sans-serif;
   --r:8px;
 }
+/* Always light by choice. The dark palette is kept here, commented out, in case it is wanted later:
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#141b2a; --bg2:#0f1521; --panel:#1f2838; --panel2:#283446; --ink:#edf2f8; --muted:#a5b4c6; --line:#4a5b73; --shadow:#0a0f18;
   --accent:#9b7bff; --accent-ink:#120a2e; --gold:#ffcb3d; --gold-ink:#2a1d00; --grass:#4caf32; --dirt:#8a5630; --ok:#5fd37f; --ok-bg:#1d3b28; --bad:#ff7a7f; --bad-bg:#4a2024; --warn:#ffb648; --warn-bg:#3f3015;
@@ -20,6 +21,8 @@
   --accent:#9b7bff; --accent-ink:#120a2e; --gold:#ffcb3d; --gold-ink:#2a1d00; --grass:#4caf32; --dirt:#8a5630; --ok:#5fd37f; --ok-bg:#1d3b28; --bad:#ff7a7f; --bad-bg:#4a2024; --warn:#ffb648; --warn-bg:#3f3015;
   --l1:#4fbcf5; --l2:#4fcf96; --l3:#ff7d4d; --l4:#ab7cff; --l5:#ff6aa3; --l6:#3fc2cc;
   color-scheme:dark; }
+*/
+:root{color-scheme:light}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);background-image:linear-gradient(var(--bg),var(--bg2));color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;font-weight:600;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100%}
