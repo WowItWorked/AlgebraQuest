@@ -21,6 +21,7 @@ Live artifact: https://claude.ai/artifact/RbaM9DamvxqEwj7JNi9sjy
   - `10-u1r.js` Unit 1 Review Materials: items, guide, examples, boss generator
   - `11-u1r-learn.js` Unit 1 Review: scenes, interactives, mini-bosses
   - `12-extras.js` avatar + coin shop, journal, rematch chest, read-aloud
+  - `13-u1t.js` Unit 1 Test to Correct: the real test's items, guide, scenes, mini-bosses (reuses Unit 1 interactives, examples and boss generator)
   - `99-main.js` boot, routing, capability wiring, profile merge
 - `voices/` — one MP3 per scene line (`l*` for Unit 1, `r-l*` for the Review) and `voices/ra/` read-aloud clips for every Check and mini-boss question, published alongside the page; rendered by `tools/voices.mjs`
   (needs `piper`, `ffmpeg`, and the Piper voice models in `tools/piper-models/` or `$PIPER_VOICES`).
@@ -38,4 +39,4 @@ Change `PARENT_PASSPHRASE` at the top of `src/02-data.js`, rebuild, republish.
 Register it in `UNITS` (see `src/10-u1r.js` for the full shape: LEVELS, PROBLEMS, ITEMS, GUIDE, EXAMPLES, SKILLS, genTest, SCENES, EXPLAINERS, MINI, EXPL_HOW, a `voice` prefix) and give it a slot in `MAP_SLOTS` in `src/02-data.js`. Rerun `tools/voices.mjs`, rebuild, publish the new clips with the page.
 
 ## Tests
-`node tests/test-math.js`, `node tests/test-gen.js`, `node tests/test-gen-r.js` need only Node. The browser suites need Playwright and `tests/mkharness.sh`: `test-all.js` (regression, both modes), `test-tracking.js` (persistence with a slow sign-in and reloads), `test-review.js` (every review item, level, and a boss run).
+`node tests/test-math.js`, `node tests/test-gen.js`, `node tests/test-gen-r.js` need only Node. The browser suites need Playwright and `tests/mkharness.sh`: `test-all.js` (regression, both modes), `test-tracking.js` (persistence with a slow sign-in and reloads), `test-review.js` and `test-u1t.js` (every item, level, and a boss run for the Review and Test-correction units).

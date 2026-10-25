@@ -1030,5 +1030,349 @@
  "ra-u1r-m6-3": {
   "key": "57efa605b375c8dae410f6faa5c99b4449801b7e",
   "sec": 2.43
+ },
+ "t-l1-01": {
+  "key": "965d2860cd77ee6e78a81f229098e5247201a272",
+  "sec": 11.18
+ },
+ "t-l1-02": {
+  "key": "981e2a33cf1e840d1d2ef4ed7d20c77bc047f36f",
+  "sec": 8.28
+ },
+ "t-l1-03": {
+  "key": "9d42d89b9c39134fd9a4a7dd3e2fb65b1aadbd64",
+  "sec": 6.09
+ },
+ "t-l1-04": {
+  "key": "307fc67db202020686d07afc7c3c2f3eccb5a8b4",
+  "sec": 12.33
+ },
+ "t-l1-05": {
+  "key": "8c3180f2b239041b7082c216daf38b0564087801",
+  "sec": 10.29
+ },
+ "t-l1-06": {
+  "key": "41c315496bee8b705aad2f7af32d3bcd6cd04334",
+  "sec": 13.43
+ },
+ "t-l1-07": {
+  "key": "92ecc9c43ec58648996f8b8df64a870c73a73ea9",
+  "sec": 9.01
+ },
+ "t-l2-01": {
+  "key": "42e492e5f54eff1f6b4a1fd673e9f170ecffd38e",
+  "sec": 6.58
+ },
+ "t-l2-02": {
+  "key": "2049c6aa5ddeba4f79ac3fc03ec77c92eeaa2734",
+  "sec": 8.57
+ },
+ "t-l2-03": {
+  "key": "560e8ef422d4c169a3833184ccee5e62407ef7ba",
+  "sec": 20.9
+ },
+ "t-l2-04": {
+  "key": "ad29e42e6a0aae515a7ff5ad4183159728ddd852",
+  "sec": 11.28
+ },
+ "t-l2-05": {
+  "key": "ddeeb13304596d4969ee6c2803fb95b0d175c39d",
+  "sec": 7.65
+ },
+ "t-l2-06": {
+  "key": "52b1ad271436deeb2e50cf9289037fb8d924b4fb",
+  "sec": 11.68
+ },
+ "t-l2-07": {
+  "key": "248477048883dcb9bb6c6f50e46c3bd3861a38bd",
+  "sec": 6.53
+ },
+ "t-l2-08": {
+  "key": "c9b1d0bbd13a8ba9b832b3b860d7e2c7cab8886e",
+  "sec": 10
+ },
+ "t-l3-01": {
+  "key": "ba7361e799fd3a28cb914b8f1c3f86f9c705467a",
+  "sec": 9.59
+ },
+ "t-l3-02": {
+  "key": "7712daa36672e6162177ad8fe5adee72c6b5adfc",
+  "sec": 5.59
+ },
+ "t-l3-03": {
+  "key": "683a7dde7b304c5b967aedb35502ad200e6c742f",
+  "sec": 9.51
+ },
+ "t-l3-04": {
+  "key": "246e92ccc8a744bd1ffdc4d83d3b13bb2070588f",
+  "sec": 7.42
+ },
+ "t-l3-05": {
+  "key": "7d6d68a6ef3cecd7560f60b49325169e428a1f69",
+  "sec": 3.79
+ },
+ "t-l3-06": {
+  "key": "ff7f84793e20dd69010c838b0ee87ee26c0fa7c3",
+  "sec": 11.15
+ },
+ "t-l3-07": {
+  "key": "5fd0474c5857aa56c38a41d3de232cd66a2e5fde",
+  "sec": 12.04
+ },
+ "t-l3-08": {
+  "key": "2ee0c921c5b979b53c153121912d56b229d3cffa",
+  "sec": 7.86
+ },
+ "t-l3-09": {
+  "key": "f5c3611ea4819ba499bfcca187cfc5737419de96",
+  "sec": 12.88
+ },
+ "t-l3-10": {
+  "key": "cedf3527007c915332ae76622692250fdb811be5",
+  "sec": 8.15
+ },
+ "t-l4-01": {
+  "key": "098ac782c711d3418b80c513fba95f59fb5f44c8",
+  "sec": 6.92
+ },
+ "t-l4-02": {
+  "key": "a07e20efddad22477b589c71cd0704ded5c3679c",
+  "sec": 7.58
+ },
+ "t-l4-03": {
+  "key": "e341d45b79e7c3584ea4cdbcfb3d4f8cb245be52",
+  "sec": 6.97
+ },
+ "t-l4-04": {
+  "key": "0669c63aa848db4e65d07455179abd2a7e280da8",
+  "sec": 10.68
+ },
+ "t-l4-05": {
+  "key": "d20548256c6a1f1a6adc23b884e76fb16ead7859",
+  "sec": 4.7
+ },
+ "t-l4-06": {
+  "key": "fc6a43c2303a3355e69022442773db0a3292f172",
+  "sec": 9.27
+ },
+ "t-l4-07": {
+  "key": "f1f7893f9065346920ca4d4e00a2b4edbb659622",
+  "sec": 8.2
+ },
+ "t-l4-08": {
+  "key": "0fdbfefba0ad846318876770c1f9c9acb860866c",
+  "sec": 5.41
+ },
+ "t-l5-01": {
+  "key": "3805740c512e40b525177af308b780b7fbcc5ff6",
+  "sec": 5.75
+ },
+ "t-l5-02": {
+  "key": "e370edfeb6007d56ea581e43007706f3817096ac",
+  "sec": 6.9
+ },
+ "t-l5-03": {
+  "key": "8187afb72294cc399dbd3d7998c0931e833f56f9",
+  "sec": 5.69
+ },
+ "t-l5-04": {
+  "key": "16fc30867b020025c5a96a2af46636564aec6697",
+  "sec": 7
+ },
+ "t-l5-05": {
+  "key": "8e25f14f78f6c96404252c9551f0fddc027b72e3",
+  "sec": 10.19
+ },
+ "t-l5-06": {
+  "key": "c0156e3be0fa75670d7dc9f162088985d972c111",
+  "sec": 8.52
+ },
+ "t-l5-07": {
+  "key": "985d819215ebddb759572e4f1a1cd92cf23a5bc2",
+  "sec": 13.87
+ },
+ "t-l5-08": {
+  "key": "c24fb63b779d53583bc96f1974232e6553a18511",
+  "sec": 6.06
+ },
+ "t-l6-01": {
+  "key": "4d34d97bb57d4daa4c41fa2c55d14bbf5469a493",
+  "sec": 5.72
+ },
+ "t-l6-02": {
+  "key": "4b299d4bdbc91b89d9ccab2d90000bef9b8c58f0",
+  "sec": 8.67
+ },
+ "t-l6-03": {
+  "key": "0e100337519e860025eec330c823ee1a07608972",
+  "sec": 7.11
+ },
+ "t-l6-04": {
+  "key": "ae57f6516693797916c84faa47b77165505db5be",
+  "sec": 6.09
+ },
+ "t-l6-05": {
+  "key": "a24dbf295877d509948d761ce68d73594fde6d0c",
+  "sec": 10.24
+ },
+ "t-l6-06": {
+  "key": "e7fd12e6e25cc62b584e5cff8c59e4a3511743c4",
+  "sec": 5.62
+ },
+ "t-l6-07": {
+  "key": "73d5a0e7ac852c99cc7a4d25deffa80bdcfb34a1",
+  "sec": 9.8
+ },
+ "t-l6-08": {
+  "key": "5c9f4eca19602b893e6a31bfebeb84be1c357475",
+  "sec": 4.91
+ },
+ "ra-u1t-1a": {
+  "key": "37cf11c4b3a79428a1ddf65eaecc287d1d860463",
+  "sec": 35.11
+ },
+ "ra-u1t-1b": {
+  "key": "32fe45f141fb139c6eb9c7dcdfecb143790be7b9",
+  "sec": 31.06
+ },
+ "ra-u1t-1c": {
+  "key": "ba26ee3f7f0a5e55ba10c601578d90ee78b94c00",
+  "sec": 30.67
+ },
+ "ra-u1t-1d": {
+  "key": "9a8eaf93fc8535df607a3d0c2cbae64c2fd68882",
+  "sec": 28.42
+ },
+ "ra-u1t-2a": {
+  "key": "6c617ff001f23bf8fae063bc64773ff1a4ce5ee8",
+  "sec": 56.14
+ },
+ "ra-u1t-2b": {
+  "key": "3590c4597db37cdc3901869d87deaf1e6ee32fce",
+  "sec": 59.56
+ },
+ "ra-u1t-2c": {
+  "key": "1d6539246a66bb7fe25a0ce84b0f704c6cf3bc7d",
+  "sec": 56.84
+ },
+ "ra-u1t-3a": {
+  "key": "72728c99de8f66c4c34e776c58c676ada175b178",
+  "sec": 7.86
+ },
+ "ra-u1t-3b": {
+  "key": "dcc72ae3ff55b805eabd18118e1393e82c92f4c6",
+  "sec": 7.97
+ },
+ "ra-u1t-3c": {
+  "key": "3289c32c5677d1f2ad6df62c87b7783c0ab15260",
+  "sec": 8.83
+ },
+ "ra-u1t-3d": {
+  "key": "349f83a2539ad7ba54f9bab684b971235a4bd649",
+  "sec": 9.43
+ },
+ "ra-u1t-4a": {
+  "key": "7e38142727a6a007622458ff8ea4e5fa008218ae",
+  "sec": 18.63
+ },
+ "ra-u1t-4b": {
+  "key": "ff04a7a6581817cc3391edf09b5db9f1eb793265",
+  "sec": 16.38
+ },
+ "ra-u1t-5a": {
+  "key": "2ac1fd12931aa591d5ccaa4beb66aa920f587bca",
+  "sec": 34.09
+ },
+ "ra-u1t-5b": {
+  "key": "1d65f1240ad2d9a1da47739bc726516a44ef102b",
+  "sec": 27.69
+ },
+ "ra-u1t-5c": {
+  "key": "7314003d26a09286045fa899de9c7fd15ec44006",
+  "sec": 30.46
+ },
+ "ra-u1t-6a": {
+  "key": "3cf8397fb9e3ba9adfafdc5dff6f24c1c44b450f",
+  "sec": 10.45
+ },
+ "ra-u1t-6b": {
+  "key": "81c22305ad64db45de0d401073c5d5c437d7f659",
+  "sec": 9.72
+ },
+ "ra-u1t-6c": {
+  "key": "a376a9efcff9ae9cabe77d258fe67791a29f6646",
+  "sec": 14.34
+ },
+ "ra-u1t-m1-1": {
+  "key": "a332e91b375270e7084877576f0981e24af3d935",
+  "sec": 13.06
+ },
+ "ra-u1t-m1-2": {
+  "key": "c3d1f929ffe4a310a05eead978538e72956977dd",
+  "sec": 4.91
+ },
+ "ra-u1t-m1-3": {
+  "key": "1a8a26765777ecdcf5921cb56a384f02c97199dc",
+  "sec": 6.45
+ },
+ "ra-u1t-m2-1": {
+  "key": "d76626c03fdcceec5eb4baa63d33c9e570854d2a",
+  "sec": 9.17
+ },
+ "ra-u1t-m2-2": {
+  "key": "fa794d659eed1250e6bac557aa26dae28121837e",
+  "sec": 2.09
+ },
+ "ra-u1t-m2-3": {
+  "key": "339d21becd637023994db5d5f6cc333e4b22bd75",
+  "sec": 6.09
+ },
+ "ra-u1t-m3-1": {
+  "key": "b9cbfac6f1d29d9130cf5eb8f365f84b01e3f459",
+  "sec": 4.96
+ },
+ "ra-u1t-m3-2": {
+  "key": "8ac8160c39ca35c4dcfb301f10cdb56f4885201d",
+  "sec": 5.04
+ },
+ "ra-u1t-m3-3": {
+  "key": "4aa4dd18967fc9a719d6718c8d85f4284ed8c10a",
+  "sec": 4.83
+ },
+ "ra-u1t-m4-1": {
+  "key": "f402ac54c6b22c92afbac673f958659cc0df4308",
+  "sec": 6.9
+ },
+ "ra-u1t-m4-2": {
+  "key": "2b85f856fd369f9f75897fff83a7b6f68da2224e",
+  "sec": 5.64
+ },
+ "ra-u1t-m4-3": {
+  "key": "5024ab0992a8bf43efe32d3e412effbc3365e133",
+  "sec": 8.83
+ },
+ "ra-u1t-m5-1": {
+  "key": "92e4a84e5229673437cf5eb21dab3b2f4fe3a17f",
+  "sec": 0.97
+ },
+ "ra-u1t-m5-2": {
+  "key": "056f0f1387783c9600ab5b984914b778ef51c8e7",
+  "sec": 6.01
+ },
+ "ra-u1t-m5-3": {
+  "key": "c1caf0d465e6950330dfaaee8deaa98ca05ba424",
+  "sec": 2.66
+ },
+ "ra-u1t-m6-1": {
+  "key": "9f50ee08404cbdd66f06f156f674ca84670ebcac",
+  "sec": 7.97
+ },
+ "ra-u1t-m6-2": {
+  "key": "c880c3ee4231ef86b87dc3450c078d0077ed9793",
+  "sec": 16.54
+ },
+ "ra-u1t-m6-3": {
+  "key": "6aa6ebb3728b114fcc2eb9946efe759d188de69a",
+  "sec": 5.38
  }
 }

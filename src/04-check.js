@@ -2,16 +2,19 @@
 function gradeItem(item, raw, extra){
   // returns {ok:boolean, partial?:string}
   switch(item.kind){
-    case 'rel': { if(item.setup){ const t=M.tryParse(raw); if(t&&t.t==='rel'&&t.parts.some(x=>x.t==='v')&&t.parts.filter(x=>x.t!=='v').every(x=>M.vars(x).size===0)) return {ok:false,partial:'That is the solved form. This part asks for the setup: the inequality that describes the situation before any solving.'}; }
+    case 'rel': { if(Array.isArray(item.answer)){ for(const a of item.answer){ const r=gradeItem({...item,answer:a},raw,extra); if(r.ok) return r; } const r=gradeItem({...item,answer:item.answer[0]},raw,extra); return r.partial?r:{ok:false}; }
+      if(item.setup){ const t=M.tryParse(raw); if(t&&t.t==='rel'&&t.parts.some(x=>x.t==='v')&&t.parts.filter(x=>x.t!=='v').every(x=>M.vars(x).size===0)) return {ok:false,partial:'That is the solved form. This part asks for the setup: the inequality that describes the situation before any solving.'}; }
       if(item.inclusive||item.strict){ const cl=M.clauses(raw)||{parts:[raw]}; for(const part of cl.parts){ const t=M.tryParse(part); if(t&&t.t==='rel'){ const ns=t.ops.every(o=>o==='<='||o==='>='||o==='='), st=t.ops.every(o=>o==='<'||o==='>'); if(item.inclusive&&!ns) return {ok:false,partial:'"Inclusive" means the endpoints count. Which symbols include equal?'}; if(item.strict&&!st) return {ok:false,partial:'The endpoints are not included here. Which symbols leave them out?'}; } } }
       if(!M.relEquiv(raw,item.answer)){ if(M.toNumber(raw)!==null&&!/[<>=]/.test(M.clean(raw))) return {ok:false,partial:'An inequality needs a symbol (<, ≤, >, ≥) and the variable. Which symbol, and which side is the variable on?'}; return {ok:false}; } if(item.solved){ const cl=M.clauses(raw)||{parts:[raw]}; for(const part of cl.parts){ const t=M.tryParse(part); if(!t||t.t!=='rel') return {ok:false}; const bare=t.parts.filter(x=>x.t==='v'&&x.v===item.solved).length; const others=t.parts.filter(x=>!(x.t==='v'&&x.v===item.solved)); if(bare!==1||others.some(x=>M.vars(x).has(item.solved))) return {ok:false,partial:'That is true, but not finished: get '+item.solved+' alone in its own part.'}; } } return {ok:true}; }
     case 'expr': { const ss=M.solvedSide(raw,item.var); return {ok: ss.status==='ok' && M.exprEquiv(ss.expr,item.answer)}; }
     case 'num': { const n=M.toNumber(raw); const want=M.toNumber(item.answer); if(M.numEq(n,want)) return {ok:true}; if(item.partial&&n!==null){ for(const k in item.partial) if(M.numEq(n,+k)) return {ok:false,partial:item.partial[k]}; } return {ok:false}; }
     case 'choice': return {ok:item.correct.includes(+raw)};
+    case 'multi': { const picked=String(raw).split(',').filter(x=>x!=='').map(Number).sort((a,b)=>a-b); const want=[...item.correct].sort((a,b)=>a-b); if(picked.length!==want.length||picked.some((v,i)=>v!==want[i])){ const extraPick=picked.filter(v=>!want.includes(v)), missing=want.filter(v=>!picked.includes(v)); return {ok:false,partial:extraPick.length&&!missing.length?'One of those is not correct. Test it with numbers.':(!extraPick.length&&missing.length?'You have the right ones so far, but you are missing at least one.':'')}; } return {ok:true}; }
     case 'order': return {ok: raw===item.steps.map((_,i)=>i).join('')};
     case 'numberline': { const nl=extra; const w=item.nl; if(!nl) return {ok:false}; const shape=w.shape||'between'; if((nl.shape||'between')!==shape) return {ok:false};
-      if(shape==='left'||shape==='right') return {ok: nl.lo===w.lo && nl.loOpen===w.loOpen};
-      return {ok: nl.lo===w.lo && nl.hi===w.hi && nl.loOpen===w.loOpen && nl.hiOpen===w.hiOpen}; }
+      const openOk=(a,b)=>w.anyOpen||a===b;
+      if(shape==='left'||shape==='right') return {ok: nl.lo===w.lo && openOk(nl.loOpen,w.loOpen)};
+      return {ok: nl.lo===w.lo && nl.hi===w.hi && openOk(nl.loOpen,w.loOpen) && openOk(nl.hiOpen,w.hiOpen)}; }
     case 'eqn': { const a=M.tryParse(raw), b=M.tryParse(item.answer); if(!a||a.t!=='rel') return {ok:false,partial:'An equation needs an equals sign.'}; return {ok: !!(b&&equationEquiv(a,b))}; }
     case 'intset': { const ints=M.integers(raw); const want=item.want; return {ok: ints.length===want.length && want.every(x=>ints.includes(x))}; }
     case 'time': { const t=String(raw).toLowerCase().replace(/\s+/g,''); const m=t.match(/^(\d{1,2})(?::(\d{2}))?(a\.?m\.?|p\.?m\.?)?$/); if(!m) return {ok:false}; let h=+m[1], mi=+(m[2]||0); const ap=(m[3]||'').replace(/\./g,''); if(ap==='pm'&&h<12) h+=12; if(ap==='am'&&h===12) h=0; if(!ap&&h<item.hour&&h+12===item.hour) h+=12; return {ok: h===item.hour && mi===item.minute}; }
@@ -23,7 +26,7 @@ function gradeItem(item, raw, extra){
   return {ok:false};
 }
 function rawOf(item, el){
-  if(item.kind==='choice') return el.dataset.choice ?? '';
+  if(item.kind==='choice'||item.kind==='multi') return el.dataset.choice ?? '';
   if(item.kind==='explain') return el.dataset.choice ?? '';
   if(item.kind==='order') return el.dataset.order ?? '';
   if(item.kind==='numberline') return JSON.stringify(el._nl.get());
@@ -41,6 +44,7 @@ function answerUI(item, idx){
   const id=`in-${idx}-${item.id}`;
   switch(item.kind){
     case 'choice': return `<div class="opts" role="group">${item.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>${item.explain?`<label for="${id}x" class="muted" style="font-size:.9rem">Optional: explain the error in your own words</label><textarea id="${id}x" placeholder="Ben… Chris…"></textarea>`:''}`;
+    case 'multi': return `<p class="muted" style="font-size:.85rem">Pick every one that applies.</p><div class="opts" role="group">${item.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>`;
     case 'order': return `<div class="chips pool">${item.steps.map((s,i)=>i).sort((a,b)=>((a*7+3)%5)-((b*7+3)%5)).map(i=>`<button type="button" class="chip" data-i="${i}">${item.steps[i]}</button>`).join('')}</div><p class="muted" style="font-size:.85rem">Your solution (tap a step to remove it):</p><div class="seq"></div>`;
     case 'numberline': return `<div class="nl"></div>`;
     case 'intset': return `<input type="text" class="ans" id="${id}" placeholder="${esc(item.placeholder||'e.g. 4, 5, 6')}" autocomplete="off" inputmode="numeric">`;
@@ -51,6 +55,7 @@ function answerUI(item, idx){
 }
 function wireAnswerUI(item, el, onChange){
   if(item.kind==='choice'){ el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ el.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); el.dataset.choice=b.dataset.i; onChange&&onChange(); }); }
+  if(item.kind==='multi'){ el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')==='true'?'false':'true'); el.dataset.choice=[...el.querySelectorAll('.opt[aria-pressed="true"]')].map(x=>x.dataset.i).join(','); onChange&&onChange(); }); }
   if(item.kind==='order'){ const pool=$('.pool',el), seq=$('.seq',el); const upd=()=>{ el.dataset.order=[...seq.children].map(c=>c.dataset.i).join(''); onChange&&onChange(); };
     pool.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ seq.appendChild(c); upd(); }); seq.addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(c){ pool.appendChild(c); upd(); } }); }
   if(item.kind==='numberline'){ el._nl=numberLine($('.nl',el), item.nl.min, item.nl.max, onChange, null, {step:item.nl.step||1, chooseShape:!!item.nl.chooseShape, shape:item.nl.chooseShape?'between':(item.nl.shape||'between')}); }
@@ -133,7 +138,7 @@ function wireCheckItem(it, el){
     $('.tries',el).textContent=`${rec.attempts} tr${rec.attempts===1?'y':'ies'}`;
     if(res.ok){
       const first=!rec.correct; const hadMiss=rec.history.some(x=>!x.ok);
-      if(first){ rec.correct=true; rec.firstTry=rec.attempts===1; rec.clearedAt=Date.now(); rec.answer=it.kind==='numberline'?rec.history[rec.history.length-1].raw:(it.kind==='choice'?it.options[+raw].replace(/<[^>]+>/g,''):raw); rec.unit=State.unit; State.addCoins(rec.firstTry?10:5,'checkpoint cleared'); if(hadMiss) State.award('respawn'); State.checkpoint(); refreshPnav(); }
+      if(first){ rec.correct=true; rec.firstTry=rec.attempts===1; rec.clearedAt=Date.now(); rec.answer=it.kind==='numberline'?rec.history[rec.history.length-1].raw:(it.kind==='choice'?it.options[+raw].replace(/<[^>]+>/g,''):it.kind==='multi'?raw.split(',').map(i=>it.options[+i].replace(/<[^>]+>/g,'')).join('; '):raw); rec.unit=State.unit; State.addCoins(rec.firstTry?10:5,'checkpoint cleared'); if(hadMiss) State.award('respawn'); State.checkpoint(); refreshPnav(); }
       else State.save();
       el.classList.add('ok'); el.classList.remove('bad'); $('.tag',el).innerHTML=`${it.id.toUpperCase()} <span class="ck">✔ cleared</span>`;
       showFB(el,'ok',first?pickPraise(it):'Still right. Checkpoint stays cleared.');
