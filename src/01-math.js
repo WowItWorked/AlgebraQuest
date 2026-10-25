@@ -99,6 +99,7 @@ const M = (() => {
   // grid for truth sets: quarter steps near the action plus wider sweep
   function grid(){ const g=[]; for(let x=-40;x<=130;x+=0.25) g.push(x); for(let x=150;x<=1200;x+=37) g.push(x); g.push(-500,-120,2000); return g; }
   function relEquiv(A,B){
+    if(typeof A==='string'&&typeof B==='string'&&/\b(or|and)\b/.test(clean(A)+' '+clean(B))) return setEquiv(A,B);
     const a=typeof A==='string'?tryParse(A):A, b=typeof B==='string'?tryParse(B):B;
     if(!a||!b||a.t!=='rel'||b.t!=='rel') return false;
     const va=[...vars(a)], vb=[...vars(b)];
@@ -130,8 +131,13 @@ const M = (() => {
     if(isBare(L)||isBare(R)) return {status:'circular',expr:isBare(L)?R:L};
     return {status:'not-solved',rel:t};
   }
+  // Compound statements joined by the words "and" / "or" (either language or the symbols ∧ ∨ are not expected).
+  function clauses(str){ const c=clean(str).replace(/\s*,\s*/g,' and '); const m=c.match(/\b(or|and)\b/); if(!m) return {op:null,parts:[c]}; const op=m[1]; const parts=c.split(new RegExp('\\b'+op+'\\b')).map(x=>x.trim()).filter(Boolean); if(c.includes(op==='or'?' and ':' or ')) return null; return {op,parts}; }
+  function setFn(str){ const cl=clauses(str); if(!cl) return null; const rels=cl.parts.map(tryParse); if(rels.some(r=>!r||r.t!=='rel')) return null; const vs=new Set(); rels.forEach(r=>vars(r,vs)); if(vs.size!==1) return null; const v=[...vs][0];
+    return {v, rels, f:x=>{ const ts=rels.map(r=>truth(r,{[v]:x})); if(ts.some(t=>t===null)) return null; return cl.op==='or'?ts.some(Boolean):ts.every(Boolean); }}; }
+  function setEquiv(A,B){ const a=setFn(A), b=setFn(B); if(!a||!b||a.v!==b.v) return false; let n=0; for(const x of grid()){ const ta=a.f(x), tb=b.f(x); if(ta===null||tb===null) continue; if(ta!==tb) return false; n++; } return n>50; }
   function integers(s){ return (String(s).match(/-?\d+/g)||[]).map(Number); }
   function hasOp(str,op){ const t=tryParse(str); return !!(t&&t.t==='rel'&&t.ops.includes(op)); }
   function fmt(n){ return Number.isInteger(n)?String(n):String(Math.round(n*1000)/1000); }
-  return {clean,parse,tryParse,ev,truth,vars,exprEquiv,relEquiv,toNumber,numEq,solvedSide,integers,hasOp,fmt,rng};
+  return {clean,parse,tryParse,ev,truth,vars,exprEquiv,relEquiv,clauses,setFn,setEquiv,toNumber,numEq,solvedSide,integers,hasOp,fmt,rng};
 })();

@@ -362,3 +362,8 @@ const EXAMPLES = {
  '6c':{stem:'List the sets of three consecutive integers for 9 < x < 13.',steps:['Integers strictly between 9 and 13: 10, 11, 12.','Sets: (10,11,12), (11,12,13), (12,13,14).','Check an edge: 12 + 13 + 14 = 39 < 42 ✔; 13 + 14 + 15 = 42, not less than 42.']},
  '6d':{stem:'Graph 9 < x < 13.',steps:['Endpoints are 9 and 13, straight from the inequality.','Both symbols are strict, so both circles are open.','Shade between them, because x is trapped between.']},
 };
+
+/* ===== Unit registry. Each unit supplies the same shape; views read the current unit through U(). ===== */
+const UNITS={};
+UNITS.u1={id:'u1', n:1, title:'Unit 1 Practice Quest', short:'Practice Quest', blurb:'His practice test: six problems, 19 parts, six Learn levels.', LEVELS, PROBLEMS, ITEMS, ITEM_BY_ID, GUIDE, EXAMPLES, OBSERVED, voice:'', checkIntro:'Same problems, same numbers as the practice test.'};
+const MAP_SLOTS=[{id:'u1'},{id:'u1r'},{soon:'Unit 2'},{soon:'Unit 3'},{soon:'Unit 4'},{soon:'Unit 5'},{soon:'Unit 6'},{soon:'Unit 7'},{soon:'Unit 8'},{soon:'Final Review'}];

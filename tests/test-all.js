@@ -17,15 +17,15 @@ async function answer(page, it, val){ const el=page.locator(`[data-item="${it.id
     const page=await ctx.newPage(); page.on('pageerror',e=>errs.push(mode+': '+e.message)); page.on('console',m=>{ if(m.type()==='error') errs.push(mode+' console: '+m.text()); });
     await page.goto(URL); await page.waitForTimeout(400);
     ok(mode+' mode', (await page.evaluate(()=>State.mode))===mode);
-    ok(mode+' lobby renders daily goal', await page.locator('.daily').count()===1);
+    ok(mode+' map renders daily goal + 10 stops', await page.locator('.daily').count()===1 && await page.locator('.stop').count()===10);
     const noH=async(l)=>ok(mode+' no horizontal overflow @'+l, !(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)));
-    await noH('lobby');
+    await noH('map'); await page.locator('.stop[data-unit="u1"]').click(); await page.waitForTimeout(200); ok(mode+' hub opens unit 1', /Practice Quest/.test(await page.locator('h1').first().innerText()));
     // ---- Check: one problem at a time, keypad, scratch, example, hints ----
     await page.click('[data-v="check"]'); await page.waitForTimeout(200);
     ok(mode+' check shows one problem', await page.locator('#probBlock').count()===1 && await page.locator('[data-item]').count()===3);
     const i1a=page.locator('[data-item="1a"]'); await i1a.locator('.ans').fill('1600+400h'); await i1a.locator('.key[data-k="≤"]').dispatchEvent('pointerdown'); await i1a.locator('.ans').type('3000');
     ok(mode+' keypad inserts at cursor', (await i1a.locator('.ans').inputValue())==='1600+400h≤3000');
-    await i1a.locator('.scratch').fill('1600 + 400h'); await page.waitForTimeout(800); ok(mode+' scratch saved to state', (await page.evaluate(()=>State.s.checks['1a']?.work))==='1600 + 400h');
+    await i1a.locator('.scratch').fill('1600 + 400h'); await page.waitForTimeout(800); ok(mode+' scratch saved to state', (await page.evaluate(()=>UC()['1a']?.work))==='1600 + 400h');
     await i1a.locator('.ex summary').click(); ok(mode+' worked example opens', await i1a.locator('.exsteps li').count()>=3);
     await i1a.locator('.ans').press('Enter'); await page.waitForTimeout(200); ok(mode+' enter submits, 1a correct', (await i1a.locator('.fb').innerText()).match(/cleared|Correct|Nailed/i)!==null);
     const i1c=page.locator('[data-item="1c"]'); await i1c.locator('.ans').fill('4.75'); await i1c.locator('.check').click(); ok(mode+' 1c partial credit message', (await i1c.locator('.fb').innerText()).includes('Partially'));
@@ -41,7 +41,7 @@ async function answer(page, it, val){ const el=page.locator(`[data-item="${it.id
     // clear all 19 via navigation
     const ITEMS_=await page.evaluate(()=>ITEMS.map(i=>({id:i.id,p:i.p,kind:i.kind})));
     for(let p=1;p<=6;p++){ await page.locator(`.pbtn[data-p="${p}"]`).click(); await page.waitForTimeout(150); for(const it of ITEMS_.filter(i=>i.p===p)){ await answer(page,it,ANS[it.id]); await page.locator(`[data-item="${it.id}"] .check`).click(); await page.waitForTimeout(80); } }
-    await page.waitForTimeout(300); const st=await page.evaluate(()=>({cleared:ITEMS.filter(i=>State.s.checks[i.id]?.correct).length, badges:Object.keys(State.s.badges), coins:State.s.coins, daily:dailyInfo()}));
+    await page.waitForTimeout(300); const st=await page.evaluate(()=>({cleared:ITEMS.filter(i=>UC()[i.id]?.correct).length, badges:Object.keys(State.s.badges), coins:State.s.coins, daily:dailyInfo()}));
     ok(mode+' all 19 cleared', st.cleared===19, JSON.stringify(st)); ok(mode+' badges incl check_all/letters/fraction/respawn', ['check_all','letters','fraction','respawn','first'].every(x=>st.badges.includes(x)), st.badges.join(','));
     ok(mode+' daily goal met + streak 1', st.daily.met&&st.daily.streak===1, JSON.stringify(st.daily));
     ok(mode+' pnav all done', await page.locator('.pbtn.done').count()===6);
@@ -59,9 +59,9 @@ async function answer(page, it, val){ const el=page.locator(`[data-item="${it.id
     await page.evaluate(()=>go('level',1)); await page.waitForTimeout(150); await page.click('[data-lt="boss"]'); await page.waitForTimeout(150); const q3=page.locator('#mb .item').nth(2); await q3.locator('.ans').fill('x>3'); await q3.locator('.check').click(); ok(mode+' L1Q3 solved-form rejected', (await q3.locator('.fb').innerText()).includes('solved form'));
     await page.evaluate(()=>go('level',2)); await page.waitForTimeout(150); await page.click('[data-lt="boss"]'); await page.waitForTimeout(150); const q1=page.locator('#mb .item').nth(0); await q1.locator('.ans').fill('5'); await q1.locator('.check').click(); ok(mode+' bare number nudge on solve-for-h', (await q1.locator('.fb').innerText()).includes('needs a symbol'));
     // L2 slider: lo and hi only (touch drag skipping 6) still clears
-    await page.click('[data-lt="explainer"]'); await page.waitForTimeout(150); await page.evaluate(()=>{ const r=document.querySelector('#jx'); for(const v of [2,9]){ r.value=v; r.dispatchEvent(new Event('input',{bubbles:true})); } }); ok(mode+' L2 interactive credits on crossing', await page.evaluate(()=>!!State.s.learn.l2?.explainer));
+    await page.click('[data-lt="explainer"]'); await page.waitForTimeout(150); await page.evaluate(()=>{ const r=document.querySelector('#jx'); for(const v of [2,9]){ r.value=v; r.dispatchEvent(new Event('input',{bubbles:true})); } }); ok(mode+' L2 interactive credits on crossing', await page.evaluate(()=>!!UL().l2?.explainer));
     // video: skipping to the last line credits the checkpoint
-    await page.waitForTimeout(2000); await page.click('[data-lt="video"]'); await page.waitForTimeout(100); await page.click('#vo'); for(let k=0;k<20;k++) await page.click('#nx'); await page.waitForTimeout(100); ok(mode+' video credits at last line', await page.evaluate(()=>!!State.s.learn.l2?.video) && (await page.locator('#fr').innerText())==='14/14');
+    await page.waitForTimeout(2000); await page.click('[data-lt="video"]'); await page.waitForTimeout(100); await page.click('#vo'); for(let k=0;k<20;k++) await page.click('#nx'); await page.waitForTimeout(100); ok(mode+' video credits at last line', await page.evaluate(()=>!!UL().l2?.video) && (await page.locator('#fr').innerText())==='14/14');
     // video resume: leave mid-way, come back at the same line
     await page.evaluate(()=>go('level',3)); await page.waitForTimeout(150); await page.click('[data-lt="video"]'); await page.waitForTimeout(100); await page.click('#vo'); for(let k=0;k<4;k++) await page.click('#nx'); await page.evaluate(()=>go('lobby')); await page.waitForTimeout(100); await page.evaluate(()=>go('level',3)); await page.waitForTimeout(150); await page.click('[data-lt="video"]'); await page.waitForTimeout(200); ok(mode+' video resumes at saved line', (await page.locator('#fr').innerText())==='5/13' && await page.locator('.msg').count()===5);
     await page.evaluate(()=>go('level',2)); await page.waitForTimeout(150);
@@ -70,9 +70,9 @@ async function answer(page, it, val){ const el=page.locator(`[data-item="${it.id
     // video chat + stage mini
     await page.click('[data-lt="video"]'); await page.waitForTimeout(100); await page.click('#vo'); await page.waitForTimeout(12000); ok(mode+' chat accumulates & stage shrinks', await page.locator('.msg').count()>=2 && await page.locator('.stage.mini').count()===1);
     // reset lessons
-    await page.evaluate(()=>go('learn')); await page.waitForTimeout(150); await page.click('#resetLearn'); await page.locator('.modal .btn',{hasText:'Reset lessons'}).click(); await page.waitForTimeout(150); ok(mode+' lessons reset', (await page.evaluate(()=>JSON.stringify(State.s.learn)))==='{}');
+    await page.evaluate(()=>go('learn')); await page.waitForTimeout(150); await page.click('#resetLearn'); await page.locator('.modal .btn',{hasText:'Reset lessons'}).click(); await page.waitForTimeout(150); ok(mode+' lessons reset', (await page.evaluate(()=>JSON.stringify(UL())))==='{}');
     // ---- Boss ----
-    await page.evaluate(()=>go('boss')); await page.waitForTimeout(250); await page.click('#startBoss'); await page.waitForTimeout(200); ok(mode+' boss keypad present', await page.locator('[data-item="3a"] .key').count()>0); ok(mode+' boss work box on every item', await page.locator('.work').count()===19);
+    await page.evaluate(()=>go('boss')); await page.waitForTimeout(250); await page.click('#startBoss'); await page.waitForTimeout(200); ok(mode+' boss keypad present', await page.locator('[data-item="3a"] .key').count()>0); ok(mode+' boss work box on every item', await page.locator('.work').count()===19); ok(mode+' boss read-aloud buttons', await page.locator('.ra').count()===19);
     const T=await page.evaluate(()=>boss.test.items.map(i=>({id:i.id,kind:i.kind,answer:i.answer,var:i.var,correct:i.correct,want:i.want,nl:i.nl,work:i.work})));
     for(const it of T){ const el=page.locator(`[data-item="${it.id}"]`); if(it.work) await el.locator('.work').fill('step 1: = stuff\nstep 2: divide');
       if(it.kind==='rel'||it.kind==='num') await el.locator('.ans').fill(it.id==='3c'?'99':it.answer); else if(it.kind==='expr') await el.locator('.ans').fill(it.var+'='+it.answer); else if(it.kind==='choice') await el.locator('.opt').nth(it.correct[0]).click(); else if(it.kind==='order'){ for(const s of [0,1,2]) await el.locator(`.pool .chip[data-i="${s}"]`).click(); } else if(it.kind==='triples') await el.locator('.ans').fill(it.want.map(x=>`${x},${x+1},${x+2}`).join('; ')); else await el.evaluate((e,nl)=>e._nl.set({lo:nl.lo,hi:nl.hi,loOpen:true,hiOpen:true}),it.nl); }
@@ -81,21 +81,21 @@ async function answer(page, it, val){ const el=page.locator(`[data-item="${it.id
     if(mode==='signed'){ ok('signed boss summary + attempt saved', (await page.locator('body').innerText()).includes('Fake summary') && Object.keys(await page.evaluate(()=>window.__store)).some(k=>k.includes('/attempts/'))); }
     await noH('boss results');
     // ---- Guide ----
-    await page.evaluate(()=>go('lobby')); await page.click('#glyph'); await page.fill('#pp','blockparty'); await page.click('#mact .btn'); await page.waitForTimeout(200); ok(mode+' guide unlocks', (await page.locator('h1').innerText()).includes('curtain'));
+    await page.evaluate(()=>go('map')); await page.click('#glyph'); await page.fill('#pp','blockparty'); await page.click('#mact .btn'); await page.waitForTimeout(200); ok(mode+' guide unlocks', (await page.locator('h1').innerText()).includes('curtain'));
     for(const t of ['solutions','dash']){ await page.click(`[data-t="${t}"]`); await page.waitForTimeout(150); ok(mode+' guide tab '+t, await page.locator('#gbody .block').count()>=1); }
     ok(mode+' guide shows scratch work', (await page.locator('#gbody').innerText()).includes('scratch')||true);
     await page.click('[data-t="solutions"]'); await page.waitForTimeout(100); await page.locator('details summary').first().click(); ok(mode+' solutions show his scratch', (await page.locator('details').first().innerText()).includes('1600 + 400h'));
     await page.click('[data-t="summary"]'); await page.waitForTimeout(100); await page.click('#resetAll'); await page.locator('.modal .btn',{hasText:'Reset all'}).click(); await page.waitForTimeout(400);
-    const rs=await page.evaluate(()=>({coins:State.s.coins,checks:Object.keys(State.s.checks).length,attempts:State.s.attempts.length,store:Object.keys(window.__store||{}).length}));
+    const rs=await page.evaluate(()=>({coins:State.s.coins,checks:Object.keys(UC()).length,attempts:UA().length,store:Object.keys(window.__store||{}).length}));
     ok(mode+' reset all progress', rs.coins===0&&rs.checks===0&&rs.attempts===0&&(mode==='public'||rs.store===0), JSON.stringify(rs));
     await noH('guide');
     // student text scan
-    await page.evaluate(()=>go('lobby')); const txt=await page.evaluate(()=>document.body.innerText); ok(mode+' no urgency words', !/days left|countdown|test date|hurry|deadline|test is (soon|coming)/i.test(txt));
+    await page.evaluate(()=>go('map')); const txt=await page.evaluate(()=>document.body.innerText); ok(mode+' no urgency words', !/days left|countdown|test date|hurry|deadline|test is (soon|coming)/i.test(txt));
     await ctx.close();
   }
   // desktop + dark screenshots
   const d=await b.newPage({viewport:{width:1280,height:900},colorScheme:'dark'}); d.on('pageerror',e=>errs.push('desk: '+e.message));
-  for(const [h,f] of [['','lobby'],['#check','check'],['#level2','level2'],['#boss','boss']]){ await d.goto(URL+h); await d.waitForTimeout(300); if(h==='#boss'){ await d.click('#startBoss'); await d.waitForTimeout(200);} await d.screenshot({path:`/tmp/claude-0/-home-user/026071ee-d13a-53b3-8e69-f20bbb159396/scratchpad/final-desk-${f}.png`}); ok('desktop no overflow '+f, !(await d.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth))); }
+  for(const [h,f] of [['','map'],['#u1-check','check'],['#u1-level2','level2'],['#u1-boss','boss'],['#u1r-check','rcheck'],['#shop','shop'],['#journal','journal']]){ await d.goto(URL+h); await d.waitForTimeout(300); if(h==='#boss'){ await d.click('#startBoss'); await d.waitForTimeout(200);} await d.screenshot({path:`/tmp/claude-0/-home-user/026071ee-d13a-53b3-8e69-f20bbb159396/scratchpad/final-desk-${f}.png`}); ok('desktop no overflow '+f, !(await d.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth))); }
   const ph=await b.newPage({viewport:{width:390,height:844}}); await ph.goto(URL+'#check'); await ph.waitForTimeout(300); await ph.screenshot({path:'/tmp/claude-0/-home-user/026071ee-d13a-53b3-8e69-f20bbb159396/scratchpad/final-phone-check.png'}); await ph.goto(URL); await ph.waitForTimeout(300); await ph.screenshot({path:'/tmp/claude-0/-home-user/026071ee-d13a-53b3-8e69-f20bbb159396/scratchpad/final-phone-lobby.png'});
   console.log(out.join('\n')); console.log('errors:', errs); console.log(`${out.filter(x=>x.startsWith('ok')).length} passed, ${out.filter(x=>x.startsWith('FAIL')).length} failed`);
   await b.close();

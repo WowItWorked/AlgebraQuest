@@ -2,7 +2,7 @@
 const NAMES=['Avery','Blake','Casey','Devin','Emery','Finley','Harper','Jordan','Kai','Lennon','Morgan','Quinn','Reese','Rowan','Sage','Tatum'];
 const F2=n=>Number.isInteger(n)?String(n):n.toFixed(2).replace(/0$/,'');
 const money=n=>'$'+(Number.isInteger(n)?n.toLocaleString('en-US'):n.toFixed(2));
-function genTest(seed){
+function genTestU1(seed){
   const r=M.rng(seed); const ri=(a,b)=>a+Math.floor(r()*(b-a+1)); const pick=a=>a[Math.floor(r()*a.length)]; const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   const probs=[], items=[];
   /* P1 */
@@ -82,6 +82,8 @@ function genTest(seed){
   items.forEach(it=>{ if(it.variants) it.variants=it.variants.filter(v=>{ const raw=v.form?(it.kind==='expr'?it.var+'='+v.form:v.form):String(v.num); return !gradeItem(it,raw,null).ok; }); });
   return {seed, probs, items};
 }
+UNITS.u1.genTest=genTestU1;
+function genTest(seed){ return U().genTest(seed); }
 function diagnose(it, raw, extra){
   if(!raw && !extra) return 'Left blank. Any attempt with work shown is worth more than a blank.';
   for(const v of (it.variants||[])){ try{ if(v.form&&it.kind==='rel'&&M.relEquiv(raw,v.form)) return v.why; if(v.form&&it.kind==='expr'){ const ss=M.solvedSide(raw,it.var); if(ss.expr&&M.exprEquiv(ss.expr,v.form)) return v.why; } if(v.num!==undefined&&it.kind==='num'&&M.numEq(M.toNumber(raw),v.num)) return v.why; }catch(e){} }
@@ -93,24 +95,25 @@ function diagnose(it, raw, extra){
 function workPoint(txt){ const t=(txt||'').trim(); return t.length>=6 && /\d/.test(t) && /[=<>+\-*/÷×−·()]/.test(t); }
 
 /* ===== Boss view ===== */
-let boss={test:null, seed:null, result:null};
+let boss={test:null, seed:null, result:null, unit:null};
 VIEWS.boss=(app)=>{
+  if(boss.unit!==State.unit){ boss={test:null,seed:null,result:null,unit:State.unit}; }
   if(boss.result) return bossResults(app);
-  if(!boss.test){ app.innerHTML=h`<div class="stack"><div class="block" style="border-color:var(--bad)"><p class="eyebrow" style="color:var(--bad)">Final Boss</p><h1>Same moves. New numbers.</h1><p style="margin-top:6px">Six problems, 19 answers, and work lines on the hard ones. The boss says nothing until you hit <b>Grade</b> at the very end. Then you get a score out of <b class="num">29</b> (19 answers + 10 work lines), a breakdown, and what to practice.</p>
-    <div class="row" style="margin-top:12px"><button class="btn gold" id="startBoss">Start a fresh run</button>${State.s.attempts.length?`<span class="muted">Runs so far: <b class="num">${State.s.attempts.length}</b> · best <b class="num">${Math.max(...State.s.attempts.map(a=>a.pct))}%</b></span>`:''}</div>
+  if(!boss.test){ app.innerHTML=h`<div class="stack"><div class="block" style="border-color:var(--bad)"><p class="eyebrow" style="color:var(--bad)">Unit ${U().n} · Final Boss</p><h1>Same moves. New numbers.</h1><p style="margin-top:6px">${U().bossIntro||'Six problems, 19 answers, and work lines on the hard ones.'} The boss says nothing until you hit <b>Grade</b> at the very end. Then you get a score, a breakdown, and what to practice.</p>
+    <div class="row" style="margin-top:12px"><button class="btn gold" id="startBoss">Start a fresh run</button>${UA().length?`<span class="muted">Runs so far: <b class="num">${UA().length}</b> · best <b class="num">${Math.max(...UA().map(a=>a.pct))}%</b></span>`:''}</div>
     <details style="margin-top:12px"><summary>Replay a specific run (seed)</summary><div class="lock" style="margin-top:8px"><input type="text" id="seedIn" inputmode="numeric" placeholder="seed number"><button class="btn alt sm" id="seedBtn">Load</button></div></details></div>
-    ${State.s.attempts.length?`<div class="block soft"><p class="eyebrow">Past runs</p><div class="tablewrap"><table><thead><tr><th>When</th><th class="n">Score</th><th>Missed</th></tr></thead><tbody>${[...State.s.attempts].sort((a,b)=>b.ts-a.ts).slice(0,10).map(a=>`<tr><td>${new Date(a.ts).toLocaleDateString()}</td><td class="n"><b>${a.score}/${a.total}</b> (${a.pct}%)</td><td>${a.items.filter(x=>!x.ok).map(x=>x.id).join(', ')||'nothing!'}</td></tr>`).join('')}</tbody></table></div></div>`:''}</div>`;
+    ${UA().length?`<div class="block soft"><p class="eyebrow">Past runs</p><div class="tablewrap"><table><thead><tr><th>When</th><th class="n">Score</th><th>Missed</th></tr></thead><tbody>${[...UA()].sort((a,b)=>b.ts-a.ts).slice(0,10).map(a=>`<tr><td>${new Date(a.ts).toLocaleDateString()}</td><td class="n"><b>${a.score}/${a.total}</b> (${a.pct}%)</td><td>${a.items.filter(x=>!x.ok).map(x=>x.id).join(', ')||'nothing!'}</td></tr>`).join('')}</tbody></table></div></div>`:''}</div>`;
     $('#startBoss').onclick=()=>{ boss.seed=Math.floor(Math.random()*90000)+10000; boss.test=genTest(boss.seed); boss.answers={}; render(); };
     $('#seedBtn').onclick=()=>{ const s=parseInt($('#seedIn').value,10); if(s>0){ boss.seed=s; boss.test=genTest(s); boss.answers={}; render(); } };
     return;
   }
   const T=boss.test; const hpPct=100;
   app.innerHTML=h`<div class="stack">
-   <div class="block" style="border-color:var(--bad)"><div class="bossbar"><div><p class="eyebrow" style="color:var(--bad)">Final Boss · run ${T.seed}</p><h2>Answer everything, then Grade.</h2></div><div class="row"><span class="muted" id="answered">0/19 answered</span><button class="btn alt sm" id="quitBoss">Leave</button></div></div></div>
-   ${T.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${T.items.filter(i=>i.p===P.n).map(it=>`<div class="item" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()}</div><div>${it.prompt}</div><label class="muted" style="font-size:.85rem">${it.work?'Show your work (worth a point)':'Work it out here (not graded)'}</label><textarea class="work" placeholder="Write the steps here. Messy is fine."></textarea>${answerUI(it,'b')}</div>`).join('')}</div></div>`).join('')}
+   <div class="block" style="border-color:var(--bad)"><div class="bossbar"><div><p class="eyebrow" style="color:var(--bad)">Final Boss · run ${T.seed}</p><h2>Answer everything, then Grade.</h2></div><div class="row"><span class="muted" id="answered">0/${T.items.length} answered</span><button class="btn alt sm" id="quitBoss">Leave</button></div></div></div>
+   ${T.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${T.items.filter(i=>i.p===P.n).map(it=>`<div class="item" data-item="${it.id}"><div class="tag">${it.id.toUpperCase()}${raButton('boss-'+it.id, P.stem+' '+it.prompt)}</div><div>${it.prompt}</div><label class="muted" style="font-size:.85rem">${it.work?'Show your work (worth a point)':'Work it out here (not graded)'}</label><textarea class="work" placeholder="Write the steps here. Messy is fine."></textarea>${answerUI(it,'b')}</div>`).join('')}</div></div>`).join('')}
    <div class="block" style="border-color:var(--bad)"><div class="row" style="justify-content:space-between"><p>Done? The boss only grades once you say so.</p><button class="btn gold" id="gradeBtn">Grade my test</button></div></div>
   </div>`;
-  const count=()=>{ let n=0; T.items.forEach(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const r=rawOf(it,el); if(it.kind==='numberline'?true:r.trim()) n++; }); $('#answered').textContent=`${n}/19 answered`; };
+  const count=()=>{ let n=0; T.items.forEach(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const r=rawOf(it,el); if(it.kind==='numberline'?true:r.trim()) n++; }); $('#answered').textContent=`${n}/${T.items.length} answered`; };
   T.items.forEach(it=>wireAnswerUI(it, app.querySelector(`[data-item="${it.id}"]`), count));
   $('#quitBoss').onclick=()=>modal('<h2>Leave the boss fight?</h2><p class="muted">This run will not be graded or saved.</p>',[{label:'Stay',cls:'alt'},{label:'Leave',fn:()=>{ boss={test:null,seed:null,result:null}; go('lobby'); }}]);
   $('#gradeBtn').onclick=()=>{
@@ -123,7 +126,7 @@ VIEWS.boss=(app)=>{
 async function gradeBoss(app){
   const T=boss.test; const items=T.items.map(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const raw=rawOf(it,el).trim(); const extra=it.kind==='numberline'?el._nl.get():null; const work=($('.work',el).value||'').trim(); const g=gradeItem(it,raw,extra); const wp=it.work?workPoint(work):false; return {id:it.id,p:it.p,skill:it.skill,learn:it.learn,ok:g.ok,partial:g.partial||null,raw:it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:(it.kind==='choice'&&raw!==''?it.options[+raw]:raw),work,workPt:wp,hasWork:!!it.work,show:it.show,diag:g.ok?null:(diagnose(it,raw,extra)||it.diag),skillDiag:it.diag}; });
   const score=items.filter(x=>x.ok).length+items.filter(x=>x.workPt).length; const total=items.length+items.filter(x=>x.hasWork).length;
-  const att={id:'a'+Date.now(),ts:Date.now(),seed:T.seed,score,total,pct:Math.round(100*score/total),items,ai:null};
+  const att={id:'a'+Date.now(),ts:Date.now(),unit:State.unit,seed:T.seed,score,total,pct:Math.round(100*score/total),items,ai:null};
   boss.result=att; render();
   if(att.pct>=80) State.award('boss'); if(score===total) State.award('perfect'); State.addCoins(Math.round(score*2),'boss run');
   if(State.sample){ try{ await aiBossFeedback(att); }catch(e){} } att.aiDone=true;
@@ -141,16 +144,16 @@ Problems: ${JSON.stringify(payload)}`;
   if(out&&out.summary) att.ai=String(out.summary);
 }
 function bossResults(app){
-  const a=boss.result; const byP={}; a.items.forEach(x=>{ (byP[x.p]=byP[x.p]||{ok:0,n:0,w:0,wn:0}); byP[x.p].n++; if(x.ok) byP[x.p].ok++; if(x.hasWork){ byP[x.p].wn++; if(x.workPt) byP[x.p].w++; } });
+  const a=boss.result; const byP={}; const LEVELS=U().LEVELS; a.items.forEach(x=>{ (byP[x.p]=byP[x.p]||{ok:0,n:0,w:0,wn:0}); byP[x.p].n++; if(x.ok) byP[x.p].ok++; if(x.hasWork){ byP[x.p].wn++; if(x.workPt) byP[x.p].w++; } });
   const missedSkills=[...new Set(a.items.filter(x=>!x.ok).map(x=>x.skill))];
   app.innerHTML=h`<div class="stack">
    <div class="block" style="border-color:var(--gold)"><p class="eyebrow">Final Boss · run ${a.seed} · results</p>
-    <div class="result"><div class="big">${a.score} / ${a.total}</div><div><h2>${a.pct>=90?'Boss defeated. Clean run.':a.pct>=80?'Boss defeated.':a.pct>=60?'Boss staggered. Rematch?':'Boss took the round. Respawn and go again.'}</h2><p class="muted">${a.items.filter(x=>x.ok).length} of 19 answers correct, plus ${a.items.filter(x=>x.workPt).length} of 10 work points. Total possible: 29.</p></div></div>
+    <div class="result"><div class="big">${a.score} / ${a.total}</div><div><h2>${a.pct>=90?'Boss defeated. Clean run.':a.pct>=80?'Boss defeated.':a.pct>=60?'Boss staggered. Rematch?':'Boss took the round. Respawn and go again.'}</h2><p class="muted">${a.items.filter(x=>x.ok).length} of ${a.items.length} answers correct, plus ${a.items.filter(x=>x.workPt).length} of ${a.items.filter(x=>x.hasWork).length} work points. Total possible: ${a.total}.</p></div></div>
     <div class="row" style="margin-top:12px"><button class="btn gold" id="retake">Retake with new numbers</button><button class="btn alt" data-go="learn">Train in Learn</button><button class="btn alt" data-go="lobby">Lobby</button></div></div>
    ${a.ai?`<div class="block soft"><p class="eyebrow">Coach: what to focus on next</p><p>${esc(a.ai)}</p></div>`:(State.sample&&!a.aiDone?`<div class="block soft"><p class="eyebrow">Coach</p><p class="muted">Reading your work…</p></div>`:'')}
-   ${missedSkills.length?`<div class="block soft"><p class="eyebrow">Skills to practice</p><div class="row" style="margin-top:6px">${missedSkills.map(s=>`<a class="btn sm alt" href="#level${LEVELS.find(L=>L.skill===s).n}" data-go="level" data-arg="${LEVELS.find(L=>L.skill===s).n}">Level ${LEVELS.find(L=>L.skill===s).n}: ${SKILL_NAMES[s]}</a>`).join('')}</div></div>`:''}
+   ${missedSkills.length?`<div class="block soft"><p class="eyebrow">Skills to practice</p><div class="row" style="margin-top:6px">${missedSkills.map(s=>{ const L=U().LEVELS.find(L=>L.skill===s); return L?`<a class="btn sm alt" href="#" data-go="level" data-arg="${L.n}">Level ${L.n}: ${esc(L.title)}</a>`:''; }).join('')}</div></div>`:''}
    <div class="block"><h2>Problem by problem</h2><div class="tablewrap"><table><thead><tr><th>Problem</th><th class="n">Answers</th><th class="n">Work</th></tr></thead><tbody>${boss.test.probs.map(P=>`<tr><td>${P.n}. ${esc(P.title)}</td><td class="n">${byP[P.n].ok}/${byP[P.n].n}</td><td class="n">${byP[P.n].wn?`${byP[P.n].w}/${byP[P.n].wn}`:'—'}</td></tr>`).join('')}</tbody></table></div></div>
-   ${boss.test.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p class="muted" style="margin:6px 0 12px;font-size:.95rem">${P.stem}</p><div class="stack">${a.items.filter(x=>x.p===P.n).map(x=>`<div class="item ${x.ok?'ok':'bad'}"><div class="tag">${x.id.toUpperCase()} ${x.ok?'<span class="ck">✔ correct</span>':'<span style="color:var(--bad)">✘ missed</span>'}${x.hasWork?`<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· work ${x.workPt?'✔ +1':'✘ 0'}</span>`:''}</div><div><span class="muted">Your answer:</span> <span class="eq" style="white-space:normal">${esc(x.raw||'(blank)')}</span></div>${x.ok?'':`<div><span class="muted">Correct:</span> <span class="eq" style="white-space:normal">${esc(x.show)}</span></div><div class="fb bad"><span class="who">What went wrong</span>${esc(x.diag)}<br><span class="who" style="margin-top:6px">Skill to practice</span>${SKILL_NAMES[x.skill]} · ${learnLink(x.learn)}</div>`}${x.aiDiag?`<div class="fb info"><span class="who">Coach on your work</span>${esc(x.aiDiag)}</div>`:''}${x.work?`<div class="workbox">${esc(x.work)}</div>`:''}</div>`).join('')}</div></div>`).join('')}
+   ${boss.test.probs.map(P=>`<div class="block"><p class="eyebrow">Problem ${P.n}</p><h2>${esc(P.title)}</h2><p class="muted" style="margin:6px 0 12px;font-size:.95rem">${P.stem}</p><div class="stack">${a.items.filter(x=>x.p===P.n).map(x=>`<div class="item ${x.ok?'ok':'bad'}"><div class="tag">${x.id.toUpperCase()} ${x.ok?'<span class="ck">✔ correct</span>':'<span style="color:var(--bad)">✘ missed</span>'}${x.hasWork?`<span class="muted" style="font-family:var(--body);font-size:.8rem;font-weight:700">· work ${x.workPt?'✔ +1':'✘ 0'}</span>`:''}</div><div><span class="muted">Your answer:</span> <span class="eq" style="white-space:normal">${esc(x.raw||'(blank)')}</span></div>${x.ok?'':`<div><span class="muted">Correct:</span> <span class="eq" style="white-space:normal">${esc(x.show)}</span></div><div class="fb bad"><span class="who">What went wrong</span>${esc(x.diag)}<br><span class="who" style="margin-top:6px">Skill to practice</span>${(U().SKILLS||SKILL_NAMES)[x.skill]||x.skill} · ${learnLink(x.learn)}</div>`}${x.aiDiag?`<div class="fb info"><span class="who">Coach on your work</span>${esc(x.aiDiag)}</div>`:''}${x.work?`<div class="workbox">${esc(x.work)}</div>`:''}</div>`).join('')}</div></div>`).join('')}
   </div>`;
   $('#retake').onclick=()=>{ boss={test:null,seed:null,result:null}; const seed=Math.floor(Math.random()*90000)+10000; boss.seed=seed; boss.test=genTest(seed); render(); };
 }
