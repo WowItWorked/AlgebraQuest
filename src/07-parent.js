@@ -10,7 +10,7 @@ VIEWS.guide = (app)=>{
   const tabs=[['summary','What the test shows'],['solutions','Worked solutions'],['dash','Attempt dashboard']];
   app.innerHTML=h`<div class="stack">
    <div class="block"><div class="row" style="justify-content:space-between"><div><p class="eyebrow">Parent guide</p><h1>Behind the curtain.</h1></div><button class="btn alt sm" id="lockBtn">Lock & return to lobby</button></div>
-   <p class="muted" style="margin-top:6px">${State.mode==='signed'?'Signed in: saved attempts load from this account.':'Public link: nothing is saved here, so the dashboard shows only this browser session.'}</p>
+   <p class="muted" style="margin-top:6px"><b>Storage:</b> ${State.mode==='signed'?'signed in, progress saves to this account and loads on any device where this account is signed in.':'<span style="color:var(--bad)">public link, nothing is saved.</span> Progress lasts only while this page stays open. For saving, open the link while signed in to the owning account.'}</p>
    <div class="row" style="margin-top:10px"><button class="btn alt sm" id="resetAll" style="border-color:var(--bad);color:var(--bad)">Reset all progress</button><span class="muted" style="font-size:.85rem">Coins, badges, Check history, Learn checkpoints, daily streak, and Final Boss runs. Cannot be undone.</span></div>
    <div class="steps" style="margin-top:12px">${tabs.map(([k,l])=>`<button class="tab" data-t="${k}" aria-current="${guideTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
    <div id="gbody"></div></div>`;

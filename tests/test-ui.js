@@ -33,16 +33,16 @@ const WRONG = {'1a':'1600+400h<=3000-1600','1b':'1600+800t<=3000','1c':'4.75','2
     return {out,hints}; },{ALT,WRONG});
   console.log(res.out.length?res.out.join('\n'):'All accept/reject checks pass'); console.log(res.hints.join('\n'));
   // UI flow at phone width: check 3a wrong then right
-  await page.click('[data-v="check"]'); await page.waitForTimeout(300);
+  await page.click('[data-v="check"]'); await page.waitForTimeout(300); await page.locator('.pbtn[data-p="3"]').click(); await page.waitForTimeout(150);
   const horiz=await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth); console.log('phone horizontal overflow:',horiz);
   const it=page.locator('[data-item="3a"]'); await it.locator('input').fill('y=k/(5+k)'); await it.locator('.check').click(); await page.waitForTimeout(200);
   console.log('3a wrong fb:', (await it.locator('.fb').innerText()).slice(0,120).replace(/\n/g,' '));
   await it.locator('input').fill('y = -k/(k-5)'); await it.locator('.check').click(); await page.waitForTimeout(300);
   console.log('3a right fb:', (await it.locator('.fb').innerText()).slice(0,80), '| coins:', await page.locator('#coinCount').innerText());
   // order widget 2b
-  const o=page.locator('[data-item="2b"]'); for(const s of ['A − B = ½lp','2(A − B) = lp','p = 2(A − B) / l']) await o.locator('.pool .chip',{hasText:s}).click(); await o.locator('.check').click(); await page.waitForTimeout(200); console.log('2b:', (await o.locator('.fb').innerText()).slice(0,50));
+  await page.locator('.pbtn[data-p="2"]').click(); await page.waitForTimeout(150); const o=page.locator('[data-item="2b"]'); for(const s of ['A − B = ½lp','2(A − B) = lp','p = 2(A − B) / l']) await o.locator('.pool .chip',{hasText:s}).click(); await o.locator('.check').click(); await page.waitForTimeout(200); console.log('2b:', (await o.locator('.fb').innerText()).slice(0,50));
   // number line drag test 6d
-  const nl=page.locator('[data-item="6d"]'); await nl.scrollIntoViewIfNeeded(); const svg=nl.locator('svg'); const box=await svg.boundingBox();
+  await page.locator('.pbtn[data-p="6"]').click(); await page.waitForTimeout(150); const nl=page.locator('[data-item="6d"]'); await nl.scrollIntoViewIfNeeded(); const svg=nl.locator('svg'); const box=await svg.boundingBox();
   const X=v=>box.x+ (24+(v-10)/(27-10)*(600-48))/600*box.width; const y=box.y+box.height/2;
   // drag lo handle from default (12) to 15, hi (25) to 22
   await page.mouse.move(X(12),y); await page.mouse.down(); await page.mouse.move(X(15),y,{steps:5}); await page.mouse.up();
@@ -50,7 +50,7 @@ const WRONG = {'1a':'1600+400h<=3000-1600','1b':'1600+800t<=3000','1c':'4.75','2
   console.log('nl state:', JSON.stringify(await nl.evaluate(el=>el._nl.get())));
   await nl.locator('.check').click(); await page.waitForTimeout(200); console.log('6d:', (await nl.locator('.fb').innerText()).slice(0,50));
   // third-miss first step
-  const c=page.locator('[data-item="5c"]'); for(const v of ['6','6','6']){ await c.locator('input').fill(v); await c.locator('.check').click(); await page.waitForTimeout(150);} console.log('5c third:', (await c.locator('.fb').innerText()).includes('first step')?'offers first step':'NO FIRST STEP');
+  await page.locator('.pbtn[data-p="5"]').click(); await page.waitForTimeout(150); const c=page.locator('[data-item="5c"]'); for(const v of ['6','6','6']){ await c.locator('input').fill(v); await c.locator('.check').click(); await page.waitForTimeout(150);} console.log('5c third:', (await c.locator('.fb').innerText()).includes('first step')?'offers first step':'NO FIRST STEP');
   await page.screenshot({path:'shot-phone-check.png',fullPage:false});
   await page.click('[data-v="lobby"]'); await page.waitForTimeout(300); await page.screenshot({path:'shot-phone-lobby.png'});
   // gate

@@ -20,13 +20,13 @@ function localDay(off){ const d=new Date(); d.setDate(d.getDate()+off); return `
 function dailyInfo(){ const d=State.s.daily||{}; const today=localDay(0), yest=localDay(-1); const count=d.date===today?d.count:0; const streak=(d.lastMet===today||d.lastMet===yest)?(d.streak||0):0; return {count:Math.min(count,DAILY_GOAL),met:count>=DAILY_GOAL,streak}; }
 const State = {
   s:{coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:false, voice:true},
-  mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false,
+  mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false, earned:0, learnChanged:false,
   listeners:new Set(),
   on(fn){this.listeners.add(fn);}, emit(){this.listeners.forEach(f=>f());},
   _t:null,
   save(){ renderHUD(); if(!this.db||!this.uid) return; clearTimeout(this._t); this._t=setTimeout(()=>this.flush(),700); },
   async flush(){ if(!this.db||!this.uid) return; try{ const {attempts,...rest}=this.s; await this.db.doc('data/users/'+this.uid+'/profile').set({...rest, updatedAt:Date.now()}); }catch(e){ console.warn('save failed',e); } },
-  addCoins(n,why){ this.s.coins+=n; toast(`+${n} coins${why?' · '+why:''}`); ding(); if(!this.s.badges.first) this.award('first'); this.save(); },
+  addCoins(n,why){ this.s.coins+=n; if(!this.ready) this.earned+=n; toast(`+${n} coins${why?' · '+why:''}`); ding(); if(!this.s.badges.first) this.award('first'); this.save(); },
   /* Daily goal: 3 checkpoints a day earns a bonus; consecutive days build a streak. */
   checkpoint(){ const today=localDay(0), yest=localDay(-1); const d=this.s.daily||(this.s.daily={date:today,count:0,streak:0,lastMet:null});
     if(d.date!==today){ d.date=today; d.count=0; } d.count++;

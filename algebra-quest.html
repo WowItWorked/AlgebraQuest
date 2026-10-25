@@ -726,13 +726,13 @@ function localDay(off){ const d=new Date(); d.setDate(d.getDate()+off); return `
 function dailyInfo(){ const d=State.s.daily||{}; const today=localDay(0), yest=localDay(-1); const count=d.date===today?d.count:0; const streak=(d.lastMet===today||d.lastMet===yest)?(d.streak||0):0; return {count:Math.min(count,DAILY_GOAL),met:count>=DAILY_GOAL,streak}; }
 const State = {
   s:{coins:0, badges:{}, checks:{}, learn:{}, attempts:[], muted:false, voice:true},
-  mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false,
+  mode:'public', uid:null, db:null, sample:null, user:null, ready:false, unlocked:false, earned:0, learnChanged:false,
   listeners:new Set(),
   on(fn){this.listeners.add(fn);}, emit(){this.listeners.forEach(f=>f());},
   _t:null,
   save(){ renderHUD(); if(!this.db||!this.uid) return; clearTimeout(this._t); this._t=setTimeout(()=>this.flush(),700); },
   async flush(){ if(!this.db||!this.uid) return; try{ const {attempts,...rest}=this.s; await this.db.doc('data/users/'+this.uid+'/profile').set({...rest, updatedAt:Date.now()}); }catch(e){ console.warn('save failed',e); } },
-  addCoins(n,why){ this.s.coins+=n; toast(`+${n} coins${why?' · '+why:''}`); ding(); if(!this.s.badges.first) this.award('first'); this.save(); },
+  addCoins(n,why){ this.s.coins+=n; if(!this.ready) this.earned+=n; toast(`+${n} coins${why?' · '+why:''}`); ding(); if(!this.s.badges.first) this.award('first'); this.save(); },
   /* Daily goal: 3 checkpoints a day earns a bonus; consecutive days build a streak. */
   checkpoint(){ const today=localDay(0), yest=localDay(-1); const d=this.s.daily||(this.s.daily={date:today,count:0,streak:0,lastMet:null});
     if(d.date!==today){ d.date=today; d.count=0; } d.count++;
@@ -1399,12 +1399,12 @@ VIEWS.level=(app,n)=>{
   app.innerHTML=h`<div class="stack">
    <div class="block" style="border-color:${L.color}"><div class="row" style="justify-content:space-between"><div><p class="eyebrow" style="color:${L.color}">Level ${n} of 6</p><h1>${esc(L.title)}</h1><p class="muted">${esc(L.blurb)}</p></div><div class="row">${n>1?`<button class="btn alt sm" data-go="level" data-arg="${n-1}">← L${n-1}</button>`:''}${n<6?`<button class="btn alt sm" data-go="level" data-arg="${n+1}">L${n+1} →</button>`:''}</div></div>
     ${courseHTML(cps, keys.filter(k=>st[k]).length, L.color)}
-    ${(()=>{ const open=keys.filter(k=>!st[k]); if(!open.length) return '<p class="muted" style="margin-top:22px"><b style="color:var(--ok)">Level clear.</b> Everything here is replayable.</p>'; const how={explainer:'Interactive: '+EXPL_HOW[n], video:'Video: reach the last line (play through, or use ⏭)', q1:'Mini-boss 1', q2:'Mini-boss 2', q3:'Mini-boss 3'}; return `<p class="muted" style="margin-top:22px;font-size:.9rem"><b>Still open:</b> ${open.map(k=>how[k]).join(' · ')}</p>`; })()}
+    <p class="muted" id="openList" style="margin-top:22px;font-size:.9rem">${openListHTML(n)}</p>
     <div class="steps" style="margin-top:26px">${tabs.map(([k,l])=>`<button class="tab ${(k==='boss'?D.boss.every((_,i)=>st['q'+(i+1)]):st[k])?'done':''}" data-lt="${k}" aria-current="${levelTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
    <div class="block" id="lbody"></div></div>`;
   app.querySelectorAll('[data-lt]').forEach(b=>b.onclick=()=>{ levelTab=b.dataset.lt; render(); });
   const body=$('#lbody');
-  const clear=(k,coins)=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(cur[k]) return; cur[k]=Date.now(); st[k]=cur[k]; State.addCoins(coins,'checkpoint'); State.checkpoint(); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
+  const clear=(k,coins)=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(cur[k]) return; cur[k]=Date.now(); st[k]=cur[k]; refreshOpenList(n); State.addCoins(coins,'checkpoint'); State.checkpoint(); checkLevelBadge(n); const done=keys.filter(x=>st[x]).length; moveAvatar(app.querySelector('.course'), done, cps.length, L.color); setTimeout(render,1900); };
   if(levelTab==='explainer'){ EXPLAINERS[n](body,()=>clear('explainer',5)); if(st.explainer){ const d=document.createElement('p'); d.className='muted'; d.style.marginTop='10px'; d.textContent='Checkpoint already cleared. Play again anytime.'; body.appendChild(d); } }
   else if(levelTab==='video'){ body.innerHTML='<p class="eyebrow">Video</p>'; const hst=document.createElement('div'); body.appendChild(hst); player=scenePlayer(hst, SCENES[n], ()=>{ clear('video',5); }, n, {start: st.video?0:(st.vpos||0), onFrame:k=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(cur.vpos!==k){ cur.vpos=k; State.save(); } }}); }
   else {
@@ -1412,10 +1412,12 @@ VIEWS.level=(app,n)=>{
     D.boss.forEach((q,i)=>{ const key='q'+(i+1); const it={...q,id:'L'+n+'Q'+(i+1),learn:n}; const el=document.createElement('div'); el.className='item '+(st[key]?'ok':''); el.innerHTML=`<div class="tag">BOSS ${i+1} ${st[key]?'<span class="ck">✔ cleared</span>':''}</div><div>${q.prompt}</div><label class="muted" style="font-size:.85rem" for="mw-${n}-${i}">Work it out here (not graded)</label><textarea class="scratch" id="mw-${n}-${i}" placeholder="Steps, scribbles, anything.">${esc(st['w'+key]||'')}</textarea>${answerUI(it,'m'+n)}<div class="row"><button type="button" class="btn sm check">Check</button></div><div class="fbwrap"></div>`; $('#mb').appendChild(el); wireAnswerUI(it,el);
       const sc=$('.scratch',el); let wt=null; sc.addEventListener('input',()=>{ clearTimeout(wt); wt=setTimeout(()=>{ const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); cur['w'+key]=sc.value.slice(0,1500); State.save(); },600); });
       let misses=0; $('.check',el).onclick=()=>{ const raw=rawOf(it,el).trim(); if(!raw&&it.kind!=='numberline'){ showFB(el,'info','Type something first.'); return; } const extra=it.kind==='numberline'?el._nl.get():null; const g=gradeItem(it,raw,extra);
-        if(g.ok){ el.classList.add('ok'); el.classList.remove('bad'); showFB(el,'ok',pickPraise({id:'L'+n+'Q'+i})); if(!st[key]){ st[key]=Date.now(); State.addCoins(misses?5:10,'mini-boss'); State.checkpoint(); if(misses) State.award('respawn'); checkLevelBadge(n); $('.tag',el).innerHTML=`BOSS ${i+1} <span class="ck">✔ cleared</span>`; } State.save(); }
+        if(g.ok){ el.classList.add('ok'); el.classList.remove('bad'); const cur=State.s.learn['l'+n]||(State.s.learn['l'+n]={}); if(!cur[key]){ cur[key]=Date.now(); st[key]=cur[key]; showFB(el,'ok',pickPraise({id:'L'+n+'Q'+i})); State.addCoins(misses?5:10,'mini-boss'); State.checkpoint(); if(misses) State.award('respawn'); checkLevelBadge(n); $('.tag',el).innerHTML=`BOSS ${i+1} <span class="ck">✔ cleared</span>`; refreshOpenList(n); } else showFB(el,'ok','Still right. This one was already cleared; the level header lists anything still open.'); State.save(); }
         else { misses++; thud(); el.classList.add('bad'); showFB(el,'bad',`<span class="who">Respawn</span>${g.partial?g.partial+' ':''}${q.hint}${misses>=3?`<br><span class="muted">Three tries, no penalty. Rewatch this level's video for the move, then come back. The checkpoint stays open.</span>`:''}`); } }; });
   }
 };
+function openListHTML(n){ const st=State.s.learn['l'+n]||{}; const D=LEVEL_DEFS[n-1]; const keys=['explainer','video',...D.boss.map((_,i)=>'q'+(i+1))]; const open=keys.filter(k=>!st[k]); if(!open.length) return '<b style="color:var(--ok)">Level clear.</b> Everything here is replayable.'; const how={explainer:'Interactive: '+EXPL_HOW[n], video:'Video: reach the last line (play through, or use ⏭)', q1:'Mini-boss 1', q2:'Mini-boss 2', q3:'Mini-boss 3'}; return `<b>Still open:</b> ${open.map(k=>how[k]).join(' · ')}`; }
+function refreshOpenList(n){ const el=document.querySelector('#openList'); if(el) el.innerHTML=openListHTML(n); }
 function checkLevelBadge(n){ const st=State.s.learn['l'+n]||{}; const D=LEVEL_DEFS[n-1]; if(st.explainer&&st.video&&D.boss.every((_,i)=>st['q'+(i+1)])){ State.award('l'+n); if(State.s.badges.l2&&State.s.badges.l5) State.award('nine'); } }
 /* ===== Parent guide (passphrase-gated) ===== */
 let guideTab='summary';
@@ -1429,7 +1431,7 @@ VIEWS.guide = (app)=>{
   const tabs=[['summary','What the test shows'],['solutions','Worked solutions'],['dash','Attempt dashboard']];
   app.innerHTML=h`<div class="stack">
    <div class="block"><div class="row" style="justify-content:space-between"><div><p class="eyebrow">Parent guide</p><h1>Behind the curtain.</h1></div><button class="btn alt sm" id="lockBtn">Lock & return to lobby</button></div>
-   <p class="muted" style="margin-top:6px">${State.mode==='signed'?'Signed in: saved attempts load from this account.':'Public link: nothing is saved here, so the dashboard shows only this browser session.'}</p>
+   <p class="muted" style="margin-top:6px"><b>Storage:</b> ${State.mode==='signed'?'signed in, progress saves to this account and loads on any device where this account is signed in.':'<span style="color:var(--bad)">public link, nothing is saved.</span> Progress lasts only while this page stays open. For saving, open the link while signed in to the owning account.'}</p>
    <div class="row" style="margin-top:10px"><button class="btn alt sm" id="resetAll" style="border-color:var(--bad);color:var(--bad)">Reset all progress</button><span class="muted" style="font-size:.85rem">Coins, badges, Check history, Learn checkpoints, daily streak, and Final Boss runs. Cannot be undone.</span></div>
    <div class="steps" style="margin-top:12px">${tabs.map(([k,l])=>`<button class="tab" data-t="${k}" aria-current="${guideTab===k?'page':'false'}">${l}</button>`).join('')}</div></div>
    <div id="gbody"></div></div>`;
@@ -1509,13 +1511,27 @@ async function connect(){
     State.sample=sample||null;
     if(user&&db){ const uid=await user.id(); if(uid){ State.uid=uid; State.db=db; State.mode='signed'; await loadProfile(); } }
   }catch(e){ console.warn('capabilities',e); }
-  State.ready=true; render();
+  State.ready=true;
+  // Re-render data views; leave an in-progress level alone unless the merge changed it.
+  if(route.view!=='level'||State.learnChanged) render(); else renderHUD();
 }
+/* Merge the stored profile INTO the live objects (never replace them: open views hold references),
+   and keep anything earned before the store answered. */
 async function loadProfile(){
   try{
     const doc=State.db.doc('data/users/'+State.uid+'/profile'); const snap=await doc.get();
-    if(snap.exists){ const d=snap.data()||{}; ['coins','badges','checks','learn','muted','voice','daily'].forEach(k=>{ if(d[k]!==undefined) State.s[k]=d[k]; }); }
-    const q=await doc.collection('attempts').orderBy('ts','desc').limit(50).get(); State.s.attempts=q.docs.map(x=>x.data());
+    const before=JSON.stringify(State.s.learn);
+    if(snap.exists){ const d=snap.data()||{}; const S=State.s;
+      S.coins=(d.coins||0)+(State.earned||0);
+      Object.assign(S.badges, d.badges||{});
+      for(const id in (d.checks||{})){ const st=d.checks[id], lo=S.checks[id]; if(!lo||!lo.attempts) S.checks[id]=st; else { S.checks[id]={...st,...lo, attempts:(st.attempts||0)+(lo.attempts||0), correct:!!(st.correct||lo.correct), firstTry:!!(st.firstTry||lo.firstTry), history:[...(st.history||[]),...(lo.history||[])].slice(-25), work:lo.work||st.work}; } }
+      for(const l in (d.learn||{})){ S.learn[l]=Object.assign(S.learn[l]||{}, d.learn[l], S.learn[l]||{}); }
+      if(d.daily){ const lo=S.daily; if(!lo||lo.date!==d.daily.date) S.daily=lo&&lo.date>d.daily.date?lo:d.daily; else S.daily={...d.daily, count:Math.max(lo.count||0,d.daily.count||0), streak:Math.max(lo.streak||0,d.daily.streak||0), lastMet:lo.lastMet||d.daily.lastMet}; }
+      if(d.muted!==undefined) S.muted=d.muted; if(d.voice!==undefined) S.voice=d.voice;
+    }
+    const q=await doc.collection('attempts').orderBy('ts','desc').limit(50).get(); const stored=q.docs.map(x=>x.data()); const ids=new Set(stored.map(a=>a.id)); State.s.attempts=[...State.s.attempts.filter(a=>!ids.has(a.id)),...stored];
+    if(State.earned||before!==JSON.stringify(State.s.learn)) State.save();
+    State.learnChanged = before!==JSON.stringify(State.s.learn);
   }catch(e){ console.warn('load',e); }
 }
 async function saveAttempt(a){ State.s.attempts.unshift(a); if(!State.db||!State.uid) return; try{ await State.db.doc('data/users/'+State.uid+'/profile').collection('attempts').doc(a.id).set(a); }catch(e){ console.warn('attempt save',e); } }

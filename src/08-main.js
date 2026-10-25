@@ -20,13 +20,27 @@ async function connect(){
     State.sample=sample||null;
     if(user&&db){ const uid=await user.id(); if(uid){ State.uid=uid; State.db=db; State.mode='signed'; await loadProfile(); } }
   }catch(e){ console.warn('capabilities',e); }
-  State.ready=true; render();
+  State.ready=true;
+  // Re-render data views; leave an in-progress level alone unless the merge changed it.
+  if(route.view!=='level'||State.learnChanged) render(); else renderHUD();
 }
+/* Merge the stored profile INTO the live objects (never replace them: open views hold references),
+   and keep anything earned before the store answered. */
 async function loadProfile(){
   try{
     const doc=State.db.doc('data/users/'+State.uid+'/profile'); const snap=await doc.get();
-    if(snap.exists){ const d=snap.data()||{}; ['coins','badges','checks','learn','muted','voice','daily'].forEach(k=>{ if(d[k]!==undefined) State.s[k]=d[k]; }); }
-    const q=await doc.collection('attempts').orderBy('ts','desc').limit(50).get(); State.s.attempts=q.docs.map(x=>x.data());
+    const before=JSON.stringify(State.s.learn);
+    if(snap.exists){ const d=snap.data()||{}; const S=State.s;
+      S.coins=(d.coins||0)+(State.earned||0);
+      Object.assign(S.badges, d.badges||{});
+      for(const id in (d.checks||{})){ const st=d.checks[id], lo=S.checks[id]; if(!lo||!lo.attempts) S.checks[id]=st; else { S.checks[id]={...st,...lo, attempts:(st.attempts||0)+(lo.attempts||0), correct:!!(st.correct||lo.correct), firstTry:!!(st.firstTry||lo.firstTry), history:[...(st.history||[]),...(lo.history||[])].slice(-25), work:lo.work||st.work}; } }
+      for(const l in (d.learn||{})){ S.learn[l]=Object.assign(S.learn[l]||{}, d.learn[l], S.learn[l]||{}); }
+      if(d.daily){ const lo=S.daily; if(!lo||lo.date!==d.daily.date) S.daily=lo&&lo.date>d.daily.date?lo:d.daily; else S.daily={...d.daily, count:Math.max(lo.count||0,d.daily.count||0), streak:Math.max(lo.streak||0,d.daily.streak||0), lastMet:lo.lastMet||d.daily.lastMet}; }
+      if(d.muted!==undefined) S.muted=d.muted; if(d.voice!==undefined) S.voice=d.voice;
+    }
+    const q=await doc.collection('attempts').orderBy('ts','desc').limit(50).get(); const stored=q.docs.map(x=>x.data()); const ids=new Set(stored.map(a=>a.id)); State.s.attempts=[...State.s.attempts.filter(a=>!ids.has(a.id)),...stored];
+    if(State.earned||before!==JSON.stringify(State.s.learn)) State.save();
+    State.learnChanged = before!==JSON.stringify(State.s.learn);
   }catch(e){ console.warn('load',e); }
 }
 async function saveAttempt(a){ State.s.attempts.unshift(a); if(!State.db||!State.uid) return; try{ await State.db.doc('data/users/'+State.uid+'/profile').collection('attempts').doc(a.id).set(a); }catch(e){ console.warn('attempt save',e); } }
