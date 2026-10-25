@@ -1,4 +1,4 @@
-const fs=require('fs'); const g=fs.readFileSync('src/04-check.js','utf8'); const gi=g.slice(g.indexOf('function gradeItem'), g.indexOf('function rawOf'));
+const fs=require('fs'); const g=fs.readFileSync('src/04-check.js','utf8'); const gi='const KIND_EXT={},UI_EXT={};'+g.slice(g.indexOf('function gradeItem'), g.indexOf('function rawOf'));
 eval(fs.readFileSync('src/01-math.js','utf8')+fs.readFileSync('src/02-data.js','utf8')+gi+fs.readFileSync('src/05-practice.js','utf8').replace(/VIEWS\.boss[\s\S]*/,'')+';globalThis.genTest=genTest;globalThis.gradeItem=gradeItem;globalThis.diagnose=diagnose;');
 let allbad=0;
 for(let seed=1;seed<=300;seed++){ const T=genTestU1(seed); const bad=[];

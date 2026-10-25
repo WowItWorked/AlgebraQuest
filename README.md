@@ -22,8 +22,10 @@ Live artifact: https://claude.ai/artifact/RbaM9DamvxqEwj7JNi9sjy
   - `11-u1r-learn.js` Unit 1 Review: scenes, interactives, mini-bosses
   - `12-extras.js` avatar + coin shop, journal, rematch chest, read-aloud
   - `13-u1t.js` Unit 1 Test to Correct: the real test's items, guide, scenes, mini-bosses (reuses Unit 1 interactives, examples and boss generator)
+  - `14-u2.js` Unit 2 Prep Journey: coordinate-plane widgets (`planeSVG`, `planeInput`), the `line` / `graph` / `table` / `text` answer kinds (registered through `KIND_EXT` / `UI_EXT` in `04-check.js`), study-guide items, guide, examples, boss generator
+  - `15-u2-learn.js` Unit 2: scenes, interactives (slope explorer, intercept finder, slope-intercept builder, form changer, parallel/perpendicular, story-to-equation), mini-bosses
   - `99-main.js` boot, routing, capability wiring, profile merge
-- `voices/` — one MP3 per scene line (`l*` for Unit 1, `r-l*` for the Review) and `voices/ra/` read-aloud clips for every Check and mini-boss question, published alongside the page; rendered by `tools/voices.mjs`
+- `voices/` — one MP3 per scene line (`l*` for Unit 1, `r-l*` for the Review, `t-l*` for Test Corrections, `p-l*` for Unit 2 Prep) and `voices/ra/` read-aloud clips for every Check and mini-boss question, published alongside the page; rendered by `tools/voices.mjs`
   (needs `piper`, `ffmpeg`, and the Piper voice models in `tools/piper-models/` or `$PIPER_VOICES`).
   The cast and processing are at the top of that script. Rerun it after editing any scene line.
 - `tests/` — Node and Playwright checks. `test-math.js` and `test-gen.js` run with plain Node from `src/`;
@@ -39,4 +41,4 @@ Change `PARENT_PASSPHRASE` at the top of `src/02-data.js`, rebuild, republish.
 Register it in `UNITS` (see `src/10-u1r.js` for the full shape: LEVELS, PROBLEMS, ITEMS, GUIDE, EXAMPLES, SKILLS, genTest, SCENES, EXPLAINERS, MINI, EXPL_HOW, a `voice` prefix) and give it a slot in `MAP_SLOTS` in `src/02-data.js`. Rerun `tools/voices.mjs`, rebuild, publish the new clips with the page.
 
 ## Tests
-`node tests/test-math.js`, `node tests/test-gen.js`, `node tests/test-gen-r.js` need only Node. The browser suites need Playwright and `tests/mkharness.sh`: `test-all.js` (regression, both modes), `test-tracking.js` (persistence with a slow sign-in and reloads), `test-review.js` and `test-u1t.js` (every item, level, and a boss run for the Review and Test-correction units).
+`node tests/test-math.js`, `node tests/test-gen.js`, `node tests/test-gen-r.js` need only Node. The browser suites need Playwright and `tests/mkharness.sh`: `test-all.js` (regression, both modes), `test-tracking.js` (persistence with a slow sign-in and reloads), `test-review.js`, `test-u1t.js` and `test-u2.js` (every item, level, and a boss run for the Review, Test-correction and Unit 2 Prep units; `test-u2.js` also sweeps the Unit 2 generator across 60 seeds). `test-ui.js`, `test-learn.js` and `test-nl.js` predate the world-map layout and their selectors are stale.

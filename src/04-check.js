@@ -1,6 +1,8 @@
 /* ===== Shared widgets: grading, number line, order, choice ===== */
+const KIND_EXT={}; const UI_EXT={};
 function gradeItem(item, raw, extra){
   // returns {ok:boolean, partial?:string}
+  if(KIND_EXT[item.kind]) return KIND_EXT[item.kind](item,raw,extra);
   switch(item.kind){
     case 'rel': { if(Array.isArray(item.answer)){ for(const a of item.answer){ const r=gradeItem({...item,answer:a},raw,extra); if(r.ok) return r; } const r=gradeItem({...item,answer:item.answer[0]},raw,extra); return r.partial?r:{ok:false}; }
       if(item.setup){ const t=M.tryParse(raw); if(t&&t.t==='rel'&&t.parts.some(x=>x.t==='v')&&t.parts.filter(x=>x.t!=='v').every(x=>M.vars(x).size===0)) return {ok:false,partial:'That is the solved form. This part asks for the setup: the inequality that describes the situation before any solving.'}; }
@@ -26,6 +28,7 @@ function gradeItem(item, raw, extra){
   return {ok:false};
 }
 function rawOf(item, el){
+  if(UI_EXT[item.kind]) return UI_EXT[item.kind].raw(item,el);
   if(item.kind==='choice'||item.kind==='multi') return el.dataset.choice ?? '';
   if(item.kind==='explain') return el.dataset.choice ?? '';
   if(item.kind==='order') return el.dataset.order ?? '';
@@ -42,6 +45,7 @@ function keypadHTML(item){ if(!keypadFor(item).length) return ''; return `<div c
 function wireKeypad(el){ const inp=$('.ans',el); if(!inp) return; el.querySelectorAll('.key').forEach(b=>b.addEventListener('pointerdown',e=>{ e.preventDefault(); const k=b.dataset.k; const st=inp.selectionStart??inp.value.length, en=inp.selectionEnd??st; inp.value=inp.value.slice(0,st)+k+inp.value.slice(en); inp.focus(); inp.setSelectionRange(st+k.length,st+k.length); inp.dispatchEvent(new Event('input',{bubbles:true})); })); }
 function answerUI(item, idx){
   const id=`in-${idx}-${item.id}`;
+  if(UI_EXT[item.kind]) return UI_EXT[item.kind].html(item,id);
   switch(item.kind){
     case 'choice': return `<div class="opts" role="group">${item.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>${item.explain?`<label for="${id}x" class="muted" style="font-size:.9rem">Optional: explain the error in your own words</label><textarea id="${id}x" placeholder="Ben… Chris…"></textarea>`:''}`;
     case 'multi': return `<p class="muted" style="font-size:.85rem">Pick every one that applies.</p><div class="opts" role="group">${item.options.map((o,i)=>`<button type="button" class="opt" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>`;
@@ -54,6 +58,7 @@ function answerUI(item, idx){
   }
 }
 function wireAnswerUI(item, el, onChange){
+  if(UI_EXT[item.kind]){ UI_EXT[item.kind].wire(item,el,onChange); return; }
   if(item.kind==='choice'){ el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ el.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); el.dataset.choice=b.dataset.i; onChange&&onChange(); }); }
   if(item.kind==='multi'){ el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ b.setAttribute('aria-pressed', b.getAttribute('aria-pressed')==='true'?'false':'true'); el.dataset.choice=[...el.querySelectorAll('.opt[aria-pressed="true"]')].map(x=>x.dataset.i).join(','); onChange&&onChange(); }); }
   if(item.kind==='order'){ const pool=$('.pool',el), seq=$('.seq',el); const upd=()=>{ el.dataset.order=[...seq.children].map(c=>c.dataset.i).join(''); onChange&&onChange(); };
@@ -131,7 +136,7 @@ function wireCheckItem(it, el){
   const sc=$('.scratch',el); let st=null; sc.addEventListener('input',()=>{ clearTimeout(st); st=setTimeout(()=>{ const C=UC(); const rec=C[it.id]||(C[it.id]={attempts:0,correct:false,firstTry:false,history:[]}); rec.work=sc.value.slice(0,2000); State.save(); },600); });
   $('.check',el).onclick=async()=>{
     const raw=rawOf(it,el).trim(); if(!raw||raw==='{}'){ showFB(el,'info','Type something first. Any attempt is free.'); return; }
-    const extra = it.kind==='numberline'? el._nl.get() : null;
+    const extra = it.kind==='numberline'? el._nl.get() : (el._get? el._get() : null);
     const res=gradeItem(it, raw, extra);
     const C=UC(); const rec=C[it.id]||(C[it.id]={attempts:0,correct:false,firstTry:false,history:[]});
     rec.attempts++; rec.history.push({raw: it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:raw, ok:res.ok, ts:Date.now()}); if(rec.history.length>25) rec.history.shift();

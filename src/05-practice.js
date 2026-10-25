@@ -124,7 +124,7 @@ VIEWS.boss=(app)=>{
   };
 };
 async function gradeBoss(app){
-  const T=boss.test; const items=T.items.map(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const raw=rawOf(it,el).trim(); const extra=it.kind==='numberline'?el._nl.get():null; const work=($('.work',el).value||'').trim(); const g=gradeItem(it,raw,extra); const wp=it.work?workPoint(work):false; return {id:it.id,p:it.p,skill:it.skill,learn:it.learn,ok:g.ok,partial:g.partial||null,raw:it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:(it.kind==='choice'&&raw!==''?it.options[+raw]:raw),work,workPt:wp,hasWork:!!it.work,show:it.show,diag:g.ok?null:(diagnose(it,raw,extra)||it.diag),skillDiag:it.diag}; });
+  const T=boss.test; const items=T.items.map(it=>{ const el=app.querySelector(`[data-item="${it.id}"]`); const raw=rawOf(it,el).trim(); const extra=it.kind==='numberline'?el._nl.get():(el._get?el._get():null); const work=($('.work',el).value||'').trim(); const g=gradeItem(it,raw,extra); const wp=it.work?workPoint(work):false; return {id:it.id,p:it.p,skill:it.skill,learn:it.learn,ok:g.ok,partial:g.partial||null,raw:it.kind==='numberline'?`${extra.loOpen?'open':'closed'} at ${extra.lo}, ${extra.hiOpen?'open':'closed'} at ${extra.hi}`:(it.kind==='choice'&&raw!==''?it.options[+raw]:raw),work,workPt:wp,hasWork:!!it.work,show:it.show,diag:g.ok?null:(diagnose(it,raw,extra)||it.diag),skillDiag:it.diag}; });
   const score=items.filter(x=>x.ok).length+items.filter(x=>x.workPt).length; const total=items.length+items.filter(x=>x.hasWork).length;
   const att={id:'a'+Date.now(),ts:Date.now(),unit:State.unit,seed:T.seed,score,total,pct:Math.round(100*score/total),items,ai:null};
   boss.result=att; render();

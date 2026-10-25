@@ -1,4 +1,4 @@
-const fs=require('fs'); const g=fs.readFileSync('src/04-check.js','utf8'); const gi=g.slice(g.indexOf('function gradeItem'), g.indexOf('function rawOf'));
+const fs=require('fs'); const g=fs.readFileSync('src/04-check.js','utf8'); const gi='const KIND_EXT={},UI_EXT={};'+g.slice(g.indexOf('function gradeItem'), g.indexOf('function rawOf'));
 const eng=fs.readFileSync('src/03-engine.js','utf8'); const eq=eng.slice(eng.indexOf('function equationEquiv'), eng.indexOf('function pickHint'));
 const esc=s=>String(s);
 eval(fs.readFileSync('src/01-math.js','utf8')+fs.readFileSync('src/02-data.js','utf8')+gi+eq+fs.readFileSync('src/10-u1r.js','utf8')+';globalThis.gen=UNITS.u1r.genTest;globalThis.gradeItem=gradeItem;globalThis.R_ITEMS=R_ITEMS;');

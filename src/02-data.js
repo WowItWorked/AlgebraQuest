@@ -366,4 +366,4 @@ const EXAMPLES = {
 /* ===== Unit registry. Each unit supplies the same shape; views read the current unit through U(). ===== */
 const UNITS={};
 UNITS.u1={id:'u1', n:1, title:'Unit 1 Practice Quest', short:'Practice Quest', blurb:'His practice test: six problems, 19 parts, six Learn levels.', LEVELS, PROBLEMS, ITEMS, ITEM_BY_ID, GUIDE, EXAMPLES, OBSERVED, voice:'', checkIntro:'Same problems, same numbers as the practice test.'};
-const MAP_SLOTS=[{id:'u1'},{id:'u1r'},{id:'u1t'},{soon:'Unit 2'},{soon:'Unit 3'},{soon:'Unit 4'},{soon:'Unit 5'},{soon:'Unit 6'},{soon:'Unit 7'},{soon:'Final Review'}];
+const MAP_SLOTS=[{id:'u1'},{id:'u1r'},{id:'u1t'},{id:'u2'},{soon:'Unit 3'},{soon:'Unit 4'},{soon:'Unit 5'},{soon:'Unit 6'},{soon:'Unit 7'},{soon:'Final Review'}];
