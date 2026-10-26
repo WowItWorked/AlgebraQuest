@@ -106,6 +106,19 @@ textarea{min-height:88px;resize:vertical}
 .seq{min-height:48px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px;border:3px dashed var(--line);border-radius:var(--r)}
 .seq .chip{cursor:pointer}
 /* Number line */
+/* Hub route card */
+.stages{display:grid;gap:12px}
+.rstage{display:flex;gap:12px;background:var(--panel);border:3px solid var(--ink);border-radius:var(--r);box-shadow:0 5px 0 var(--shadow);padding:14px;opacity:.92}
+.rstage.next{opacity:1;border-color:var(--accent);box-shadow:0 5px 0 var(--accent)}
+.rstage.done{opacity:.8}
+.rstage-n{flex:0 0 40px;height:40px;border:3px solid var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:1.3rem;background:var(--panel2)}
+.rstage.next .rstage-n{background:var(--accent);color:#fff}
+.rstage.done .rstage-n{background:var(--ok);color:#fff}
+.rstage-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.rstage-body h3{margin:0}
+.rstage-body p{margin:0;font-size:.95rem}
+.fb-note{color:var(--muted);font-size:.9rem !important}
+.next-pill{background:var(--accent);color:#fff;font-size:.8rem;padding:2px 8px}
 /* Unit 2: coordinate planes and tables */
 .plane{width:100%;max-width:340px;height:auto;display:block;margin:6px auto;overflow:visible}
 .planein{touch-action:none;user-select:none}

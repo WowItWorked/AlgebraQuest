@@ -79,7 +79,7 @@ function render(){
 }
 function renderHUD(){
   $('#coinCount').textContent=State.s.coins; $('#badgeCount').textContent=Object.keys(State.s.badges).length;
-  const tabs=[['map','Map'],['hub','Unit'],['learn','Learn'],['check','Check'],['boss','Boss'],['journal','Journal']];
+  const tabs=[['map','Map'],['hub','Unit'],['learn','Learn'],['check','Mid-Boss'],['boss','Boss'],['journal','Journal']];
   $('#nav').innerHTML=tabs.map(([k,l])=>`<button class="tab" data-v="${k}" aria-current="${route.view===k||(k==='learn'&&route.view==='level')?'page':'false'}">${l}</button>`).join('');
   $('#nav').querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.v));
 }
@@ -127,16 +127,18 @@ VIEWS.hub = (app)=>{
   <div class="stack">
    <div class="block" style="background:linear-gradient(135deg,var(--panel),var(--panel2))">
     <div class="row" style="justify-content:space-between"><div><p class="eyebrow">${u.title} · spawn lobby</p><h1>${esc(u.title)}</h1></div><button class="btn alt sm" data-go="map">🗺 Map</button></div>
-    <p style="margin-top:6px">${esc(u.blurb)} Six Learn levels are obbies: clear checkpoints, earn coins. <b>Check My Answers</b> grades the real questions. The <b>Final Boss</b> is a fresh test with new numbers. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
-    <div class="row" style="margin-top:12px">
-      <button class="btn" data-go="check">Check My Answers</button>
-      <button class="btn gold" data-go="boss">Fight the Final Boss</button>
-    </div>
+    <p style="margin-top:6px">${esc(u.blurb)} Three stages, in order. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
    </div>
+   ${(()=>{ const lp=LEVELS.map(L=>levelProgress(L.n)); const learnDone=lp.filter(p=>p.done===p.total).length; const nextLvl=(LEVELS.find((L,i)=>lp[i].done<lp[i].total)||{}).n; const checkAll=checkDone===ITEMS.length; const bossWon=best!==null&&best>=80; const cur=learnDone<LEVELS.length?1:(!checkAll?2:3);
+     const stage=(n,cls,title,sub,what,fb,btn,go,arg,prog)=>`<div class="rstage ${cls} ${cur===n?'next':''} ${cur>n?'done':''}"><div class="rstage-n">${cur>n?'✔':n}</div><div class="rstage-body"><div class="row" style="justify-content:space-between;align-items:baseline"><h3>${title} <span class="muted" style="font-weight:700;font-size:.85rem">${sub}</span></h3>${cur===n?'<span class="pill next-pill">▶ NEXT UP</span>':''}</div><p>${what}</p><p class="fb-note"><b>Feedback:</b> ${fb}</p><div class="row"><button class="btn ${cur===n?'':'alt'} sm" data-go="${go}" ${arg?`data-arg="${arg}"`:''}>${btn}</button><span class="muted num" style="font-size:.85rem">${prog}</span></div></div></div>`;
+     return `<div class="stages">
+      ${stage(1,'s-learn','Learn','six levels','Each level has three parts, in order: an <b>Interactive</b>, a short <b>Video</b>, then three <b>Mini-Boss</b> questions. Clear all three to clear the level.','instant. Right: coins and a checkpoint. Wrong: you respawn with a hint about your answer, never the answer itself.',nextLvl?'Go to Level '+nextLvl:'Replay a level','level',nextLvl||1,learnDone+'/'+LEVELS.length+' levels clear')}
+      ${stage(2,'s-mid','Mid-Boss','practice test','Every question from the '+(u.n===3?'test':'study packet')+', one at a time, with a work box. This is the practice test: nothing is timed and you can retry any question.','instant after each Check. Right: coins and the answer goes in your Journal. Wrong: a hint, then a stronger hint, then the first step, plus a link back to the level it comes from. Every part has a worked example.','Open the Mid-Boss','check',null,checkDone+'/'+ITEMS.length+' questions cleared')}
+      ${stage(3,'s-boss','Final Boss','fresh numbers','The same problems with new numbers, start to finish, like the real thing. Show your work on the hard ones.','none until you tap <b>Grade</b> at the end. Then: a score, every miss explained, and a coach summary of what to practice. 80% or better beats the boss.','Fight the Final Boss','boss',null,best===null?'no runs yet':'best '+best+'%'+(bossWon?' · beaten':''))}
+     </div>`; })()}
+   <p class="eyebrow" style="margin:4px 0 -6px">Stage 1 · the six Learn levels</p>
    <div class="grid" id="portals">
     ${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}
-    <button class="portal big" data-go="check" style="--pc:var(--accent)"><div style="flex:1;min-width:200px"><span class="lvl">CHECK MY ANSWERS</span><h3>${u.n===1?'Your practice test, graded live':'The review questions, graded live'}</h3><p class="muted" style="font-size:.9rem">${ITEMS.length} parts. Type an answer, get coins or a hint. Hints never give the answer.</p></div><div style="min-width:160px;flex:1"><div class="prog"><i style="width:${Math.round(100*checkDone/ITEMS.length)}%"></i></div><span class="muted" style="font-size:.8rem">${checkDone}/${ITEMS.length} cleared</span></div></button>
-    <button class="portal big" data-go="boss" style="--pc:var(--gold)"><div style="flex:1;min-width:200px"><span class="lvl" style="color:var(--bad)">FINAL BOSS</span><h3>Fresh test, new numbers, same moves</h3><p class="muted" style="font-size:.9rem">No feedback until you hit Grade. Retake as many times as you like.</p></div><div style="min-width:160px;flex:1"><span class="muted" style="font-size:.85rem">${best===null?'No runs yet':`Best run: <b class="num">${best}%</b> · ${st.attempts.length} run${st.attempts.length===1?'':'s'}`}</span></div></button>
    </div>
   </div>`;
 };

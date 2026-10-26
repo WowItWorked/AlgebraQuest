@@ -106,6 +106,19 @@ textarea{min-height:88px;resize:vertical}
 .seq{min-height:48px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px;border:3px dashed var(--line);border-radius:var(--r)}
 .seq .chip{cursor:pointer}
 /* Number line */
+/* Hub route card */
+.stages{display:grid;gap:12px}
+.rstage{display:flex;gap:12px;background:var(--panel);border:3px solid var(--ink);border-radius:var(--r);box-shadow:0 5px 0 var(--shadow);padding:14px;opacity:.92}
+.rstage.next{opacity:1;border-color:var(--accent);box-shadow:0 5px 0 var(--accent)}
+.rstage.done{opacity:.8}
+.rstage-n{flex:0 0 40px;height:40px;border:3px solid var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:1.3rem;background:var(--panel2)}
+.rstage.next .rstage-n{background:var(--accent);color:#fff}
+.rstage.done .rstage-n{background:var(--ok);color:#fff}
+.rstage-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.rstage-body h3{margin:0}
+.rstage-body p{margin:0;font-size:.95rem}
+.fb-note{color:var(--muted);font-size:.9rem !important}
+.next-pill{background:var(--accent);color:#fff;font-size:.8rem;padding:2px 8px}
 /* Unit 2: coordinate planes and tables */
 .plane{width:100%;max-width:340px;height:auto;display:block;margin:6px auto;overflow:visible}
 .planein{touch-action:none;user-select:none}
@@ -829,7 +842,7 @@ function render(){
 }
 function renderHUD(){
   $('#coinCount').textContent=State.s.coins; $('#badgeCount').textContent=Object.keys(State.s.badges).length;
-  const tabs=[['map','Map'],['hub','Unit'],['learn','Learn'],['check','Check'],['boss','Boss'],['journal','Journal']];
+  const tabs=[['map','Map'],['hub','Unit'],['learn','Learn'],['check','Mid-Boss'],['boss','Boss'],['journal','Journal']];
   $('#nav').innerHTML=tabs.map(([k,l])=>`<button class="tab" data-v="${k}" aria-current="${route.view===k||(k==='learn'&&route.view==='level')?'page':'false'}">${l}</button>`).join('');
   $('#nav').querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.v));
 }
@@ -877,16 +890,18 @@ VIEWS.hub = (app)=>{
   <div class="stack">
    <div class="block" style="background:linear-gradient(135deg,var(--panel),var(--panel2))">
     <div class="row" style="justify-content:space-between"><div><p class="eyebrow">${u.title} · spawn lobby</p><h1>${esc(u.title)}</h1></div><button class="btn alt sm" data-go="map">🗺 Map</button></div>
-    <p style="margin-top:6px">${esc(u.blurb)} Six Learn levels are obbies: clear checkpoints, earn coins. <b>Check My Answers</b> grades the real questions. The <b>Final Boss</b> is a fresh test with new numbers. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
-    <div class="row" style="margin-top:12px">
-      <button class="btn" data-go="check">Check My Answers</button>
-      <button class="btn gold" data-go="boss">Fight the Final Boss</button>
-    </div>
+    <p style="margin-top:6px">${esc(u.blurb)} Three stages, in order. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
    </div>
+   ${(()=>{ const lp=LEVELS.map(L=>levelProgress(L.n)); const learnDone=lp.filter(p=>p.done===p.total).length; const nextLvl=(LEVELS.find((L,i)=>lp[i].done<lp[i].total)||{}).n; const checkAll=checkDone===ITEMS.length; const bossWon=best!==null&&best>=80; const cur=learnDone<LEVELS.length?1:(!checkAll?2:3);
+     const stage=(n,cls,title,sub,what,fb,btn,go,arg,prog)=>`<div class="rstage ${cls} ${cur===n?'next':''} ${cur>n?'done':''}"><div class="rstage-n">${cur>n?'✔':n}</div><div class="rstage-body"><div class="row" style="justify-content:space-between;align-items:baseline"><h3>${title} <span class="muted" style="font-weight:700;font-size:.85rem">${sub}</span></h3>${cur===n?'<span class="pill next-pill">▶ NEXT UP</span>':''}</div><p>${what}</p><p class="fb-note"><b>Feedback:</b> ${fb}</p><div class="row"><button class="btn ${cur===n?'':'alt'} sm" data-go="${go}" ${arg?`data-arg="${arg}"`:''}>${btn}</button><span class="muted num" style="font-size:.85rem">${prog}</span></div></div></div>`;
+     return `<div class="stages">
+      ${stage(1,'s-learn','Learn','six levels','Each level has three parts, in order: an <b>Interactive</b>, a short <b>Video</b>, then three <b>Mini-Boss</b> questions. Clear all three to clear the level.','instant. Right: coins and a checkpoint. Wrong: you respawn with a hint about your answer, never the answer itself.',nextLvl?'Go to Level '+nextLvl:'Replay a level','level',nextLvl||1,learnDone+'/'+LEVELS.length+' levels clear')}
+      ${stage(2,'s-mid','Mid-Boss','practice test','Every question from the '+(u.n===3?'test':'study packet')+', one at a time, with a work box. This is the practice test: nothing is timed and you can retry any question.','instant after each Check. Right: coins and the answer goes in your Journal. Wrong: a hint, then a stronger hint, then the first step, plus a link back to the level it comes from. Every part has a worked example.','Open the Mid-Boss','check',null,checkDone+'/'+ITEMS.length+' questions cleared')}
+      ${stage(3,'s-boss','Final Boss','fresh numbers','The same problems with new numbers, start to finish, like the real thing. Show your work on the hard ones.','none until you tap <b>Grade</b> at the end. Then: a score, every miss explained, and a coach summary of what to practice. 80% or better beats the boss.','Fight the Final Boss','boss',null,best===null?'no runs yet':'best '+best+'%'+(bossWon?' · beaten':''))}
+     </div>`; })()}
+   <p class="eyebrow" style="margin:4px 0 -6px">Stage 1 · the six Learn levels</p>
    <div class="grid" id="portals">
     ${LEVELS.map(L=>{ const p=levelProgress(L.n); return `<button class="portal" style="--pc:${L.color}" data-go="level" data-arg="${L.n}"><div class="band"></div><span class="lvl">LEVEL ${L.n}</span><h3>${esc(L.title)}</h3><p class="muted" style="font-size:.9rem">${esc(L.blurb)}</p><div class="prog"><i style="width:${Math.round(100*p.done/p.total)}%"></i></div><span class="muted" style="font-size:.8rem">${p.done}/${p.total} checkpoints</span>${p.done===p.total?'<span class="done">CLEAR</span>':''}</button>`; }).join('')}
-    <button class="portal big" data-go="check" style="--pc:var(--accent)"><div style="flex:1;min-width:200px"><span class="lvl">CHECK MY ANSWERS</span><h3>${u.n===1?'Your practice test, graded live':'The review questions, graded live'}</h3><p class="muted" style="font-size:.9rem">${ITEMS.length} parts. Type an answer, get coins or a hint. Hints never give the answer.</p></div><div style="min-width:160px;flex:1"><div class="prog"><i style="width:${Math.round(100*checkDone/ITEMS.length)}%"></i></div><span class="muted" style="font-size:.8rem">${checkDone}/${ITEMS.length} cleared</span></div></button>
-    <button class="portal big" data-go="boss" style="--pc:var(--gold)"><div style="flex:1;min-width:200px"><span class="lvl" style="color:var(--bad)">FINAL BOSS</span><h3>Fresh test, new numbers, same moves</h3><p class="muted" style="font-size:.9rem">No feedback until you hit Grade. Retake as many times as you like.</p></div><div style="min-width:160px;flex:1"><span class="muted" style="font-size:.85rem">${best===null?'No runs yet':`Best run: <b class="num">${best}%</b> · ${st.attempts.length} run${st.attempts.length===1?'':'s'}`}</span></div></button>
    </div>
   </div>`;
 };
@@ -1045,8 +1060,8 @@ VIEWS.check = (app)=>{
   const cleared=ITEMS.filter(i=>UC()[i.id]?.correct).length; const P=PROBLEMS.find(x=>x.n===checkProb); const its=ITEMS.filter(i=>i.p===P.n); const NP=PROBLEMS.length;
   const pdone=n=>ITEMS.filter(i=>i.p===n&&UC()[i.id]?.correct).length, pn=n=>ITEMS.filter(i=>i.p===n).length;
   app.innerHTML=h`<div class="stack">
-   <div class="block"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><p class="eyebrow">${u.title} · check my answers</p><h1>${u.n===1?'Your practice test, one problem at a time.':'The review, one problem at a time.'}</h1></div><span class="pill badges num">${cleared}/${ITEMS.length} cleared</span></div>
-    <p style="margin-top:6px">Type an answer and tap <b>Check</b>. Right: coins. Wrong: you respawn with a hint about <i>your</i> answer, never the answer itself. Stuck? Every part has a worked example with different numbers.</p>
+   <div class="block"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><p class="eyebrow">${u.title} · mid-boss · practice test</p><h1>Mid-Boss: the practice test, one problem at a time.</h1></div><span class="pill badges num">${cleared}/${ITEMS.length} cleared</span></div>
+    <p style="margin-top:6px">Every question from the packet, nothing timed, retry anything. Type an answer and tap <b>Check</b>. Right: coins, and the answer is saved to your Journal. Wrong: you respawn with a hint about <i>your</i> answer, then a stronger hint, then the first step. Never the answer itself. Stuck? Every part has a worked example with different numbers, and a link back to the Learn level it comes from.</p>
     <nav class="pnav" style="grid-template-columns:repeat(${Math.min(NP,6)},1fr)" aria-label="Problems">${PROBLEMS.map(x=>`<button class="pbtn ${x.n===checkProb?'cur':''} ${pdone(x.n)===pn(x.n)?'done':''}" data-p="${x.n}" aria-current="${x.n===checkProb?'page':'false'}"><b>${x.tab||x.label||x.n}</b><span class="num">${pdone(x.n)}/${pn(x.n)}</span></button>`).join('')}</nav></div>
    <div class="block" id="probBlock"><p class="eyebrow">${P.label?esc(P.label):'Problem '+P.n+' of '+NP}</p><h2>${esc(P.title)}</h2><p style="margin:8px 0 14px">${P.stem}</p><div class="stack">${its.map(it=>itemHTML(it,'c')).join('')}</div>
     <div class="row" style="justify-content:space-between;margin-top:18px"><button class="btn alt" id="prevP" ${P.n===PROBLEMS[0].n?'disabled':''}>← Back</button><span class="muted num">${pdone(P.n)}/${pn(P.n)} cleared here</span><button class="btn" id="nextP" ${P.n===PROBLEMS[NP-1].n?'disabled':''}>Next →</button></div></div>
@@ -1213,7 +1228,7 @@ let boss={test:null, seed:null, result:null, unit:null};
 VIEWS.boss=(app)=>{
   if(boss.unit!==State.unit){ boss={test:null,seed:null,result:null,unit:State.unit}; }
   if(boss.result) return bossResults(app);
-  if(!boss.test){ app.innerHTML=h`<div class="stack"><div class="block" style="border-color:var(--bad)"><p class="eyebrow" style="color:var(--bad)">${U().title} · Final Boss</p><h1>Same moves. New numbers.</h1><p style="margin-top:6px">${U().bossIntro||'Six problems, 19 answers, and work lines on the hard ones.'} The boss says nothing until you hit <b>Grade</b> at the very end. Then you get a score, a breakdown, and what to practice.</p>
+  if(!boss.test){ app.innerHTML=h`<div class="stack"><div class="block" style="border-color:var(--bad)"><p class="eyebrow" style="color:var(--bad)">${U().title} · Final Boss</p><h1>Same moves. New numbers.</h1><p style="margin-top:6px">${U().bossIntro||'Six problems, 19 answers, and work lines on the hard ones.'} Unlike the Mid-Boss, the boss says nothing until you hit <b>Grade</b> at the very end. Then you get a score, every miss explained, and a coach summary of what to practice. 80% or better beats the boss.</p>
     <div class="row" style="margin-top:12px"><button class="btn gold" id="startBoss">Start a fresh run</button>${UA().length?`<span class="muted">Runs so far: <b class="num">${UA().length}</b> · best <b class="num">${Math.max(...UA().map(a=>a.pct))}%</b></span>`:''}</div>
     <details style="margin-top:12px"><summary>Replay a specific run (seed)</summary><div class="lock" style="margin-top:8px"><input type="text" id="seedIn" inputmode="numeric" placeholder="seed number"><button class="btn alt sm" id="seedBtn">Load</button></div></details></div>
     ${UA().length?`<div class="block soft"><p class="eyebrow">Past runs</p><div class="tablewrap"><table><thead><tr><th>When</th><th class="n">Score</th><th>Missed</th></tr></thead><tbody>${[...UA()].sort((a,b)=>b.ts-a.ts).slice(0,10).map(a=>`<tr><td>${new Date(a.ts).toLocaleDateString()}</td><td class="n"><b>${a.score}/${a.total}</b> (${a.pct}%)</td><td>${a.items.filter(x=>!x.ok).map(x=>x.id).join(', ')||'nothing!'}</td></tr>`).join('')}</tbody></table></div></div>`:''}</div>`;
