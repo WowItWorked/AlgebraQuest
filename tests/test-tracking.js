@@ -10,7 +10,7 @@ window.claude={use:async(name)=>{ await new Promise(r=>setTimeout(r,window.__del
 const URL='file://'+path.resolve('harness.html'); const out=[]; const ok=(n,c,x='')=>out.push((c?'ok  ':'FAIL')+' '+n+(x?' :: '+x:''));
 const ANS={ '1a':'1600 + 400h ≤ 3000','1b':'1600+800(t-3)<=3000','1c':'4.5','2a':0,'2b':'012','2c':1,'3a':'y=k/(5-k)','3b':'y = nx/4 + c','3c':'-11','3d':'2','4a':'w=(P-2l)/2','4b':'36','5a':'18+6.5x<12+7.5x','5b':'x>6','5c':'7','6a':'48<3x+3<69','6b':'15<x<22','6c':'16,17,18; 17,18,19; 18,19,20; 19,20,21; 20,21,22; 21,22,23','6d':{lo:15,hi:22,loOpen:true,hiOpen:true} };
 const MINI={1:['25+8h<=65',2,'10+3x<4+5x'],2:['h<=5','4','x>3'],3:['a=m/(4-m)','F=9C/5+32','h=2A/b'],4:['-5','2',1],5:['3<x<8','10,11,12; 11,12,13; 12,13,14',{lo:3,hi:8,loOpen:true,hiOpen:false}],6:[1,1,'20']};
-async function explainer(page,n){
+async function explainer(page,n){ await page.click('[data-lt="explainer"]'); await page.waitForTimeout(150);
   if(n===1){ const W={'at most':'≤','no more than':'≤','a budget of':'≤','less than':'<','under':'<','fewer than':'<','at least':'≥','a minimum of':'≥','no less than':'≥','more than':'>','over':'>','exceeds':'>'}; for(const w in W){ await page.locator('.kw',{hasText:new RegExp('^'+w+'$')}).click(); await page.locator(`.bucket[data-s="${W[w]}"]`).click(); } }
   if(n===2){ await page.click('#jm'); await page.click('#jp'); await page.click('#jp'); for(let k=0;k<8;k++) await page.click('#jp'); }
   if(n===3){ for(const t of ['− 3y','factor','÷ (5 − k)']) await page.locator('.chip',{hasText:t}).click(); }

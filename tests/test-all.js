@@ -48,7 +48,7 @@ async function answer(page, it, val){ const el=page.locator(`[data-item="${it.id
     // ---- Learn levels ----
     for(let n=1;n<=6;n++){ await page.evaluate(k=>go('level',k),n); await page.waitForTimeout(250); ok(mode+` level ${n} loads`, new RegExp('level '+n,'i').test(await page.locator('.eyebrow').first().innerText())); await noH('level'+n); }
     // L6 explain
-    await page.evaluate(()=>go('level',6)); await page.waitForTimeout(250); const ex=page.locator('[data-ex="ex1"]'); await ex.locator('.expl').fill('In step 2 only the 12 was divided by 3; 6y should be divided by 3 too, giving 4 − 2y.'); await ex.locator('.chk').click(); await page.waitForTimeout(400);
+    await page.evaluate(()=>go('level',6)); await page.waitForTimeout(250); await page.click('[data-lt="explainer"]'); await page.waitForTimeout(150); const ex=page.locator('[data-ex="ex1"]'); await ex.locator('.expl').fill('In step 2 only the 12 was divided by 3; 6y should be divided by 3 too, giving 4 − 2y.'); await ex.locator('.chk').click(); await page.waitForTimeout(400);
     ok(mode+' L6 explain graded', (await ex.locator('.fbwrap').innerText()).includes('Model answer') && await ex.locator('.ck').count()===1);
     // mini-boss keypad presence and 3-miss message has no answer leak
     await page.click('[data-lt="boss"]'); await page.waitForTimeout(200); const q=page.locator('#mb .item').nth(2); ok(mode+' mini-boss has keypad', await q.locator('.key').count()>0);
