@@ -126,7 +126,7 @@ VIEWS.hub = (app)=>{
   app.innerHTML=h`
   <div class="stack">
    <div class="block" style="background:linear-gradient(135deg,var(--panel),var(--panel2))">
-    <div class="row" style="justify-content:space-between"><div><p class="eyebrow">Unit ${u.n} · spawn lobby</p><h1>${esc(u.title)}</h1></div><button class="btn alt sm" data-go="map">🗺 Map</button></div>
+    <div class="row" style="justify-content:space-between"><div><p class="eyebrow">${u.title} · spawn lobby</p><h1>${esc(u.title)}</h1></div><button class="btn alt sm" data-go="map">🗺 Map</button></div>
     <p style="margin-top:6px">${esc(u.blurb)} Six Learn levels are obbies: clear checkpoints, earn coins. <b>Check My Answers</b> grades the real questions. The <b>Final Boss</b> is a fresh test with new numbers. Wrong answers just respawn you at the last checkpoint. No lives, no penalty.</p>
     <div class="row" style="margin-top:12px">
       <button class="btn" data-go="check">Check My Answers</button>
